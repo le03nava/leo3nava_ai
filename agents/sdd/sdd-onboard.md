@@ -118,10 +118,24 @@ Delegate `sdd-design` to write the design. Highlight the key decisions:
  over alternatives. Future you (and teammates) will thank you."
 ```
 
-### Phase 6: Tasks (narrated)
+### Phase 6: Test Design (narrated)
 
 ```
-"Step 5: Tasks — We break the work into concrete, checkable steps."
+"Step 5: Test Design — We plan the checks before turning the design into tasks.
+ This creates the evidence contract for apply and verify."
+```
+
+Delegate `sdd-test-design` to create `test-design.md`. Explain how it maps spec scenarios and design risks to automated, manual, or static checks:
+
+```
+"This is where we decide HOW the change will be proven correct.
+ Mandatory cases block verification if uncovered; non-mandatory cases become warnings."
+```
+
+### Phase 7: Tasks (narrated)
+
+```
+"Step 6: Tasks — We break the work into concrete, checkable steps."
 ```
 
 Delegate `sdd-tasks` to write the task breakdown. Explain the structure:
@@ -131,10 +145,10 @@ Delegate `sdd-tasks` to write the task breakdown. Explain the structure:
  'Implement feature' is not a task. 'Create src/utils/validate.ts with validateEmail()' is."
 ```
 
-### Phase 7: Apply (narrated)
+### Phase 8: Apply (narrated)
 
 ```
-"Step 6: Apply — Now we write actual code. The tasks guide us, the specs tell us what 'done' means."
+"Step 7: Apply — Now we write actual code. The tasks and test design guide us; the specs tell us what 'done' means."
 ```
 
 Delegate `sdd-apply` for the assigned task batch. Narrate each completed task from the returned apply-progress summary:
@@ -151,10 +165,10 @@ If Strict TDD mode is active, apply the TDD cycle and explain it:
  We write the failing test FIRST, then write the minimum code to pass it."
 ```
 
-### Phase 8: Verify (narrated)
+### Phase 9: Verify (narrated)
 
 ```
-"Step 7: Verify — We check that what we built matches what we specified."
+"Step 8: Verify — We check that what we built matches the specs and test design."
 ```
 
 Delegate `sdd-verify`. Explain the returned compliance matrix:
@@ -164,10 +178,10 @@ Delegate `sdd-verify`. Explain the returned compliance matrix:
  This is the moment where specs pay off — they tell us exactly what to check."
 ```
 
-### Phase 9: Archive (narrated)
+### Phase 10: Archive (narrated)
 
 ```
-"Step 8: Archive — We merge our delta specs into the main specs and close the change.
+"Step 9: Archive — We merge our delta specs into the main specs and close the change.
  The specs now describe the new behavior. The change becomes the audit trail."
 ```
 
@@ -178,7 +192,7 @@ Delegate `sdd-archive`. Show the result:
  And openspec/specs/ now reflects the new behavior."
 ```
 
-### Phase 10: Summary
+### Phase 11: Summary
 
 Close the session with a recap:
 
@@ -192,13 +206,14 @@ Here's what we built together:
 - proposal.md — the WHY
 - specs/{capability}/spec.md — the WHAT
 - design.md — the HOW
+- test-design.md — the EVIDENCE PLAN
 - tasks.md — the STEPS
 
 **Code changed**:
 - {list of files}
 
 **The SDD cycle in one line**:
-explore → propose → spec → design → tasks → apply → verify → archive
+explore → propose → spec → design → test-design → tasks → apply → verify → archive
 
 **When to use SDD**: Any change where you want to agree on WHAT before writing code.
 Small tweaks? Just code. Features, APIs, architecture decisions? SDD first.
@@ -221,5 +236,5 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - If the user picks their own improvement, validate it fits the "small and safe" criteria before proceeding.
 - If anything blocks the cycle (tests fail, design is unclear, codebase is too complex), STOP and explain — don't push through.
 - Adapt the tone to the user — if they're experienced, skip basics; if they're new, explain more.
-- Do not execute phase work inline. Delegate real phase work to sdd-explore, sdd-propose, sdd-spec, sdd-design, sdd-tasks, sdd-apply, sdd-verify, and sdd-archive.
+- Do not execute phase work inline. Delegate real phase work to sdd-explore, sdd-propose, sdd-spec, sdd-design, sdd-test-design, sdd-tasks, sdd-apply, sdd-verify, and sdd-archive.
 - Follow all format rules from the individual skills by passing their artifact refs and returned envelopes through the orchestrator gatekeeper.

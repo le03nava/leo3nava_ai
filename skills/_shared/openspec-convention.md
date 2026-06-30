@@ -18,6 +18,7 @@ openspec/
         │   └── {domain}/
         │       └── spec.md  <- Delta spec
         ├── design.md        <- from sdd-design
+        ├── test-design.md   <- from sdd-test-design
         ├── tasks.md         <- from sdd-tasks (updated by sdd-apply)
         └── verify-report.md <- from sdd-verify
 ```
@@ -32,6 +33,7 @@ openspec/
 | sdd-propose | Creates | `openspec/changes/{change-name}/proposal.md` |
 | sdd-spec | Creates | `openspec/changes/{change-name}/specs/{domain}/spec.md` |
 | sdd-design | Creates | `openspec/changes/{change-name}/design.md` |
+| sdd-test-design | Creates | `openspec/changes/{change-name}/test-design.md` |
 | sdd-tasks | Creates | `openspec/changes/{change-name}/tasks.md` |
 | sdd-apply | Updates | `openspec/changes/{change-name}/tasks.md` (marks `[x]`) |
 | sdd-verify | Creates | `openspec/changes/{change-name}/verify-report.md` |
@@ -44,6 +46,7 @@ openspec/
 Proposal:   openspec/changes/{change-name}/proposal.md
 Specs:      openspec/changes/{change-name}/specs/  (all domain subdirectories)
 Design:     openspec/changes/{change-name}/design.md
+Test design: openspec/changes/{change-name}/test-design.md
 Tasks:      openspec/changes/{change-name}/tasks.md
 Verify:     openspec/changes/{change-name}/verify-report.md
 Config:     openspec/config.yaml
@@ -118,3 +121,5 @@ openspec/changes/archive/YYYY-MM-DD-{change-name}/
 ```
 
 Use today's date in ISO format. The archive is an AUDIT TRAIL — never delete or modify archived changes.
+
+Archived change folders preserve every produced phase artifact, including `test-design.md` when the change includes the mandatory test-design phase. Partial archives that omit `test-design.md` must document the explicit exception in the archive report.

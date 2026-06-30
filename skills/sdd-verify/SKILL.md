@@ -25,10 +25,11 @@ The orchestrator should provide structured status from `skills/_shared/sdd-statu
 
 ## Hard Rules
 
-- Read all available status `contextFiles` before judging implementation. Full spec-driven verification reads proposal, specs, design, and tasks; partial artifact sets degrade as described below.
+- Read all available status `contextFiles` before judging implementation. Full spec-driven verification reads proposal, specs, design, test design, and tasks; partial artifact sets degrade as described below.
 - Execute relevant tests; static analysis alone is never verification.
 - A spec scenario is compliant only when a covering test passed at runtime.
 - Compare specs first, design second, task completion third.
+- Compare `test-design.md` planned cases against apply/verification evidence. Uncovered mandatory cases fail verification; uncovered non-mandatory cases are warnings only.
 - Do not fix issues; report them for the orchestrator/user.
 - Persist `verify-report` according to mode: Engram `sdd/{change-name}/verify-report`, OpenSpec `openspec/changes/{change-name}/verify-report.md`, hybrid both, or inline-only for `none`.
 - If Strict TDD is active, load `strict-tdd-verify.md` from this skill directory; if inactive, never load it.
@@ -49,10 +50,12 @@ The orchestrator should provide structured status from `skills/_shared/sdd-statu
 | Changed files cannot be identified | Mark static correctness/design coherence as PARTIAL, record the skipped evidence, and return `next_recommended: resolve-blockers` unless runtime evidence still proves the required behavior. |
 | Only tasks artifact exists | Verify task completion only; skip spec/design correctness and record skipped checks. |
 | Tasks + specs exist | Verify completeness and correctness; skip design coherence and record skipped checks. |
-| Proposal/specs/design/tasks exist | Verify all dimensions. |
+| Proposal/specs/design/test-design/tasks exist | Verify all dimensions, including planned case coverage. |
 | Task incomplete | CRITICAL for core task, WARNING for cleanup task. |
 | Test command exits non-zero | CRITICAL. |
 | Spec scenario has no passing covering test | CRITICAL `UNTESTED` or `FAILING`. |
+| Mandatory test-design case has no matching implementation, execution, or justified skip evidence | CRITICAL `UNTESTED` and verdict `FAIL`. |
+| Non-mandatory test-design case has no matching evidence | WARNING; do not fail solely because of this uncovered non-mandatory case. |
 | Design deviation exists | WARNING unless it breaks a spec. |
 | Verification failure discovered | Report only; do not patch implementation. |
 | Verify-report persistence fails | Return `partial` with `next_recommended: resolve-blockers` and the report inline in `detailed_report`. |
@@ -64,15 +67,16 @@ The orchestrator should provide structured status from `skills/_shared/sdd-statu
 3. Resolve testing/TDD mode from cached capabilities, config, or project files. Prefer `sdd/{project}/testing-capabilities`, then `openspec/config.yaml`, then project files.
 4. Count completed and incomplete tasks. Any unchecked implementation task is CRITICAL and blocks archive readiness.
 5. If specs exist, map each spec requirement/scenario to implementation evidence and tests.
-6. If design exists, check design decisions against changed code. If design is missing, skip design coherence and record why.
-7. Run test, build/type-check, and coverage commands when available. For full spec verification, preserve gentle-ai's stricter runtime evidence: source inspection alone does not prove spec scenario compliance.
-8. Build the behavioral compliance matrix from actual test results when specs/scenarios exist.
-9. Validate the report before persistence: completeness table present, every spec scenario has a status, runtime evidence includes command and result, skipped dimensions are listed, Strict TDD sections are present when active, and any CRITICAL issue forces verdict `FAIL`.
-10. Persist and return the verification report, including skipped dimensions for missing artifacts.
+6. If test design exists, map each planned case to implementation, execution, apply-progress, or justified skip evidence and classify mandatory gaps as CRITICAL and non-mandatory gaps as WARNING.
+7. If design exists, check design decisions against changed code. If design is missing, skip design coherence and record why.
+8. Run test, build/type-check, and coverage commands when available. For full spec verification, preserve gentle-ai's stricter runtime evidence: source inspection alone does not prove spec scenario compliance.
+9. Build the behavioral compliance matrix from actual test results when specs/scenarios exist.
+10. Validate the report before persistence: completeness table present, every spec scenario has a status, every test-design case has a coverage status, runtime evidence includes command and result, skipped dimensions are listed, Strict TDD sections are present when active, and any CRITICAL issue forces verdict `FAIL`.
+11. Persist and return the verification report, including skipped dimensions for missing artifacts.
 
 ## Output Contract
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Verification Report` in `detailed_report` with change, mode, completeness table, build/tests/coverage evidence, spec compliance matrix, correctness table, design coherence table, skipped/degraded dimensions, issues grouped as CRITICAL/WARNING/SUGGESTION, and final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`.
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Verification Report` in `detailed_report` with change, mode, completeness table, build/tests/coverage evidence, spec compliance matrix, test-design coverage matrix, correctness table, design coherence table, skipped/degraded dimensions, issues grouped as CRITICAL/WARNING/SUGGESTION, and final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`.
 
 ## Routing Contract
 
@@ -87,7 +91,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 - **Tasks only**: verify objective task completion only. Do not claim spec correctness or design coherence. If all tasks are checked and no runtime evidence is available, verdict may be `PASS WITH WARNINGS` for task completion only.
 - **Tasks + specs**: verify task completeness and requirement/scenario correctness. Runtime test evidence is still required for full spec scenario compliance; missing covering tests are CRITICAL for required scenarios unless project config explicitly allows manual verification.
-- **Full artifacts**: verify completeness, correctness, and coherence.
+- **Full artifacts**: verify completeness, correctness, test-design planned case coverage, and coherence.
 - **Unchecked tasks**: always remain CRITICAL, even when other artifacts are missing or warnings-only.
 
 ## References

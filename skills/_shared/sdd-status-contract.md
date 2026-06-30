@@ -24,7 +24,7 @@ Commands that select, continue, apply, verify, or archive an SDD change MUST fir
 
 ## Routing Token Mapping
 
-Native status uses bounded tokens: `propose`, `spec`, `design`, `tasks`, `apply`, `verify`, `archive`, `sdd-new`, `select-change`, `resolve-blockers`, and `none`.
+Native status uses bounded tokens: `propose`, `spec`, `design`, `test-design`, `tasks`, `apply`, `verify`, `archive`, `sdd-new`, `select-change`, `resolve-blockers`, and `none`.
 
 When launching phase agents, normalize through this mapping:
 
@@ -33,6 +33,7 @@ When launching phase agents, normalize through this mapping:
 | `propose` | `sdd-propose` |
 | `spec` | `sdd-spec` |
 | `design` | `sdd-design` |
+| `test-design` | `sdd-test-design` |
 | `tasks` | `sdd-tasks` |
 | `apply` | `sdd-apply` |
 | `verify` | `sdd-verify` |
@@ -78,6 +79,7 @@ artifactRefs:
   proposal: [<topic keys, file paths, or inline refs>]
   specs: [<topic keys, file paths, or inline refs>]
   design: [<topic keys, file paths, or inline refs>]
+  testDesign: [<topic keys, file paths, or inline refs>]
   tasks: [<topic keys, file paths, or inline refs>]
   applyProgress: [<topic keys, file paths, or inline refs>]
   verifyReport: [<topic keys, file paths, or inline refs>]
@@ -87,6 +89,7 @@ artifactPaths:
   proposal: [<absolute path>]
   specs: [<absolute paths>]
   design: [<absolute path>]
+  testDesign: [<absolute path>]
   tasks: [<absolute path>]
   applyProgress: [<absolute path>]
   verifyReport: [<absolute path>]
@@ -96,6 +99,7 @@ contextFiles:
   proposal: [<absolute readable files>]
   specs: [<absolute readable files>]
   design: [<absolute readable files>]
+  testDesign: [<absolute readable files>]
   tasks: [<absolute readable files>]
   applyProgress: [<absolute readable files>]
   verifyReport: [<absolute readable files>]
@@ -105,6 +109,7 @@ artifacts:
   proposal: missing | done | partial
   specs: missing | done | partial
   design: missing | done | partial
+  testDesign: missing | done | partial
   tasks: missing | done | partial
   applyProgress: missing | done | partial
   verifyReport: missing | done | partial
@@ -118,6 +123,7 @@ dependencies:
   proposal: blocked | ready | all_done
   specs: blocked | ready | all_done
   design: blocked | ready | all_done
+  testDesign: blocked | ready | all_done
   tasks: blocked | ready | all_done
   apply: blocked | ready | all_done
   verify: blocked | ready | all_done
@@ -137,7 +143,7 @@ phaseInstructions:
   apply: [<instruction strings>]
   verify: [<instruction strings>]
   archive: [<instruction strings>]
-nextRecommended: propose | spec | design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons: []
 ```
 
@@ -160,10 +166,12 @@ Native status JSON is authoritative when available. If native currently emits on
 
 ## Dependency States
 
-- `proposal`, `specs`, `design`, and `tasks` report whether prerequisite artifacts are blocked, ready, or all done.
-- `apply` is `ready` only when specs, design, and tasks are available and task progress is not all done.
-- `verify` is `ready` when tasks exist and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full verification.
-- `archive` is `ready` only when verify-report exists, is clearly passing, and tasks are complete. A clearly passing report needs an explicit PASS/SUCCESS signal and no blocker or negation signals such as FAIL, FAILURE, BLOCKED, CRITICAL, PENDING, TODO, verification blockers, `not passed`, or `pass: no`. CRITICAL verification issues have no override. Explicit recorded exceptions are limited to non-critical partial archives or stale-checkbox reconciliation when apply-progress/verify-report prove completion.
+- `proposal`, `specs`, `design`, `testDesign`, and `tasks` report whether prerequisite artifacts are blocked, ready, or all done.
+- `testDesign` is `ready` only when proposal, specs, and design are available; it is `all_done` when the `test-design` artifact exists and is readable.
+- `tasks` is `ready` only when specs, design, and test design are available. Missing `testDesign` blocks task planning.
+- `apply` is `ready` only when specs, design, test design, and tasks are available and task progress is not all done.
+- `verify` is `ready` when tasks exist, test design is available, and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full verification.
+- `archive` is `ready` only when verify-report exists, is clearly passing, tasks are complete, and mandatory artifacts including test design are available. A clearly passing report needs an explicit PASS/SUCCESS signal and no blocker or negation signals such as FAIL, FAILURE, BLOCKED, CRITICAL, PENDING, TODO, verification blockers, `not passed`, or `pass: no`. CRITICAL verification issues have no override. Explicit recorded exceptions are limited to non-critical partial archives or stale-checkbox reconciliation when apply-progress/verify-report prove completion.
 
 ## Action Context Guard
 

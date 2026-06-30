@@ -50,7 +50,7 @@ From the orchestrator:
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the design summary in `detailed_report`.
 
 Routing rules for `next_recommended`:
-- **Successful design**: return `next_recommended: tasks`. The orchestrator normalizes this into state `nextRecommended: tasks` before routing or persisting state.
+- **Successful design**: return `next_recommended: test-design`. The orchestrator normalizes this into state `nextRecommended: test-design` before routing or persisting state.
 - **Blocked design**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, code context, testing capability, or architecture decision in `risks` / `detailed_report`.
 - **Partial design**: return `next_recommended: resolve-blockers` unless the same design artifact can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -207,7 +207,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 {List any unresolved questions, or "None"}
 
 ### Next Step
-Ready for tasks (sdd-tasks).
+Ready for test design (sdd-test-design).
 ```
 
 ## Rules

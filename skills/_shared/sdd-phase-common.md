@@ -103,6 +103,7 @@ Routing token convention:
 | `propose` | `sdd-propose` |
 | `spec` | `sdd-spec` |
 | `design` | `sdd-design` |
+| `test-design` | `sdd-test-design` |
 | `tasks` | `sdd-tasks` |
 | `apply` | `sdd-apply` |
 | `verify` | `sdd-verify` |
@@ -129,7 +130,9 @@ Example:
 - `sdd-propose` and `sdd-spec` are phase/agent names.
 - `proposal` and `spec` are singular Engram artifact keys: `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`.
 - `specs` is the OpenSpec/status collection name because file-based mode may write multiple domain files under `openspec/changes/{change-name}/specs/{domain}/spec.md`.
-- Do not use `sdd-proposal`, `sdd-proposals`, or `sdd-specs` as artifact keys.
+- `sdd-test-design` is the phase/agent token; `test-design` is the native/status token and artifact key: `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md`.
+- Persisted camelCase state/status fields use `testDesign` when a field name cannot contain hyphens.
+- Do not use `sdd-proposal`, `sdd-proposals`, `sdd-specs`, `sdd-test-design`, or `testDesign` as Engram artifact keys.
 
 ## F. Review Workload Guard
 

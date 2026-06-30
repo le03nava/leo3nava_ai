@@ -35,7 +35,7 @@ From the orchestrator:
 
 > Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/tasks`, `sdd/{change-name}/verify-report` (all required). Record all observation IDs in the archive report for traceability. Save as `sdd/{change-name}/archive-report`.
+- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/test-design`, `sdd/{change-name}/tasks`, `sdd/{change-name}/verify-report` (all required). Record all observation IDs in the archive report for traceability. Save as `sdd/{change-name}/archive-report`.
 - **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Perform merge and archive folder moves.
 - **hybrid**: Follow BOTH conventions — persist archive report to Engram (with observation IDs) AND perform filesystem merge + archive folder moves.
 - **none**: Return inline closure summary only. Do not perform archive file operations, and do not claim durable archive, source-of-truth sync, or recoverable completion.
@@ -49,7 +49,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - Successful archive -> return `next_recommended: none`.
 - Missing or non-passing `verify-report` -> return `next_recommended: verify`.
 - Persisted tasks contain unchecked implementation tasks without approved stale-checkbox reconciliation -> return `next_recommended: apply`.
-- Missing proposal/spec/design without explicit partial-archive approval -> return `next_recommended: resolve-blockers`.
+- Missing proposal/spec/design/test-design without explicit partial-archive approval -> return `next_recommended: resolve-blockers`.
 - Destructive merge confirmation, unsafe action context, archive destination conflict, or archive operation outside `allowedEditRoots` -> return `next_recommended: resolve-blockers`.
 - Status `partial` after filesystem operations -> return `next_recommended: resolve-blockers` and include exact recovery steps in `detailed_report`.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -78,7 +78,7 @@ OpenSpec permits archiving with incomplete artifacts or tasks after a user confi
 - Incomplete implementation tasks block archive unless they are stale checkboxes and apply-progress/verify-report prove completion.
 - CRITICAL issues in `verify-report` always block archive. Do not accept an override for CRITICAL verification issues.
 - `sdd-archive` does not own normal task completion. `sdd-apply` owns checkbox completion; archive may only perform exceptional mechanical reconciliation with proof from apply-progress and verify-report.
-- Missing proposal/spec/design artifacts should be reported. Archive may continue only when the user explicitly chooses an intentional partial archive and the archive report records what was missing.
+- Missing proposal/spec/design/test-design artifacts should be reported. Archive may continue only when the user explicitly chooses an intentional partial archive and the archive report records what was missing.
 
 ### Action Context Guard
 
@@ -92,7 +92,7 @@ OpenSpec permits archiving with incomplete artifacts or tasks after a user confi
 | `verify-report` is missing | Return `blocked` with `next_recommended: verify`; archive readiness cannot be proven. |
 | `verify-report` contains CRITICAL issues or verdict `FAIL` | Return `blocked` with `next_recommended: apply`; do not accept an override. |
 | Persisted tasks contain unchecked implementation tasks | Return `blocked` with `next_recommended: apply` unless explicitly approved stale-checkbox reconciliation is backed by apply-progress and verify-report proof. |
-| Proposal/spec/design artifacts are missing | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides explicit intentional partial archive approval. |
+| Proposal/spec/design/test-design artifacts are missing | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides explicit intentional partial archive approval. |
 | `actionContext.mode: workspace-planning` | Return `blocked` with `next_recommended: resolve-blockers`; do not move folders or edit linked repos. |
 | Archive operation would leave `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and report the offending path. |
 | Delta spec removal lacks `(Reason: ...)` or `(Migration: ...)` | Return `blocked` with `next_recommended: resolve-blockers`; do not delete from main specs. |
@@ -168,7 +168,8 @@ If the destination already exists, STOP and return `blocked` with the existing d
 **IF mode is `openspec` or `hybrid`:** Confirm:
 - [ ] Main specs updated correctly
 - [ ] Change folder moved to archive
-- [ ] Archive contains all artifacts (proposal, specs, design, tasks)
+- [ ] Archive contains all artifacts (proposal, specs, design, test-design, tasks)
+- [ ] Missing `test-design.md` is blocked unless an explicit partial archive exception is provided and recorded in the archive report
 - [ ] Archived `tasks.md` has no unchecked implementation tasks, unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof
 - [ ] Active changes directory no longer has this change
 - [ ] Archive report lists all synced domains, archive destination, verification verdict, and any intentional-with-warnings reason
@@ -184,6 +185,7 @@ This step is mandatory for `engram`, `openspec`, and `hybrid`. In `none`, skip p
 Before persistence, validate the archive report includes:
 - Change name and artifact store mode
 - Observation IDs for Engram artifacts, or concrete OpenSpec paths for filesystem artifacts
+- `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
 - Task completion status and any stale-checkbox reconciliation proof
 - Verification verdict and confirmation that no CRITICAL issues were archived
 - Specs synced by domain with created/updated/removed/renamed counts
@@ -215,6 +217,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - proposal.md ✅
 - specs/ ✅
 - design.md ✅
+- test-design.md ✅
 - tasks.md ✅ ({N}/{N} tasks complete)
 
 ### Source of Truth Updated

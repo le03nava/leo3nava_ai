@@ -6,6 +6,9 @@
 - ❌ `FAILING`: covering test exists but failed.
 - ❌ `UNTESTED`: no covering test found.
 - ⚠️ `PARTIAL`: test passes but covers only part of the scenario.
+- ⚠️ `WARNING`: non-mandatory planned case has no matching evidence.
+
+Mandatory planned cases from `test-design.md` are verification-blocking: uncovered mandatory cases are ❌ `UNTESTED` and force verdict `FAIL`. Non-mandatory planned cases are advisory: uncovered non-mandatory cases are ⚠️ `WARNING` and MUST NOT fail verification by themselves.
 
 ## Report Template
 
@@ -43,6 +46,15 @@
 | {REQ-02} | {Scenario} | (none found) | ❌ UNTESTED |
 
 **Compliance summary**: {N}/{total} scenarios compliant
+
+### Test-Design Coverage Matrix
+| Case ID | Source | Severity | Expected Evidence | Observed Evidence | Result |
+|---------|--------|----------|-------------------|-------------------|--------|
+| {TD-01} | {Scenario/Risk} | mandatory | {expected evidence} | {test/apply evidence/justified skip} | ✅ COMPLIANT |
+| {TD-02} | {Scenario/Risk} | mandatory | {expected evidence} | (none found) | ❌ UNTESTED |
+| {TD-03} | {Scenario/Risk} | non-mandatory | {expected evidence} | (none found) | ⚠️ WARNING |
+
+**Test-design summary**: {N}/{mandatory_total} mandatory cases covered; {M} non-mandatory warnings.
 
 ### Correctness (Static Evidence)
 | Requirement | Status | Notes |

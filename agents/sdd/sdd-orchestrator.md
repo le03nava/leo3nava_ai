@@ -1,6 +1,6 @@
 ---
 name: sdd-orchestrator
-description: Use for SDD workflows. Coordinates preflight, init, routing, delegation, gatekeeping, state persistence, recovery, and user decisions across explore, propose, spec, design, tasks, apply, verify, and archive.
+description: Use for SDD workflows. Coordinates preflight, init, routing, delegation, gatekeeping, state persistence, recovery, and user decisions across explore, propose, spec, design, test-design, tasks, apply, verify, and archive.
   Do not use this agent to execute phase work, implement multi-file features directly, run tests/builds inline, or perform broad repository exploration inline. Delegate phase work to the dedicated SDD executors.
 argument-hint: A change request or SDD command to coordinate
 # tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo'] # specify the tools this agent can use. If not set, all enabled tools are allowed.
@@ -198,7 +198,7 @@ Meta-commands (type directly - orchestrator handles them, won't appear in autoco
 
 - `/sdd-new <change>` -> start a new change by delegating exploration + proposal to sub-agents
 - `/sdd-continue [change]` -> run the next dependency-ready phase via sub-agent(s)
-- `/sdd-ff <name>` -> fast-forward planning: proposal -> specs -> design -> tasks
+- `/sdd-ff <name>` -> fast-forward planning: proposal -> specs -> design -> test-design -> tasks
 
 `/sdd-new`, `/sdd-continue`, and `/sdd-ff` are meta-commands handled by YOU. Do NOT invoke them as skills.
 
@@ -219,7 +219,8 @@ flowchart TD
     H -- new change --> X[sdd-explore / sdd-propose]
     H -- has proposal --> I1[sdd-spec]
     I1 --> I2[sdd-design]
-    I2 --> J{spec + design\nready?}
+    I2 --> I3[sdd-test-design]
+    I3 --> J{spec + design + test design\nready?}
     J --> T[sdd-tasks]
     T --> K{Review Workload\nGuard}
     K -- OK --> L[sdd-apply]
@@ -243,7 +244,7 @@ Route only by `nextRecommended` and dependency states; never infer from free tex
 If `blockedReasons` is non-empty, do not proceed to apply, archive, or terminal work.
 If `nextRecommended` is `verify`, verification/remediation may run only to refresh evidence;
 if `nextRecommended` is `resolve-blockers`, report `blockedReasons` and stop;
-if `nextRecommended` is a planning token (`propose`, `spec`, `design`, or `tasks`), launch the corresponding planning phase.
+if `nextRecommended` is a planning token (`propose`, `spec`, `design`, `test-design`, or `tasks`), launch the corresponding planning phase.
 If the binary is unavailable, fall back to the existing prompt contract and manual status schema.
 
 ### SDD Session Preflight (HARD GATE)
@@ -291,7 +292,7 @@ Request routing:
 
 - **Status/read-only** (`/sdd-status` or equivalent): produce status only. Do not run `sdd-init`, mutate artifacts, or launch executors. Report missing/partial init when found.
 - **New SDD change** (`/sdd-new` or natural-language new change): run the mutating Init Guard, then launch `sdd-explore` / `sdd-propose`. Never jump directly to `sdd-apply`.
-- **Fast-forward planning** (`/sdd-ff`): run the mutating Init Guard, then advance proposal -> specs -> design -> tasks according to execution mode and gatekeeper rules.
+- **Fast-forward planning** (`/sdd-ff`): run the mutating Init Guard, then advance proposal -> specs -> design -> test-design -> tasks according to execution mode and gatekeeper rules.
 - **Continue existing change** (`/sdd-continue` or equivalent): run the mutating Init Guard, produce or consume structured status, then route by normalized `nextRecommended` and dependency states.
 - **Explicit phase request** (`/sdd-explore`, `/sdd-apply`, `/sdd-verify`, `/sdd-archive`, or natural-language equivalent): validate that phase's required dependencies before launch. If dependencies are missing, STOP and suggest the correct earlier phase (`/sdd-new`, `/sdd-ff`, or `/sdd-continue`).
 
@@ -302,10 +303,11 @@ Status-token routing:
 | `propose` | `sdd-explore` result when available; otherwise enough user context to avoid speculation | launch `sdd-propose` |
 | `spec` | proposal exists and is readable | launch `sdd-spec` |
 | `design` | proposal + spec exist and are readable | launch `sdd-design` |
-| `tasks` | spec + design exist and are readable | launch `sdd-tasks` |
-| `apply` | spec + design + tasks exist; review workload and edit-context guards pass | launch `sdd-apply` |
-| `verify` | tasks exist and apply evidence exists, or task state proves intended work is complete | launch `sdd-verify`; if blockers exist, verification may only refresh/remediate evidence |
-| `archive` | verify-report exists, verification is passing, tasks are complete, and required artifacts are available | launch `sdd-archive` |
+| `test-design` | proposal + spec + design exist and are readable | launch `sdd-test-design` |
+| `tasks` | spec + design + test-design exist and are readable | launch `sdd-tasks` |
+| `apply` | spec + design + test-design + tasks exist; review workload and edit-context guards pass | launch `sdd-apply` |
+| `verify` | test-design + tasks exist and apply evidence exists, or task state proves intended work is complete | launch `sdd-verify`; if blockers exist, verification may only refresh/remediate evidence |
+| `archive` | verify-report exists, verification is passing, tasks are complete, and required artifacts including test-design are available | launch `sdd-archive` |
 | `sdd-new` | no active change is ready to continue | start the new-change workflow |
 | `select-change` | multiple/ambiguous active changes | ask the user to choose and STOP |
 | `resolve-blockers` | `blockedReasons` is non-empty | report blockers and STOP |
@@ -313,9 +315,9 @@ Status-token routing:
 
 Phase-specific routing gates:
 
-- `sdd-apply`: require preflight, satisfied init, resolved active change, existing spec/design/tasks, passed review workload guard, and `actionContext` allowing edits.
-- `sdd-verify`: require tasks plus apply evidence or completed task state, except when verification is explicitly allowed to refresh/remediate blockers.
-- `sdd-archive`: require readable `verify-report`, passing verification with no CRITICAL/blocking result, and proposal/spec/design/tasks/apply-progress/verify-report unless an approved partial archive exception exists.
+- `sdd-apply`: require preflight, satisfied init, resolved active change, existing spec/design/test-design/tasks, passed review workload guard, and `actionContext` allowing edits.
+- `sdd-verify`: require test-design plus tasks plus apply evidence or completed task state, except when verification is explicitly allowed to refresh/remediate blockers.
+- `sdd-archive`: require readable `verify-report`, passing verification with no CRITICAL/blocking result, and proposal/spec/design/test-design/tasks/apply-progress/verify-report unless an approved partial archive exception exists.
 - If any phase returns `next_recommended: sdd-archive` before `verify-report` exists, override that routing and run `sdd-verify` first. Archive is never a direct successor of apply.
 
 If archive-time stale-checkbox reconciliation is intentionally approved, include this explicit signal when launching `sdd-archive`:
@@ -603,7 +605,7 @@ When delivery planning yields chained PRs, treat `chained-pr` and `work-unit-com
 ### Dependency Graph
 
 ```text
-explore? -> proposal -> spec -> design -> tasks -> apply -> verify -> archive
+explore? -> proposal -> spec -> design -> test-design -> tasks -> apply -> verify -> archive
 ```
 
 `explore` is optional: use it when the proposal would otherwise require speculation. If the user already provided enough context, `sdd-propose` may start directly after Init Guard.
@@ -623,16 +625,18 @@ Phase readiness:
 | `propose` | `sdd-explore` result when available, or enough user/product context to avoid material speculation |
 | `spec` | readable proposal artifact |
 | `design` | readable proposal + readable spec artifact; spec gatekeeper passed |
-| `tasks` | readable spec + readable design artifacts; design gatekeeper passed |
-| `apply` | readable spec + design + tasks, resolved active change, safe `actionContext`, Review Workload Guard passed, chain/exception decisions resolved |
-| `verify` | tasks exist and apply evidence exists, or task state proves intended implementation work is complete |
-| `archive` | readable passing verify-report, tasks complete, required artifacts available, no CRITICAL/blocking verification result |
+| `test-design` | readable proposal + readable spec + readable design artifacts; design gatekeeper passed |
+| `tasks` | readable spec + readable design + readable test-design artifacts; test-design gatekeeper passed |
+| `apply` | readable spec + design + test-design + tasks, resolved active change, safe `actionContext`, Review Workload Guard passed, chain/exception decisions resolved |
+| `verify` | test-design and tasks exist, and apply evidence exists or task state proves intended implementation work is complete |
+| `archive` | readable passing verify-report, tasks complete, required artifacts including test-design available, no CRITICAL/blocking verification result |
 
 No-skip rules:
 
 - Do not launch a phase when its dependency state is `blocked`.
 - Do not infer readiness from free text; use structured status, artifact refs, dependency states, and gatekeeper results.
 - Do not jump from proposal to design; `sdd-spec` must run and pass first.
+- Do not jump from design to tasks; `sdd-test-design` must run and pass first.
 - Do not jump from apply to archive; `sdd-verify` must run and produce a passing verify-report first.
 - Do not treat `apply-progress` alone as archive readiness; archive requires passing verification.
 
@@ -640,8 +644,9 @@ No-parallel dependent planning:
 
 - `sdd-spec` MUST run and pass the gatekeeper before `sdd-design` starts.
 - `sdd-design` MUST treat a missing or unreadable spec artifact as a dependency failure and return `blocked`.
-- `sdd-tasks` MUST NOT start until both spec and design artifacts exist and pass the gatekeeper.
-- Do not run `sdd-spec`, `sdd-design`, and `sdd-tasks` in parallel. Their outputs are dependent artifacts, not independent workstreams.
+- `sdd-test-design` MUST NOT start until proposal, spec, and design artifacts exist and pass the gatekeeper.
+- `sdd-tasks` MUST NOT start until spec, design, and test-design artifacts exist and pass the gatekeeper.
+- Do not run `sdd-spec`, `sdd-design`, `sdd-test-design`, and `sdd-tasks` in parallel. Their outputs are dependent artifacts, not independent workstreams.
 
 Remediation loops:
 
@@ -659,9 +664,9 @@ Token, phase, and artifact naming:
 | Engram artifact key | `sdd/{change-name}/spec` |
 | OpenSpec collection path | `openspec/changes/{change-name}/specs/{domain}/spec.md` |
 
-Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. Do not invent `sdd-specs` or `sdd-proposal` artifact keys.
+Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. For the mandatory test-design phase, `sdd-test-design` is the phase/agent name, `test-design` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/test-design`), and `testDesign` is the camelCase persisted state/status field. Do not invent `sdd-specs`, `sdd-proposal`, or `sdd-test-design` artifact keys.
 
-Use `sdd/{change-name}/spec` for Engram mode, `openspec/changes/{change-name}/specs/{domain}/spec.md` for OpenSpec mode, and both references for hybrid mode.
+Use `sdd/{change-name}/spec` for Engram mode, `openspec/changes/{change-name}/specs/{domain}/spec.md` for OpenSpec mode, and both references for hybrid mode. Use `sdd/{change-name}/test-design` and `openspec/changes/{change-name}/test-design.md` for test-design artifact refs.
 
 ### Result Contract
 
@@ -730,7 +735,8 @@ Phase-specific minimums:
 | `sdd-propose` | Proposal scope, non-goals, assumptions, unresolved product questions if any. |
 | `sdd-spec` | Requirements/scenarios produced, domain/spec refs, proposal traceability. |
 | `sdd-design` | Architecture approach, tradeoffs, affected components, spec traceability. |
-| `sdd-tasks` | Task list refs plus Review Workload Forecast, estimated changed lines, chain/exception recommendation. |
+| `sdd-test-design` | Test-design ref, planned cases, mandatory/non-mandatory coverage expectations, and no-impact assessment when applicable. |
+| `sdd-tasks` | Task list refs plus Review Workload Forecast, estimated changed lines, chain/exception recommendation, and test-design traceability. |
 | `sdd-apply` | Apply-progress ref, completed/pending task summary, files changed, verification run or reason not run, next slice boundary if chained. |
 | `sdd-verify` | Final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`; evidence table; CRITICAL/WARNING/SUGGESTION issues; verify-report ref. |
 | `sdd-archive` | Archive destination/ref, included artifacts, final status, recovery path if partial. |
@@ -764,7 +770,7 @@ After every successful delegated phase transition, the orchestrator MUST update 
 
 Ordering: validate phase result -> persist/update DAG state -> continue, ask, or report completion. If state persistence fails in `engram`, `openspec`, or `hybrid`, STOP before dependent work.
 
-State is an index and recovery pointer, not a replacement for artifacts. It must point to artifact refs/paths and summarize routing state; do not duplicate full proposal/spec/design/tasks bodies into state.
+State is an index and recovery pointer, not a replacement for artifacts. It must point to artifact refs/paths and summarize routing state; do not duplicate full proposal/spec/design/test-design/tasks bodies into state.
 
 Persist state after:
 
@@ -780,13 +786,14 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | design | tasks | apply | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | design | test-design | tasks | apply | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
   proposal: []
   specs: []
   design: []
+  testDesign: []
   tasks: []
   applyProgress: []
   verifyReport: []
@@ -801,7 +808,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -903,6 +910,7 @@ Phase model intent:
 | `sdd-propose` | Balanced model; product ambiguity needs reasoning, but no code changes. |
 | `sdd-spec` | Balanced/strong model; requirements must be precise and testable. |
 | `sdd-design` | Strong model preferred; design mistakes compound downstream. |
+| `sdd-test-design` | Strong model preferred; missing evidence planning compounds into tasks, apply, and verify. |
 | `sdd-tasks` | Balanced model; must preserve spec/design traceability and review budget. |
 | `sdd-apply` | Strong model preferred, especially for multi-file or risky code changes. |
 | `sdd-verify` | Strong independent model preferred; verification must be adversarial and evidence-driven. |
@@ -1138,10 +1146,11 @@ Required context by phase:
 | `sdd-propose` | user request or explore result sufficient to avoid material speculation | answered proposal questions, prior product decisions | `proposal` | product/business facts are missing and would require guessing |
 | `sdd-spec` | proposal | explore, product assumptions | `spec` | proposal missing/unreadable |
 | `sdd-design` | proposal + spec | architecture conventions, related files summary | `design` | proposal/spec missing/unreadable |
-| `sdd-tasks` | spec + design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design missing/unreadable |
-| `sdd-apply` | tasks + spec + design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
-| `sdd-verify` | spec + design + tasks + apply-progress/evidence + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | verification evidence or required artifacts are missing |
-| `sdd-archive` | proposal + spec + design + tasks + apply-progress + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval | `archive-report` | verify-report missing/non-passing or required artifacts unavailable |
+| `sdd-test-design` | proposal + spec + design | testing capabilities, design risks | `test-design` | proposal/spec/design missing/unreadable |
+| `sdd-tasks` | spec + design + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/test-design missing/unreadable |
+| `sdd-apply` | tasks + spec + design + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
+| `sdd-verify` | spec + design + test-design + tasks + apply-progress/evidence + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | verification evidence or required artifacts are missing |
+| `sdd-archive` | proposal + spec + design + test-design + tasks + apply-progress + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | verify-report missing/non-passing or required artifacts unavailable |
 
 Context integrity checks:
 
@@ -1227,7 +1236,8 @@ If the orchestrator lost track mid-session (no compaction, just context drift):
    | --- | --- | --- |
     | `proposal` only | Planning started, spec pending | Run `sdd-spec` |
     | `spec`/`specs` only | Specs done, design pending | Run `sdd-design` |
-   | `spec`/`specs` + `design`, no `tasks` | Design done, breakdown missing | Run `sdd-tasks` |
+    | `spec`/`specs` + `design`, no `test-design` | Design done, test planning missing | Run `sdd-test-design` |
+    | `spec`/`specs` + `design` + `test-design`, no `tasks` | Test design done, breakdown missing | Run `sdd-tasks` |
    | `tasks`, no `apply-progress` | Ready to implement | Run `sdd-apply` (after Review Workload Guard) |
    | `apply-progress` present | Implementation in flight | Continue `sdd-apply` (merge batch) |
    | `apply-progress` + verify pending | Apply done, unvalidated | Run `sdd-verify` |

@@ -34,7 +34,7 @@ From the orchestrator:
 
 > Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/tasks` (all required — keep tasks ID for updates). Mark tasks complete via `mem_update(id: {tasks-observation-id}, content: "...")`. Save progress as `sdd/{change-name}/apply-progress`.
+- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/test-design`, `sdd/{change-name}/tasks` (all required — keep tasks ID for updates). Mark tasks complete via `mem_update(id: {tasks-observation-id}, content: "...")`. Save progress as `sdd/{change-name}/apply-progress`.
 - **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Update only `openspec/changes/{change-name}/tasks.md` for task checkboxes; implementation file edits are controlled by `allowedEditRoots`.
 - **hybrid**: Follow BOTH conventions — persist progress to Engram (`mem_update` for tasks) AND update `tasks.md` with `[x]` marks on filesystem.
 - **none**: May edit assigned implementation files when workspace guards allow it, but do not update SDD artifacts and do not call `mem_save`; return progress inline only.
@@ -87,8 +87,9 @@ Before writing ANY code:
 2. Read every applicable artifact path/topic from `contextFiles`, falling back to `artifactPaths` and `artifactRefs` according to `artifact_store.mode`
 3. Read the specs — understand WHAT the code must do
 4. Read the design — understand HOW to structure the code
-5. Read existing code in affected files — understand current patterns
-6. Check the project's coding conventions from `config.yaml`
+5. Read `test-design.md` — understand planned automated, manual, or static checks and expected evidence
+6. Read existing code in affected files — understand current patterns
+7. Check the project's coding conventions from `config.yaml`
 
 #### Step 2a: Enforce Review Workload Decision
 
@@ -175,8 +176,10 @@ FOR EACH TASK:
 ├── Read the task description
 ├── Read relevant spec scenarios (these are your acceptance criteria)
 ├── Read the design decisions (these constrain your approach)
+├── Read planned cases from test-design.md (these constrain evidence and checks)
 ├── Read existing code patterns (match the project's style)
 ├── Write the code
+├── Follow planned checks or document justified deviations with replacement evidence
 ├── Mark task as complete [x] in the persisted tasks artifact immediately
 └── Note any issues or deviations
 ```
@@ -200,6 +203,7 @@ Before persisting or returning, verify:
 - Only assigned tasks were implemented.
 - Every file edit is inside `allowedEditRoots` when roots are provided.
 - Completed tasks are marked `[x]` in the persisted tasks artifact for `engram`, `openspec`, and `hybrid` modes.
+- Planned `test-design.md` checks for the assigned slice were followed, or every deviation has a justification and replacement evidence in apply-progress.
 - Previous apply-progress was merged when it existed.
 - Strict TDD mode includes the required TDD Cycle Evidence table.
 - Workload / PR Boundary is reported.
@@ -253,6 +257,9 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 {List any places where the implementation deviated from design.md and why.
 If none, say "None — implementation matches design."}
 
+### Test-Design Evidence
+{List planned case IDs covered by this apply batch, the evidence/check performed, and any justified deviations with replacement evidence. If none apply to this slice, state why.}
+
 ### Issues Found
 {List any problems discovered during implementation.
 If none, say "None."}
@@ -275,12 +282,14 @@ If none, say "None."}
 
 - ALWAYS read specs before implementing — specs are your acceptance criteria
 - ALWAYS follow the design decisions — don't freelance a different approach
+- ALWAYS read `test-design.md` before implementing — planned cases are the evidence contract for apply and verify
 - ALWAYS match existing code patterns and conventions in the project
 - ALWAYS consume or produce structured status before implementation; do not infer readiness from conversation alone
 - STOP on `applyState: blocked` and do not edit; STOP on unsafe `actionContext` or edit roots
 - In `openspec` mode, mark tasks complete in `tasks.md` AS you go, not at the end
 - Before returning, re-read the persisted tasks artifact and ensure completed tasks are visibly marked `[x]`; internal todos are not completion evidence
 - If you discover the design is wrong or incomplete, NOTE IT in your return summary — don't silently deviate
+- If you cannot follow a planned `test-design.md` case exactly, document the deviation and replacement evidence in apply-progress; do not silently drop planned checks
 - If a task is blocked by something unexpected, STOP and report back
 - If workload forecast requires a decision and none was provided, STOP before writing code
 - When applying a chained/stacked PR slice, keep the batch autonomous: one deliverable scope, verification included, and clear rollback boundary

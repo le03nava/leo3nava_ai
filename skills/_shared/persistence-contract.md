@@ -86,6 +86,7 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Proposal | `sdd/{change-name}/proposal` | `openspec/changes/{change-name}/proposal.md` | Both | Inline phase result only |
 | Spec | `sdd/{change-name}/spec` | `openspec/changes/{change-name}/specs/{domain}/spec.md` | Both | Inline phase result only |
 | Design | `sdd/{change-name}/design` | `openspec/changes/{change-name}/design.md` | Both | Inline phase result only |
+| Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
 | Verify report | `sdd/{change-name}/verify-report` | `openspec/changes/{change-name}/verify-report.md` | Both | Inline phase result only |
@@ -129,13 +130,14 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | design | tasks | apply | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | design | test-design | tasks | apply | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
   proposal: []
   specs: []
   design: []
+  testDesign: []
   tasks: []
   applyProgress: []
   verifyReport: []
@@ -150,7 +152,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -193,6 +195,7 @@ Who reads, who writes:
 - Non-SDD (general task): orchestrator searches engram, passes summary in prompt; sub-agent saves discoveries via `mem_save`
 - SDD (phase with dependencies): sub-agent reads artifacts directly from backend; sub-agent saves its artifact
 - SDD (phase without dependencies, e.g. explore): nobody reads; sub-agent saves its artifact
+- SDD test-design phase: `sdd-test-design` reads proposal, spec, and design directly from the selected backend and saves `test-design`; later dependent SDD phases read `test-design` from the backend when their phase contracts require it
 
 Why this split:
 - Orchestrator reads for non-SDD: it knows what context is relevant; sub-agents doing their own searches waste tokens on irrelevant results
@@ -217,6 +220,7 @@ Artifact store mode: {engram|openspec|hybrid|none}
 Read dependency artifacts from the selected backend:
   engram: mem_search(query: "sdd/{change-name}/{type}", project: "{project}") -> mem_get_observation(id)
   openspec: read the artifact path from openspec-convention.md / the status contract
+  test-design dependencies: sdd-test-design reads proposal, spec, and design; downstream phases read test-design when their phase contract requires test-planning evidence
   hybrid: read both Engram and OpenSpec when both refs are available, fallback only when one backend is absent, and report any mismatch
   none: use only the dependency content explicitly provided by the orchestrator; if missing, return blocked
 
@@ -228,6 +232,8 @@ Persist your completed artifact according to artifact_store.mode:
   none: return the full SDD artifact inline only; do not write SDD/OpenSpec files, Engram observations, or local support files
 If you return without persisting or returning the artifact according to the selected mode, the next phase CANNOT find it and the pipeline BREAKS.
 ```
+
+Recovery fallback for `test-design`: if persisted state says design is complete but `artifactRefs.testDesign` is empty, the orchestrator must resolve the artifact directly from `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md`. If the artifact is still missing, continuation must recommend `test-design` / `sdd-test-design` before launching `sdd-tasks`.
 
 SDD (no dependencies):
 ```
