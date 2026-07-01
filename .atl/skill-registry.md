@@ -7,8 +7,8 @@ Last updated: 2026-06-30
 ## Sources scanned
 
 - skills
-- %USERPROFILE%\.config\opencode\skills
-- %USERPROFILE%\.copilot\skills
+- C:\Users\leo3n\.config\opencode\skills
+- C:\Users\leo3n\.copilot\skills
 
 ## Contract
 
@@ -20,16 +20,16 @@ Last updated: 2026-06-30
 
 | Skill | Trigger / description | Scope | Path |
 | --- | --- | --- | --- |
-| `branch-pr` | Create Gentle AI pull requests with issue-first checks. Trigger: creating, opening, or preparing PRs for review. | project | `skills\branch-pr\SKILL.md` |
-| `chained-pr` | Trigger: PRs over 400 lines, stacked PRs, review slices. Split oversized changes into chained PRs that protect review focus. | project | `skills\chained-pr\SKILL.md` |
-| `cognitive-doc-design` | Design docs that reduce cognitive load. Trigger: writing guides, READMEs, RFCs, onboarding, architecture, or review-facing docs. | project | `skills\cognitive-doc-design\SKILL.md` |
-| `comment-writer` | Write warm, direct collaboration comments. Trigger: PR feedback, issue replies, reviews, Slack messages, or GitHub comments. | project | `skills\comment-writer\SKILL.md` |
-| `go-testing` | Trigger: Go tests, go test coverage, Bubbletea teatest, golden files. Apply focused Go testing patterns. | project | `skills\go-testing\SKILL.md` |
-| `issue-creation` | Create Gentle AI issues with issue-first checks. Trigger: creating GitHub issues, bug reports, or feature requests. | project | `skills\issue-creation\SKILL.md` |
-| `judgment-day` | Trigger: judgment day, dual review, adversarial review, juzgar. Run blind dual review, fix confirmed issues, then re-judge. | project | `skills\judgment-day\SKILL.md` |
-| `skill-creator` | Trigger: new skills, agent instructions, documenting AI usage patterns. Create LLM-first skills with valid frontmatter. | project | `skills\skill-creator\SKILL.md` |
-| `skill-improver` | Trigger: improve skills, audit skills, refactor skills, skill quality. Audit and upgrade existing LLM-first skills. | project | `skills\skill-improver\SKILL.md` |
-| `work-unit-commits` | Plan commits as reviewable work units. Trigger: implementation, commit splitting, chained PRs, or keeping tests and docs with code. | project | `skills\work-unit-commits\SKILL.md` |
+| `branch-pr` | Create Gentle AI pull requests with issue-first checks. Trigger: creating, opening, or preparing PRs for review. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\branch-pr\SKILL.md` |
+| `chained-pr` | Trigger: PRs over 400 lines, stacked PRs, review slices. Split oversized changes into chained PRs that protect review focus. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\chained-pr\SKILL.md` |
+| `cognitive-doc-design` | Design docs that reduce cognitive load. Trigger: writing guides, READMEs, RFCs, onboarding, architecture, or review-facing docs. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\cognitive-doc-design\SKILL.md` |
+| `comment-writer` | Write warm, direct collaboration comments. Trigger: PR feedback, issue replies, reviews, Slack messages, or GitHub comments. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\comment-writer\SKILL.md` |
+| `go-testing` | Trigger: Go tests, go test coverage, Bubbletea teatest, golden files. Apply focused Go testing patterns. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\go-testing\SKILL.md` |
+| `issue-creation` | Create Gentle AI issues with issue-first checks. Trigger: creating GitHub issues, bug reports, or feature requests. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\issue-creation\SKILL.md` |
+| `judgment-day` | Trigger: judgment day, dual review, adversarial review, juzgar. Run blind dual review, fix confirmed issues, then re-judge. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\judgment-day\SKILL.md` |
+| `skill-creator` | Trigger: new skills, agent instructions, documenting AI usage patterns. Create LLM-first skills with valid frontmatter. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\skill-creator\SKILL.md` |
+| `skill-improver` | Trigger: improve skills, audit skills, refactor skills, skill quality. Audit and upgrade existing LLM-first skills. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\skill-improver\SKILL.md` |
+| `work-unit-commits` | Plan commits as reviewable work units. Trigger: implementation, commit splitting, chained PRs, or keeping tests and docs with code. | project | `C:\Leo\Proyectos\leo3nava_ai\leo3nava_ai\skills\work-unit-commits\SKILL.md` |
 
 ## Loading protocol
 

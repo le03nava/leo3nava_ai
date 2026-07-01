@@ -35,7 +35,7 @@ From the orchestrator:
 
 > Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/design`, `sdd/{change-name}/test-design`, `sdd/{change-name}/tasks`, `sdd/{change-name}/verify-report` (all required). Record all observation IDs in the archive report for traceability. Save as `sdd/{change-name}/archive-report`.
+- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/security-applicability`, `sdd/{change-name}/design`, required `sdd/{change-name}/security-design`, `sdd/{change-name}/test-design`, `sdd/{change-name}/tasks`, `sdd/{change-name}/verify-report` (all required except security-design for no-impact changes). Record all observation IDs in the archive report for traceability. Save as `sdd/{change-name}/archive-report`.
 - **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Perform merge and archive folder moves.
 - **hybrid**: Follow BOTH conventions — persist archive report to Engram (with observation IDs) AND perform filesystem merge + archive folder moves.
 - **none**: Return inline closure summary only. Do not perform archive file operations, and do not claim durable archive, source-of-truth sync, or recoverable completion.
@@ -50,6 +50,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - Missing or non-passing `verify-report` -> return `next_recommended: verify`.
 - Persisted tasks contain unchecked implementation tasks without approved stale-checkbox reconciliation -> return `next_recommended: apply`.
 - Missing proposal/spec/design/test-design without explicit partial-archive approval -> return `next_recommended: resolve-blockers`.
+- Missing required security-design or mandatory security evidence without complete approved exceptions -> return `next_recommended: resolve-blockers`.
 - Destructive merge confirmation, unsafe action context, archive destination conflict, or archive operation outside `allowedEditRoots` -> return `next_recommended: resolve-blockers`.
 - Status `partial` after filesystem operations -> return `next_recommended: resolve-blockers` and include exact recovery steps in `detailed_report`.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -77,6 +78,7 @@ OpenSpec permits archiving with incomplete artifacts or tasks after a user confi
 
 - Incomplete implementation tasks block archive unless they are stale checkboxes and apply-progress/verify-report prove completion.
 - CRITICAL issues in `verify-report` always block archive. Do not accept an override for CRITICAL verification issues.
+- Missing mandatory security evidence blocks archive unless every gap has a complete approved exception with approver, guideline ID, accepted-risk rationale, and mitigation or follow-up.
 - `sdd-archive` does not own normal task completion. `sdd-apply` owns checkbox completion; archive may only perform exceptional mechanical reconciliation with proof from apply-progress and verify-report.
 - Missing proposal/spec/design/test-design artifacts should be reported. Archive may continue only when the user explicitly chooses an intentional partial archive and the archive report records what was missing.
 
@@ -93,6 +95,9 @@ OpenSpec permits archiving with incomplete artifacts or tasks after a user confi
 | `verify-report` contains CRITICAL issues or verdict `FAIL` | Return `blocked` with `next_recommended: apply`; do not accept an override. |
 | Persisted tasks contain unchecked implementation tasks | Return `blocked` with `next_recommended: apply` unless explicitly approved stale-checkbox reconciliation is backed by apply-progress and verify-report proof. |
 | Proposal/spec/design/test-design artifacts are missing | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides explicit intentional partial archive approval. |
+| Applicability is security-impacting and `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not archive. |
+| Mandatory applicable security evidence is missing | Return `blocked` with `next_recommended: resolve-blockers` unless each gap has a complete approved exception. |
+| Security exception lacks approver, guideline ID, accepted-risk rationale, or mitigation/follow-up | Return `blocked` with `next_recommended: resolve-blockers`; incomplete exceptions do not satisfy archive readiness. |
 | `actionContext.mode: workspace-planning` | Return `blocked` with `next_recommended: resolve-blockers`; do not move folders or edit linked repos. |
 | Archive operation would leave `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and report the offending path. |
 | Delta spec removal lacks `(Reason: ...)` or `(Migration: ...)` | Return `blocked` with `next_recommended: resolve-blockers`; do not delete from main specs. |
@@ -169,7 +174,9 @@ If the destination already exists, STOP and return `blocked` with the existing d
 - [ ] Main specs updated correctly
 - [ ] Change folder moved to archive
 - [ ] Archive contains all artifacts (proposal, specs, design, test-design, tasks)
+- [ ] Archive contains security-applicability and required security-design artifacts
 - [ ] Missing `test-design.md` is blocked unless an explicit partial archive exception is provided and recorded in the archive report
+- [ ] Mandatory applicable security evidence is verified or covered by complete approved exceptions recorded in the audit trail
 - [ ] Archived `tasks.md` has no unchecked implementation tasks, unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof
 - [ ] Active changes directory no longer has this change
 - [ ] Archive report lists all synced domains, archive destination, verification verdict, and any intentional-with-warnings reason
@@ -186,6 +193,8 @@ Before persistence, validate the archive report includes:
 - Change name and artifact store mode
 - Observation IDs for Engram artifacts, or concrete OpenSpec paths for filesystem artifacts
 - `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
+- `security-applicability` artifact ref/path and required `security-design` artifact ref/path, or explicit no-impact evidence when security design is not required
+- Mandatory security evidence status and complete approved exception details for any accepted gaps
 - Task completion status and any stale-checkbox reconciliation proof
 - Verification verdict and confirmation that no CRITICAL issues were archived
 - Specs synced by domain with created/updated/removed/renamed counts
@@ -217,6 +226,8 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - proposal.md ✅
 - specs/ ✅
 - design.md ✅
+- security-applicability.md ✅
+- security-design.md ✅ / not required with no-impact evidence
 - test-design.md ✅
 - tasks.md ✅ ({N}/{N} tasks complete)
 
@@ -232,6 +243,7 @@ Ready for the next change.
 ## Rules
 
 - NEVER archive a change that has CRITICAL issues in its verification report
+- NEVER archive missing mandatory security evidence unless every missing item has a complete approved exception in the audit trail
 - If the user explicitly approves a non-critical partial archive or stale-checkbox reconciliation, record the exact reason in the archive report and mark the archive as intentional-with-warnings
 - NEVER archive completed work while `tasks.md` / the tasks observation still shows stale unchecked implementation tasks
 - ALWAYS sync delta specs BEFORE moving to archive

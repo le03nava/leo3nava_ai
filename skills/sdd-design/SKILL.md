@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for TECHNICAL DESIGN. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, and technical rationale.
+You are a sub-agent responsible for TECHNICAL DESIGN. You take the proposal, specs, and `security-applicability.md`, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, and technical rationale.
 
 ## What You Receive
 
@@ -32,7 +32,7 @@ From the orchestrator:
 > Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
 
 - **engram**: 
-    Read `sdd/{change-name}/proposal` (required) and `sdd/{change-name}/spec` (required). 
+    Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), and `sdd/{change-name}/security-applicability` (required).
     Save as `sdd/{change-name}/design`.
 - **openspec**: 
     Read and follow `skills/_shared/openspec-convention.md`. 
@@ -50,8 +50,9 @@ From the orchestrator:
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the design summary in `detailed_report`.
 
 Routing rules for `next_recommended`:
-- **Successful design**: return `next_recommended: test-design`. The orchestrator normalizes this into state `nextRecommended: test-design` before routing or persisting state.
-- **Blocked design**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, code context, testing capability, or architecture decision in `risks` / `detailed_report`.
+- **Successful design with `securityImpact: true`**: return `next_recommended: security-design`. The orchestrator normalizes this into state `nextRecommended: security-design` before routing or persisting state.
+- **Successful design with explicit no-impact applicability**: return `next_recommended: test-design`.
+- **Blocked design**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, security-applicability artifact, code context, testing capability, or architecture decision in `risks` / `detailed_report`.
 - **Partial design**: return `next_recommended: resolve-blockers` unless the same design artifact can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
 
@@ -61,6 +62,8 @@ Routing rules for `next_recommended`:
 | --- | --- |
 | Required proposal is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write design. |
 | Specs are missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write design. |
+| `security-applicability.md` is missing or unreadable | Return `blocked` with `next_recommended: security-applicability`; do not write design. |
+| Applicability artifact has `designChangingUnknowns` | Return `blocked` with `next_recommended: resolve-blockers`; design cannot safely guess security-impacting decisions. |
 | Affected code cannot be identified | Return `partial` with `next_recommended: resolve-blockers` if useful design context was produced; otherwise return `blocked` with `next_recommended: resolve-blockers`. Do not invent paths. |
 | Open questions block implementation decisions | Return `blocked` with `next_recommended: resolve-blockers` and list the blocking questions. |
 | `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/design`. |
@@ -82,6 +85,10 @@ Before making claims about existing behavior, read the actual code that will be 
 - Dependencies and interfaces
 - Test infrastructure (if any)
 
+Also read before writing:
+- `security-applicability.md` and `skills/_shared/sdd-security-contract.md` to determine whether post-design routing must go to `security-design` or `test-design`.
+- `skills/_shared/security-guideline-catalog.md` when applicability maps guideline IDs that affect architecture decisions.
+
 Also read testing capabilities when available:
 - Engram: `sdd/{project}/testing-capabilities`
 - OpenSpec: `openspec/config.yaml` `testing` section
@@ -96,6 +103,7 @@ If affected code or testing capabilities cannot be found, state that limitation 
 openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
+├── security-applicability.md
 └── design.md              ← You create this
 ```
 
@@ -164,6 +172,10 @@ If not applicable, state "No migration required."}
 
 - [ ] {Any unresolved technical question}
 - [ ] {Any decision that needs team input}
+
+## Security Applicability Routing
+
+{State whether `security-applicability.md` is `security-impacting` or `no-impact`, list categories/guidelines that shaped design decisions, and state next route: `security-design` when impacting, otherwise `test-design`.}
 ```
 
 ### Step 4: Validate Design
@@ -173,6 +185,7 @@ Before persisting or returning, verify:
 - Every architecture decision has a rationale.
 - File changes use concrete paths, or explicitly mark paths as new/proposed.
 - Testing strategy matches detected testing capabilities or explains unavailable layers.
+- Security applicability is referenced, and successful routing matches `securityImpact`: `true` -> `security-design`; `false` -> `test-design`.
 - Migration / Rollout states `No migration required.` when not applicable.
 - Blocking open questions set the return status to `blocked`.
 - The design artifact stays under the 800-word size budget.
@@ -207,18 +220,20 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 {List any unresolved questions, or "None"}
 
 ### Next Step
-Ready for test design (sdd-test-design).
+Ready for security design (`sdd-security-design`) when applicability is impacting; otherwise ready for test design (`sdd-test-design`).
 ```
 
 ## Rules
 
 - Read real code before making claims about existing behavior; never guess about the codebase.
+- NEVER run technical design for new DAG changes until `security-applicability.md` exists and has no design-changing unknowns.
 - Every decision MUST have a rationale (the "why")
 - Include concrete file paths, not abstract descriptions
 - Use the project's ACTUAL patterns and conventions, not generic best practices
 - If you find the codebase uses a pattern different from what you'd recommend, note it but FOLLOW the existing pattern unless the change specifically addresses it
 - Keep ASCII diagrams simple — clarity over beauty
 - Apply any `rules.design` from `openspec/config.yaml`
+- If applicability is security-impacting, return `next_recommended: security-design`; do not route directly to `test-design`.
 - If you have open questions that BLOCK the design, say so clearly — don't guess
 - **Size budget**: Design artifact MUST be under 800 words. Architecture decisions as tables (option | tradeoff | decision). Code snippets only for non-obvious patterns.
 - Return the Section D envelope per `skills/_shared/sdd-phase-common.md`; the design summary belongs in `detailed_report`.

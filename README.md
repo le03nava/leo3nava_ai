@@ -41,13 +41,18 @@ The repository contains a full SDD workflow split into dedicated phase agents an
 - `sdd-explore`
 - `sdd-propose`
 - `sdd-spec`
+- `sdd-security-applicability`
 - `sdd-design`
+- `sdd-security-design` (only when security applicability is impacting)
+- `sdd-test-design`
 - `sdd-tasks`
 - `sdd-apply`
 - `sdd-verify`
 - `sdd-archive`
 
-Shared contracts live under `skills/_shared/` and define persistence, status, language-domain, and executor-boundary rules used by the SDD agents.
+Phase order: `explore? -> propose -> spec -> security-applicability -> design -> security-design? -> test-design -> tasks -> apply -> verify -> archive`.
+
+Shared contracts live under `skills/_shared/` and define persistence, status, security, language-domain, and executor-boundary rules used by the SDD agents.
 
 ## Requirements
 

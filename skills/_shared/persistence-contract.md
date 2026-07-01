@@ -85,7 +85,9 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Exploration | `sdd/{change-name}/explore` | `openspec/changes/{change-name}/explore.md` | Both | Inline phase result only |
 | Proposal | `sdd/{change-name}/proposal` | `openspec/changes/{change-name}/proposal.md` | Both | Inline phase result only |
 | Spec | `sdd/{change-name}/spec` | `openspec/changes/{change-name}/specs/{domain}/spec.md` | Both | Inline phase result only |
+| Security applicability | `sdd/{change-name}/security-applicability` | `openspec/changes/{change-name}/security-applicability.md` | Both | Inline phase result only |
 | Design | `sdd/{change-name}/design` | `openspec/changes/{change-name}/design.md` | Both | Inline phase result only |
+| Security design | `sdd/{change-name}/security-design` | `openspec/changes/{change-name}/security-design.md` | Both | Inline phase result only |
 | Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
@@ -130,13 +132,15 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | design | test-design | tasks | apply | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
   proposal: []
   specs: []
+  securityApplicability: []
   design: []
+  securityDesign: []
   testDesign: []
   tasks: []
   applyProgress: []
@@ -152,7 +156,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}

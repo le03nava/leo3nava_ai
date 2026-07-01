@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for TEST DESIGN. You take the proposal, specs, and technical design, then produce `test-design.md` that maps scenarios, design risks, and behavior contracts to planned automated, manual, or static checks before task planning begins.
+You are a sub-agent responsible for TEST DESIGN. You take the proposal, specs, technical design, and required `security-design.md`, then produce `test-design.md` that maps scenarios, design risks, security controls, and behavior contracts to planned automated, manual, or static checks before task planning begins.
 
 ## What You Receive
 
@@ -27,13 +27,13 @@ From the orchestrator:
 - Change name
 - Artifact store mode (`engram | openspec | hybrid | none`)
 - Structured status from `skills/_shared/sdd-status-contract.md` when available
-- Artifact refs/paths for proposal, specs, and design
+- Artifact refs/paths for proposal, specs, security applicability, design, and security design when required
 
 ## Execution and Persistence Contract
 
 > Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), and `sdd/{change-name}/design` (required). Save as `sdd/{change-name}/test-design`.
+- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), `sdd/{change-name}/security-applicability` (required), `sdd/{change-name}/design` (required), and `sdd/{change-name}/security-design` when applicability is impacting. Save as `sdd/{change-name}/test-design`.
 - **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Write only `openspec/changes/{change-name}/test-design.md`.
 - **hybrid**: Follow BOTH conventions — persist to Engram as `sdd/{change-name}/test-design` AND write `openspec/changes/{change-name}/test-design.md`. Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
 - **none**: Return SDD artifact content inline only. Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
@@ -54,8 +54,11 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | Required proposal, spec, or design is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write test design. |
+| `security-applicability.md` is missing | Return `blocked` with `next_recommended: security-applicability`; do not write test design. |
+| Applicability is security-impacting and `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write test design. |
 | Specs/design have no behavior or testability impact | Write a no-impact assessment in `test-design.md`; do not treat the artifact as absent. |
 | A mandatory spec scenario or design risk has no planned check and no justified skip | Return `blocked` or fix the draft before persistence. |
+| A mandatory security-design control has no planned check, non-test evidence, or complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; uncovered mandatory security controls cannot proceed to tasks. |
 | `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/test-design`. |
 | `openspec` mode | Write only `openspec/changes/{change-name}/test-design.md`; do not call `mem_save`. |
 | `hybrid` mode | Write OpenSpec test design and persist the Engram artifact. |
@@ -74,6 +77,8 @@ Before writing the artifact, read:
 - Proposal: user intent, scope, non-goals, risks, and success criteria.
 - Specs: requirements and scenarios that need coverage.
 - Design: architecture decisions, data flow, file changes, contracts, and testing strategy.
+- Security applicability: impact/no-impact classification and required security-design routing.
+- Security design: required controls, mandatory evidence, residual risks, and approved exceptions when applicability is security-impacting.
 - Testing capabilities when available:
   - Engram: `sdd/{project}/testing-capabilities`
   - OpenSpec: `openspec/config.yaml` `testing` section
@@ -85,6 +90,7 @@ Before writing the artifact, read:
 Collect planned checks from:
 - Spec scenarios and RFC 2119 requirements.
 - Design risks, compatibility decisions, routing/state/persistence contracts, migrations, and rollout notes.
+- Security-design controls, mandatory evidence expectations, carried risks, and archive-gate notes.
 - Testing capability constraints such as unavailable runners, missing coverage tooling, or static-only repositories.
 
 If there is no behavior or testability impact, write a concise no-impact assessment instead of inventing checks.
@@ -97,7 +103,9 @@ If there is no behavior or testability impact, write a concise no-impact assessm
 openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
+├── security-applicability.md
 ├── design.md
+├── security-design.md      ← Required only for security-impacting changes
 └── test-design.md          ← You create this
 ```
 
@@ -118,13 +126,21 @@ openspec/changes/{change-name}/
 | --- | --- | --- |
 | Proposal | {path-or-topic} | {scope/intent summary} |
 | Spec | {path-or-topic} | {requirements/scenarios summary} |
+| Security Applicability | {path-or-topic} | {security impact/no-impact routing} |
 | Design | {path-or-topic} | {architecture/risk summary} |
+| Security Design | {path-or-topic or "not required"} | {controls/evidence obligations when required} |
 
 ## Test Cases
 
 | ID | Source | Check | Type | Severity | Expected Evidence | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | TD-001 | Spec: {requirement/scenario} | {planned check} | automated/manual/static | mandatory/non-mandatory | {command, artifact, file-contract check, or manual evidence} | {constraints/dependencies} |
+
+## Security Control Coverage
+
+| Guideline ID | Required Control | Mandatory | Planned Check or Evidence | Status | Exception |
+| --- | --- | --- | --- | --- | --- |
+| `SEC-...` | {control from security-design.md} | Yes/No | {test case ID, manual/static evidence, or complete exception} | covered/blocked/not-applicable | {None or complete approved exception} |
 
 ## No-Impact Assessment
 
@@ -147,6 +163,8 @@ Valid `Severity` values: `mandatory`, `non-mandatory`.
 
 Before persisting or returning, verify:
 - Every behavior-impacting spec scenario or design risk has a linked test case, or a justified omission.
+- When security applicability is impacting, `security-design.md` is present and every mandatory security control has a planned check, justified non-test evidence, or complete approved exception.
+- Uncovered mandatory security evidence is a blocker; do not persist a successful `test-design.md` that leaves mandatory controls uncovered.
 - Each test case has `ID`, `Source`, `Check`, `Type`, `Severity`, `Expected Evidence`, and `Notes`.
 - `Type` is one of `automated`, `manual`, or `static`.
 - `Severity` is one of `mandatory` or `non-mandatory`.
@@ -178,6 +196,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 
 ### Summary
 - **Inputs**: Proposal, specs, and design read.
+- **Security Inputs**: Security applicability read; security design consumed when required.
 - **Cases Planned**: {N mandatory, M non-mandatory; automated/manual/static counts}
 - **No-Impact Assessment**: {present/not applicable}
 - **Testing Constraints**: {detected runner/static/manual constraints}
@@ -192,6 +211,8 @@ Ready for tasks (sdd-tasks).
 ## Rules
 
 - ALWAYS read proposal, specs, and design before writing test design.
+- ALWAYS read security applicability before writing test design.
+- If security applicability is impacting, ALWAYS read `security-design.md` and cover each mandatory control before returning success.
 - DO NOT implement tests or code; this phase plans evidence only.
 - DO NOT skip the artifact for no-impact changes; document the no-impact assessment.
 - Prefer scenario-linked, evidence-focused checks over broad testing wishes.

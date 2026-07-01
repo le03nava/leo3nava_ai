@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the proposal, specs, design, and test design, then produce a `tasks.md` with concrete, actionable implementation steps organized by phase.
+You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the proposal, specs, design, required security design, and test design, then produce a `tasks.md` with concrete, actionable implementation steps organized by phase.
 
 ## What You Receive
 
@@ -35,7 +35,7 @@ From the orchestrator:
 
 > Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), `sdd/{change-name}/design` (required), and `sdd/{change-name}/test-design` (required). Save as `sdd/{change-name}/tasks`.
+- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), `sdd/{change-name}/security-applicability` (required), `sdd/{change-name}/design` (required), `sdd/{change-name}/security-design` when applicability is impacting, and `sdd/{change-name}/test-design` (required). Save as `sdd/{change-name}/tasks`.
 - **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Write only `openspec/changes/{change-name}/tasks.md`.
 - **hybrid**: Follow BOTH conventions — persist to Engram as `sdd/{change-name}/tasks` AND write `openspec/changes/{change-name}/tasks.md`. Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
 - **none**: Return SDD artifact content inline only. Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
@@ -48,7 +48,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 Routing rules for `next_recommended`:
 - **Successful tasks with no blocking workload decision**: return `next_recommended: apply`. The orchestrator normalizes this into state `nextRecommended: apply` before routing or persisting state.
 - **Tasks created but workload decision is required**: return `next_recommended: apply`, include `Decision needed before apply: Yes`, and leave the blocker for the orchestrator's Review Workload Guard. Do not ask the user directly.
-- **Blocked tasks**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, design, test-design artifact, testing capability, or task validation issue in `risks` / `detailed_report`.
+- **Blocked tasks**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, security-applicability, required security-design, test-design artifact, testing capability, or task validation issue in `risks` / `detailed_report`.
 - **Partial persistence failure**: return `next_recommended: resolve-blockers` unless the same artifact can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
 
@@ -57,6 +57,9 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | Required proposal, spec, design, or test-design is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write tasks. |
+| `security-applicability.md` is missing | Return `blocked` with `next_recommended: security-applicability`; do not write tasks. |
+| Applicability is security-impacting and `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write tasks. |
+| Mandatory security control evidence from `security-design.md` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
 | `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/tasks`. |
 | `openspec` mode | Write only `openspec/changes/{change-name}/tasks.md`; do not call `mem_save`. |
 | `hybrid` mode | Write OpenSpec tasks and persist the Engram artifact. |
@@ -83,6 +86,11 @@ From `test-design.md`, identify:
 - Non-mandatory cases that should become advisory evidence tasks when feasible
 - Expected evidence that `sdd-apply` and `sdd-verify` will later consume
 
+From `security-applicability.md` and required `security-design.md`, identify:
+- Whether security design is required or explicitly not required.
+- Mandatory guideline controls, expected evidence owners, residual risks, and complete approved exceptions.
+- Implementation, apply-evidence, verification, or archive-evidence tasks needed to satisfy mandatory controls.
+
 Also read testing capabilities when available:
 - Engram: `sdd/{project}/testing-capabilities`
 - OpenSpec: `openspec/config.yaml` `testing` section
@@ -99,7 +107,9 @@ Use testing capabilities to decide whether test-first RED/GREEN/REFACTOR tasks a
 openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
+├── security-applicability.md
 ├── design.md
+├── security-design.md      ← Required only for security-impacting changes
 ├── test-design.md
 └── tasks.md               ← You create this
 ```
@@ -246,7 +256,9 @@ Before persisting or returning, verify:
 - Every task is specific, actionable, verifiable, and small enough for one session.
 - Tasks are ordered by dependency.
 - Testing/evidence tasks reference specific planned cases from `test-design.md` and scenarios from the specs.
+- Security evidence tasks reference guideline IDs and controls from `security-design.md` when required.
 - Every mandatory planned case in `test-design.md` is represented by implementation, testing, or evidence work; omitted mandatory cases are blockers.
+- Every mandatory applicable security guideline has implementation, test-design, apply, verify, archive evidence, or a complete approved exception represented in tasks.
 - The Review Workload Forecast includes the required plain-text guard lines.
 - If `Review budget risk` or `400-line budget risk` is `High`, Suggested Work Units are present.
 - If `feature-branch-chain` is selected, work units name the intended base boundaries.
@@ -305,7 +317,9 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 - ALWAYS reference concrete file paths in tasks
 - Tasks MUST be ordered by dependency — Phase 1 tasks shouldn't depend on Phase 2
 - Testing/evidence tasks should reference planned case IDs from `test-design.md` plus specific scenarios from the specs
+- Security evidence tasks should reference guideline IDs from `security-design.md` plus planned case IDs from `test-design.md`
 - Mandatory `test-design.md` cases MUST NOT be omitted. If they cannot be represented in implementation tasks, return `blocked` and name the missing cases.
+- Mandatory security controls MUST NOT be omitted. Missing mandatory evidence without a complete approved exception blocks task creation.
 - Each task should be completable in ONE session (if a task feels too big, split it)
 - Use hierarchical numbering: 1.1, 1.2, 2.1, 2.2, etc.
 - NEVER include vague tasks like "implement feature" or "add tests"
