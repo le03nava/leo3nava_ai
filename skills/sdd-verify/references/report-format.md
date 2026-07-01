@@ -47,6 +47,15 @@ Mandatory planned cases from `test-design.md` are verification-blocking: uncover
 
 **Compliance summary**: {N}/{total} scenarios compliant
 
+### Security Evidence Matrix
+| Control / Guideline | Expected Evidence | Observed Evidence | Result |
+|---------------------|-------------------|-------------------|--------|
+| `{guideline-id or control}` | {design-control / implementation-reference / test-design-check / verification-evidence / approved-exception} | {file, command, report row, or complete exception} | ✅ COMPLIANT |
+| `{mandatory guideline}` | {required evidence} | (none found) | ❌ UNTESTED |
+| `{guideline with exception}` | approved-exception | {approver, approvedAt, rationale, mitigation/follow-up, evidenceGap} | ✅ COMPLIANT |
+
+**Security evidence summary**: {N}/{mandatory_total} mandatory security controls covered; {M} complete approved exceptions; {K} blockers.
+
 ### Test-Design Coverage Matrix
 | Case ID | Source | Severity | Expected Evidence | Observed Evidence | Result |
 |---------|--------|----------|-------------------|-------------------|--------|
