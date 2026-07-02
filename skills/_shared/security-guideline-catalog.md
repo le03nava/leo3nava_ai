@@ -287,3 +287,19 @@ Security design should turn each applicable guideline into one or more evidence 
 - `approved-exception`: explicit risk acceptance when mandatory evidence cannot be produced.
 
 Mandatory applicable guidelines block archive unless evidence is complete or an approved exception follows `skills/_shared/sdd-security-contract.md`.
+
+## Review-Phase Cross-Reference Guidance
+
+`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Security applicability and security design remain authoritative for taxonomy applicability, mandatory controls, expected evidence, and approved exceptions.
+
+Review-safe evidence types for security-related review rows:
+
+| Evidence Type | Review Use | Boundary |
+| --- | --- | --- |
+| `implementation-reference` | Cite a changed file, function, prompt, configuration entry, or artifact section inspected during review. | Does not replace a required security-design implementation reference when security applicability is impacting. |
+| `static-inspection` | Cite static/manual inspection evidence, including line references or artifact sections. | Does not prove runtime security behavior unless the approved test design allows manual/static evidence. |
+| `test-evidence` | Cite a configured command result, verify evidence, or planned test-design check when available. | Must not invent commands; unavailable runners remain explicit warnings/blockers according to phase rules. |
+| `approved-exception` | Cite a complete exception already owned by security design or downstream governance. | Review cannot create or approve mandatory security exceptions. |
+| `n/a-evidence` | Prove a platform, framework, API, data class, artifact, or workflow is irrelevant to the reviewed change. | Must include an evidence location and a comment explaining why no security-design control is required. |
+
+When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `security-applicability.md` or `security-design.md`, downstream phases must resolve the conflict in favor of the security applicability/design outputs and report the review row as a finding rather than treating it as new authority.

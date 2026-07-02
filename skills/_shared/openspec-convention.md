@@ -26,6 +26,7 @@ openspec/
         ├── security-design.md <- from sdd-security-design when required
         ├── test-design.md   <- from sdd-test-design
         ├── tasks.md         <- from sdd-tasks (updated by sdd-apply)
+        ├── review-report.md <- from sdd-review
         └── verify-report.md <- from sdd-verify
 ```
 
@@ -44,9 +45,10 @@ openspec/
 | sdd-test-design | Creates | `openspec/changes/{change-name}/test-design.md` |
 | sdd-tasks | Creates | `openspec/changes/{change-name}/tasks.md` |
 | sdd-apply | Updates | `openspec/changes/{change-name}/tasks.md` (marks `[x]`) |
+| sdd-review | Creates | `openspec/changes/{change-name}/review-report.md` |
 | sdd-verify | Creates | `openspec/changes/{change-name}/verify-report.md` |
 | sdd-archive | Moves | `openspec/changes/{change-name}/` → `openspec/changes/archive/YYYY-MM-DD-{change-name}/` |
-| sdd-archive | Updates | `openspec/specs/{domain}/spec.md` (merges deltas into main specs) |
+| sdd-archive | Updates | `openspec/specs/{domain}/spec.md` (merges deltas into main specs, including review workflow deltas such as `sdd-review-workflow`, `sdd-execution-persistence-contracts`, and `sdd-security-guideline-catalog`) |
 
 ## Reading Artifacts
 
@@ -58,6 +60,7 @@ Design:     openspec/changes/{change-name}/design.md
 Security design: openspec/changes/{change-name}/security-design.md (required only for security-impacting changes)
 Test design: openspec/changes/{change-name}/test-design.md
 Tasks:      openspec/changes/{change-name}/tasks.md
+Review:     openspec/changes/{change-name}/review-report.md
 Verify:     openspec/changes/{change-name}/verify-report.md
 Config:     openspec/config.yaml
 Main specs: openspec/specs/{domain}/spec.md
@@ -132,4 +135,6 @@ openspec/changes/archive/YYYY-MM-DD-{change-name}/
 
 Use today's date in ISO format. The archive is an AUDIT TRAIL — never delete or modify archived changes.
 
-Archived change folders preserve every produced phase artifact, including `security-applicability.md`, required `security-design.md`, and `test-design.md` when the change includes those mandatory phases. Partial archives that omit `test-design.md` or required security evidence must document the explicit exception in the archive report.
+Archived change folders preserve every produced phase artifact, including `security-applicability.md`, required `security-design.md`, `test-design.md`, and `review-report.md` when the change includes those mandatory phases. Partial archives that omit `test-design.md`, `review-report.md`, or required security evidence must document the explicit exception in the archive report.
+
+Archive sync keeps active-change delta specs as the source for main spec updates. For review-phase changes, expected main-spec targets include `openspec/specs/sdd-review-workflow/spec.md`, `openspec/specs/sdd-execution-persistence-contracts/spec.md`, and `openspec/specs/sdd-security-guideline-catalog/spec.md` when matching deltas exist under `openspec/changes/{change-name}/specs/`.

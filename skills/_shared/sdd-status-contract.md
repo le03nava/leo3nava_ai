@@ -24,7 +24,7 @@ Commands that select, continue, apply, verify, or archive an SDD change MUST fir
 
 ## Routing Token Mapping
 
-Native status uses bounded tokens: `propose`, `spec`, `security-applicability`, `design`, `security-design`, `test-design`, `tasks`, `apply`, `verify`, `archive`, `sdd-new`, `select-change`, `resolve-blockers`, and `none`.
+Native status uses bounded tokens: `propose`, `spec`, `security-applicability`, `design`, `security-design`, `test-design`, `tasks`, `apply`, `review`, `verify`, `archive`, `sdd-new`, `select-change`, `resolve-blockers`, and `none`.
 
 When launching phase agents, normalize through this mapping:
 
@@ -38,6 +38,7 @@ When launching phase agents, normalize through this mapping:
 | `test-design` | `sdd-test-design` |
 | `tasks` | `sdd-tasks` |
 | `apply` | `sdd-apply` |
+| `review` | `sdd-review` |
 | `verify` | `sdd-verify` |
 | `archive` | `sdd-archive` |
 | `sdd-new` | orchestrator workflow |
@@ -86,6 +87,7 @@ artifactRefs:
   testDesign: [<topic keys, file paths, or inline refs>]
   tasks: [<topic keys, file paths, or inline refs>]
   applyProgress: [<topic keys, file paths, or inline refs>]
+  reviewReport: [<topic keys, file paths, or inline refs>]
   verifyReport: [<topic keys, file paths, or inline refs>]
   state: [<topic keys, file paths, or inline refs>]
 artifactPaths:
@@ -98,6 +100,7 @@ artifactPaths:
   testDesign: [<absolute path>]
   tasks: [<absolute path>]
   applyProgress: [<absolute path>]
+  reviewReport: [<absolute path>]
   verifyReport: [<absolute path>]
   state: [<absolute path>]
 contextFiles:
@@ -110,6 +113,7 @@ contextFiles:
   testDesign: [<absolute readable files>]
   tasks: [<absolute readable files>]
   applyProgress: [<absolute readable files>]
+  reviewReport: [<absolute readable files>]
   verifyReport: [<absolute readable files>]
   state: [<absolute readable files>]
 artifacts:
@@ -122,6 +126,7 @@ artifacts:
   testDesign: missing | done | partial
   tasks: missing | done | partial
   applyProgress: missing | done | partial
+  reviewReport: missing | done | partial
   verifyReport: missing | done | partial
   state: missing | done | partial
 taskProgress:
@@ -138,6 +143,7 @@ dependencies:
   testDesign: blocked | ready | all_done
   tasks: blocked | ready | all_done
   apply: blocked | ready | all_done
+  review: blocked | ready | all_done
   verify: blocked | ready | all_done
   archive: blocked | ready | all_done
 applyState: blocked | all_done | ready
@@ -153,9 +159,10 @@ relationships:
   sameDomainActiveChanges: []
 phaseInstructions:
   apply: [<instruction strings>]
+  review: [<instruction strings>]
   verify: [<instruction strings>]
   archive: [<instruction strings>]
-nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | review | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons: []
 ```
 
@@ -185,8 +192,19 @@ Native status JSON is authoritative when available. If native currently emits on
 - `testDesign` is `ready` only when proposal, specs, design, and any required security design are available; it is `all_done` when the `test-design` artifact exists and is readable.
 - `tasks` is `ready` only when specs, design, required security design, and test design are available. Missing `testDesign` blocks task planning.
 - `apply` is `ready` only when specs, design, required security design, test design, and tasks are available and task progress is not all done.
-- `verify` is `ready` when tasks exist, test design is available, required security design evidence is available, and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full verification.
-- `archive` is `ready` only when verify-report exists, is clearly passing, tasks are complete, mandatory artifacts including test design are available, and mandatory applicable security evidence is complete or covered by approved exceptions. A clearly passing report needs an explicit PASS/SUCCESS signal and no blocker or negation signals such as FAIL, FAILURE, BLOCKED, CRITICAL, PENDING, TODO, verification blockers, `not passed`, or `pass: no`. CRITICAL verification issues have no override. Explicit recorded exceptions are limited to complete approved security exceptions, non-critical partial archives, or stale-checkbox reconciliation when apply-progress/verify-report prove completion.
+- `review` is `ready` when tasks exist, test design is available, required security design evidence is available, and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full review.
+- `verify` is `ready` when tasks exist, test design is available, required security design evidence is available, all intended implementation work is complete, and `reviewReport` exists with a non-blocking verdict. Missing or blocking review evidence blocks full verification.
+- `archive` is `ready` only when review-report exists with a non-blocking verdict, verify-report exists and is clearly passing, tasks are complete, mandatory artifacts including test design are available, and mandatory applicable security evidence is complete or covered by approved exceptions. A clearly passing report needs an explicit PASS/SUCCESS signal and no blocker or negation signals such as FAIL, FAILURE, BLOCKED, CRITICAL, PENDING, TODO, verification blockers, `not passed`, or `pass: no`. CRITICAL verification issues have no override. Explicit recorded exceptions are limited to complete approved security exceptions, non-critical partial archives, or stale-checkbox reconciliation when apply-progress/verify-report prove completion.
+
+## Phase Routing Order
+
+The implementation DAG is `apply -> review -> verify -> archive`.
+
+- Completed apply work MUST recommend `review`, not direct `verify`.
+- Non-blocking review evidence MUST recommend `verify`.
+- Blocking review findings MUST recommend `apply` and identify failed controls plus affected requirements.
+- Missing review inputs, unknown changed-file context, unsafe workspace context, or review-report persistence failure MUST recommend `resolve-blockers`.
+- Archive readiness MUST require both non-blocking review evidence and a passing verify report.
 
 ## Action Context Guard
 

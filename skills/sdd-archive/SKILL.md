@@ -37,16 +37,16 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, `security-applicability`, design, required `security-design`, `test-design`, tasks, and `verify-report` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Required inputs | Proposal, specs, `security-applicability`, design, required `security-design`, `test-design`, tasks, non-blocking `review-report.md` / `sdd/{change-name}/review`, and passing `verify-report` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
 | Produced artifact | Archive report as `sdd/{change-name}/archive-report`; in OpenSpec, the archive audit-trail reference is `openspec/changes/archive/YYYY-MM-DD-{change-name}/`. |
 | Mutates | OpenSpec/hybrid source specs under `openspec/specs/{domain}/spec.md`; OpenSpec/hybrid change folder location from active change to dated archive; Engram/hybrid archive report lineage. |
 | Spec sync semantics | Merge delta specs before moving the change folder. Preserve unrelated requirements; create missing main specs from full new specs; require explicit reason/migration for removals and explicit old/new names for renames. |
 | Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
-| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, verify verdict, security applicability/design evidence or no-impact source, archive destination, warnings, and any approved reconciliation. |
+| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, review verdict/blocking state, verify verdict, security applicability/design evidence or no-impact source, archive destination, warnings, and any approved reconciliation. |
 | Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
 | Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
-| Block routing | `next_recommended: verify`, `apply`, `security-design`, or `resolve-blockers` according to missing verify evidence, unchecked tasks, required security design, unsafe context, destructive merge, destination conflict, or persistence failure. |
+| Block routing | `next_recommended: review`, `verify`, `apply`, `security-design`, or `resolve-blockers` according to missing/blocking review evidence, missing verify evidence, unchecked tasks, required security design, unsafe context, destructive merge, destination conflict, or persistence failure. |
 
 ## Output Contract
 
@@ -55,6 +55,8 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 ## Routing Contract
 
 - Successful archive -> return `next_recommended: none`.
+- Missing `review-report` or unreadable/ambiguous review evidence -> return `next_recommended: review`.
+- Blocking `review-report` findings -> return `next_recommended: apply`.
 - Missing or non-passing `verify-report` -> return `next_recommended: verify`.
 - Persisted tasks contain unchecked implementation tasks without approved stale-checkbox reconciliation -> return `next_recommended: apply`.
 - Missing proposal/spec/design/test-design without explicit partial-archive approval -> return `next_recommended: resolve-blockers`.
@@ -85,7 +87,7 @@ The archived audit trail MUST NOT contain stale unchecked tasks for completed wo
 OpenSpec permits archiving with incomplete artifacts or tasks after a user confirmation. gentle-ai is stricter by default:
 
 - Incomplete implementation tasks block archive unless they are stale checkboxes and apply-progress/verify-report prove completion.
-- CRITICAL issues in `verify-report` always block archive. Do not accept an override for CRITICAL verification issues.
+- Blocking findings in `review-report` and CRITICAL issues in `verify-report` always block archive. Do not accept an override for blocking review findings or CRITICAL verification issues.
 - Missing mandatory security evidence blocks archive unless every gap has a complete approved exception with approver, guideline ID, accepted-risk rationale, and mitigation or follow-up.
 - `sdd-archive` does not own normal task completion. `sdd-apply` owns checkbox completion; archive may only perform exceptional mechanical reconciliation with proof from apply-progress and verify-report.
 - Missing proposal/spec/design/test-design artifacts should be reported. Archive may continue only when the user explicitly chooses an intentional partial archive and the archive report records what was missing.
@@ -99,6 +101,8 @@ OpenSpec permits archiving with incomplete artifacts or tasks after a user confi
 
 | Condition | Action |
 |---|---|
+| `review-report` is missing, unreadable, or ambiguous | Return `blocked` with `next_recommended: review`; archive readiness cannot be proven. |
+| `review-report` contains blocking findings, CRITICAL review failures, or a blocking verdict | Return `blocked` with `next_recommended: apply`; do not archive. |
 | `verify-report` is missing | Return `blocked` with `next_recommended: verify`; archive readiness cannot be proven. |
 | `verify-report` contains CRITICAL issues or verdict `FAIL` | Return `blocked` with `next_recommended: apply`; do not accept an override. |
 | Persisted tasks contain unchecked implementation tasks | Return `blocked` with `next_recommended: apply` unless explicitly approved stale-checkbox reconciliation is backed by apply-progress and verify-report proof. |
@@ -183,6 +187,7 @@ If the destination already exists, STOP and return `blocked` with the existing d
 - [ ] Change folder moved to archive
 - [ ] Archive contains all artifacts (proposal, specs, design, test-design, tasks)
 - [ ] Archive contains security-applicability and required security-design artifacts
+- [ ] Archive contains `review-report.md` / review artifact with a non-blocking verdict
 - [ ] Missing `test-design.md` is blocked unless an explicit partial archive exception is provided and recorded in the archive report
 - [ ] Mandatory applicable security evidence is verified or covered by complete approved exceptions recorded in the audit trail
 - [ ] Archived `tasks.md` has no unchecked implementation tasks, unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof
@@ -201,9 +206,11 @@ Before persistence, validate the archive report includes:
 - Change name and artifact store mode
 - Observation IDs for Engram artifacts, or concrete OpenSpec paths for filesystem artifacts
 - `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
+- `review-report` artifact ref/path and confirmation that review verdict is non-blocking
 - `security-applicability` artifact ref/path and required `security-design` artifact ref/path, or explicit no-impact evidence when security design is not required
 - Mandatory security evidence status and complete approved exception details for any accepted gaps
 - Task completion status and any stale-checkbox reconciliation proof
+- Review verdict and confirmation that no blocking review findings were archived
 - Verification verdict and confirmation that no CRITICAL issues were archived
 - Specs synced by domain with created/updated/removed/renamed counts
 - Archive destination or inline-only closure reason
@@ -237,6 +244,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - security-applicability.md ✅
 - security-design.md ✅ / not required with no-impact evidence
 - test-design.md ✅
+- review-report.md ✅ (non-blocking)
 - tasks.md ✅ ({N}/{N} tasks complete)
 
 ### Source of Truth Updated
@@ -250,7 +258,7 @@ Ready for the next change.
 
 ## Rules
 
-- NEVER archive a change that has CRITICAL issues in its verification report
+- NEVER archive a change that has blocking review findings or CRITICAL issues in its verification report
 - NEVER archive missing mandatory security evidence unless every missing item has a complete approved exception in the audit trail
 - If the user explicitly approves a non-critical partial archive or stale-checkbox reconciliation, record the exact reason in the archive report and mark the archive as intentional-with-warnings
 - NEVER archive completed work while `tasks.md` / the tasks observation still shows stale unchecked implementation tasks

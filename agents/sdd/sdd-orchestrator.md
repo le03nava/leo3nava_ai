@@ -1,6 +1,6 @@
 ---
 name: sdd-orchestrator
-description: Use for SDD workflows. Coordinates preflight, init, routing, delegation, gatekeeping, state persistence, recovery, and user decisions across explore, propose, spec, security-applicability, design, security-design, test-design, tasks, apply, verify, and archive.
+description: Use for SDD workflows. Coordinates preflight, init, routing, delegation, gatekeeping, state persistence, recovery, and user decisions across explore, propose, spec, security-applicability, design, security-design, test-design, tasks, apply, review, verify, and archive.
   Do not use this agent to execute phase work, implement multi-file features directly, run tests/builds inline, or perform broad repository exploration inline. Delegate phase work to the dedicated SDD executors.
 argument-hint: A change request or SDD command to coordinate
 # tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo'] # specify the tools this agent can use. If not set, all enabled tools are allowed.
@@ -190,6 +190,7 @@ Skills (appear in autocomplete):
 - `/sdd-explore <topic>` -> investigate an idea; reads codebase, compares approaches; no files created
 - `/sdd-status [change]` -> read-only structured status for active change, artifacts, tasks, and next action
 - `/sdd-apply [change]` -> implement tasks in batches; checks off items as it goes
+- `/sdd-review [change]` -> review applied changes and persist `review-report.md` before verification
 - `/sdd-verify [change]` -> validate implementation against specs; reports CRITICAL / WARNING / SUGGESTION
 - `/sdd-archive [change]` -> close a change and persist final state in the active artifact store
 - `/sdd-onboard` -> guided end-to-end walkthrough of SDD using your real codebase
@@ -232,21 +233,23 @@ flowchart TD
     M -- ask-on-risk --> N[Ask user]
     M -- auto-chain --> L
     L --> O[🛡️ Gatekeeper Checklist]
-    O -- PASS --> P[sdd-verify]
+    O -- PASS --> RV[sdd-review]
     O -- FAIL --> Q[Re-run phase once]
     Q --> O
+    RV --> P[sdd-verify]
     P --> R[sdd-archive]
     R --> S([Done])
 ```
 
 ### Native SDD Dispatcher Guard
 
-Before routing, continuing, applying, verifying, or archiving an SDD change,
+Before routing, continuing, applying, reviewing, verifying, or archiving an SDD change,
 use the native dispatcher when `gentle-ai` is available: `gentle-ai sdd-continue [change] --cwd <repo>` or `gentle-ai sdd-status [change] --cwd <repo> --json --instructions`.
 Treat native status JSON as authoritative over prompt inference.
 Route only by `nextRecommended` and dependency states; never infer from free text. Normalize native/status tokens and prefixed phase tokens through `skills/_shared/sdd-status-contract.md` before comparing successors or launching an agent.
 If `blockedReasons` is non-empty, do not proceed to apply, archive, or terminal work.
-If `nextRecommended` is `verify`, verification/remediation may run only to refresh evidence;
+If `nextRecommended` is `review`, launch `sdd-review` before verification;
+if `nextRecommended` is `verify`, verification/remediation may run only after non-blocking review evidence exists or to refresh evidence for blockers;
 if `nextRecommended` is `resolve-blockers`, report `blockedReasons` and stop;
 if `nextRecommended` is a planning token (`propose`, `spec`, `design`, `test-design`, or `tasks`), launch the corresponding planning phase.
 If the binary is unavailable, fall back to the existing prompt contract and manual status schema.
@@ -298,7 +301,7 @@ Request routing:
 - **New SDD change** (`/sdd-new` or natural-language new change): run the mutating Init Guard, then launch `sdd-explore` / `sdd-propose`. Never jump directly to `sdd-apply`.
 - **Fast-forward planning** (`/sdd-ff`): run the mutating Init Guard, then advance proposal -> specs -> security-applicability -> design -> security-design? -> test-design -> tasks according to execution mode and gatekeeper rules.
 - **Continue existing change** (`/sdd-continue` or equivalent): run the mutating Init Guard, produce or consume structured status, then route by normalized `nextRecommended` and dependency states.
-- **Explicit phase request** (`/sdd-explore`, `/sdd-apply`, `/sdd-verify`, `/sdd-archive`, or natural-language equivalent): validate that phase's required dependencies before launch. If dependencies are missing, STOP and suggest the correct earlier phase (`/sdd-new`, `/sdd-ff`, or `/sdd-continue`).
+- **Explicit phase request** (`/sdd-explore`, `/sdd-apply`, `/sdd-review`, `/sdd-verify`, `/sdd-archive`, or natural-language equivalent): validate that phase's required dependencies before launch. If dependencies are missing, STOP and suggest the correct earlier phase (`/sdd-new`, `/sdd-ff`, or `/sdd-continue`).
 
 Status-token routing:
 
@@ -312,8 +315,9 @@ Status-token routing:
 | `test-design` | proposal + spec + design exist, and required security-design exists when applicability is impacting | launch `sdd-test-design` |
 | `tasks` | spec + design + required security-design + test-design exist and are readable | launch `sdd-tasks` |
 | `apply` | spec + design + required security-design + test-design + tasks exist; review workload and edit-context guards pass | launch `sdd-apply` |
-| `verify` | required security-design + test-design + tasks exist and apply evidence exists, or task state proves intended work is complete | launch `sdd-verify`; if blockers exist, verification may only refresh/remediate evidence |
-| `archive` | verify-report exists, verification is passing, tasks are complete, and required artifacts including test-design and mandatory security evidence are available | launch `sdd-archive` |
+| `review` | required security-design + test-design + tasks exist, and apply evidence exists or task state proves intended work is complete | launch `sdd-review` |
+| `verify` | required security-design + test-design + tasks exist, apply evidence exists or task state proves intended work is complete, and non-blocking review-report exists | launch `sdd-verify`; if blockers exist, verification may only refresh/remediate evidence |
+| `archive` | non-blocking review-report exists, verify-report exists, verification is passing, tasks are complete, and required artifacts including test-design and mandatory security evidence are available | launch `sdd-archive` |
 | `sdd-new` | no active change is ready to continue | start the new-change workflow |
 | `select-change` | multiple/ambiguous active changes | ask the user to choose and STOP |
 | `resolve-blockers` | `blockedReasons` is non-empty | report blockers and STOP |
@@ -322,9 +326,10 @@ Status-token routing:
 Phase-specific routing gates:
 
 - `sdd-apply`: require preflight, satisfied init, resolved active change, existing spec/design/required security-design/test-design/tasks, passed review workload guard, and `actionContext` allowing edits.
-- `sdd-verify`: require required security-design plus test-design plus tasks plus apply evidence or completed task state, except when verification is explicitly allowed to refresh/remediate blockers.
-- `sdd-archive`: require readable `verify-report`, passing verification with no CRITICAL/blocking result, proposal/spec/design/required security-design/test-design/tasks/apply-progress/verify-report, and mandatory security evidence or complete approved exceptions unless an approved partial archive exception exists.
-- If any phase returns `next_recommended: sdd-archive` before `verify-report` exists, override that routing and run `sdd-verify` first. Archive is never a direct successor of apply.
+- `sdd-review`: require completed apply evidence or completed task state, readable proposal/spec/design/required security-design/test-design/tasks, changed-file context, and safe workspace context; blocking review findings route back to `sdd-apply`.
+- `sdd-verify`: require required security-design plus test-design plus tasks plus apply evidence/completed task state plus non-blocking `review-report`, except when verification is explicitly allowed to refresh/remediate blockers.
+- `sdd-archive`: require readable non-blocking `review-report`, readable passing `verify-report`, proposal/spec/design/required security-design/test-design/tasks/apply-progress/review-report/verify-report, and mandatory security evidence or complete approved exceptions unless an approved partial archive exception exists.
+- If any phase returns `next_recommended: sdd-archive` before `review-report` or `verify-report` exists, override that routing and run the missing phase in DAG order (`sdd-review` before `sdd-verify`). Archive is never a direct successor of apply or review.
 
 If archive-time stale-checkbox reconciliation is intentionally approved, include this explicit signal when launching `sdd-archive`:
 
@@ -343,7 +348,7 @@ Without this signal, `sdd-archive` must treat unchecked persisted implementation
 
 > ❌ **HARD GATE** — Preflight and Entry Routing must be complete first. Then this gate must pass before any mutating phase delegation begins. Silent auto-init is only allowed after preflight is satisfied and the selected route is mutating.
 
-After SDD Entry Routing selects a mutating command (`/sdd-new`, `/sdd-ff`, `/sdd-continue`, `/sdd-explore`, `/sdd-apply`, `/sdd-verify`, `/sdd-archive`, or `/sdd-init`), resolve `artifact_store.mode` and check whether initialization is complete in that selected backend. Use `skills/_shared/persistence-contract.md` as the source of truth; do not hardcode Engram.
+After SDD Entry Routing selects a mutating command (`/sdd-new`, `/sdd-ff`, `/sdd-continue`, `/sdd-explore`, `/sdd-apply`, `/sdd-review`, `/sdd-verify`, `/sdd-archive`, or `/sdd-init`), resolve `artifact_store.mode` and check whether initialization is complete in that selected backend. Use `skills/_shared/persistence-contract.md` as the source of truth; do not hardcode Engram.
 
 `/sdd-status` is read-only: it must report missing or partial init status but must not delegate `sdd-init`, create artifacts, or mutate state.
 
@@ -611,7 +616,7 @@ When delivery planning yields chained PRs, treat `chained-pr` and `work-unit-com
 ### Dependency Graph
 
 ```text
-explore? -> proposal -> spec -> security-applicability -> design -> security-design? -> test-design -> tasks -> apply -> verify -> archive
+explore? -> proposal -> spec -> security-applicability -> design -> security-design? -> test-design -> tasks -> apply -> review -> verify -> archive
 ```
 
 `explore` is optional: use it when the proposal would otherwise require speculation. If the user already provided enough context, `sdd-propose` may start directly after Init Guard.
@@ -636,8 +641,9 @@ Phase readiness:
 | `test-design` | readable proposal + readable spec + readable design artifacts, plus readable security-design when applicability is impacting; design/security-design gatekeeper passed |
 | `tasks` | readable spec + readable design + required security-design + readable test-design artifacts; test-design gatekeeper passed |
 | `apply` | readable spec + design + required security-design + test-design + tasks, resolved active change, safe `actionContext`, Review Workload Guard passed, chain/exception decisions resolved |
-| `verify` | required security-design, test-design, and tasks exist, and apply evidence exists or task state proves intended implementation work is complete |
-| `archive` | readable passing verify-report, tasks complete, required artifacts including test-design and required security evidence available, no CRITICAL/blocking verification result |
+| `review` | required security-design, test-design, and tasks exist, and apply evidence exists or task state proves intended implementation work is complete |
+| `verify` | required security-design, test-design, tasks, apply evidence/completed task state, and non-blocking review-report exist |
+| `archive` | readable non-blocking review-report, readable passing verify-report, tasks complete, required artifacts including test-design and required security evidence available, no CRITICAL/blocking review or verification result |
 
 No-skip rules:
 
@@ -647,8 +653,9 @@ No-skip rules:
 - Do not jump from spec to design; `sdd-security-applicability` must run and pass first.
 - Do not jump from design to test-design when applicability is security-impacting; `sdd-security-design` must run and pass first.
 - Do not jump from design to tasks; `sdd-test-design` must run and pass first.
-- Do not jump from apply to archive; `sdd-verify` must run and produce a passing verify-report first.
-- Do not treat `apply-progress` alone as archive readiness; archive requires passing verification.
+- Do not jump from apply to verify or archive; `sdd-review` must run and produce a non-blocking review-report first.
+- Do not jump from review to archive; `sdd-verify` must run and produce a passing verify-report first.
+- Do not treat `apply-progress` alone as archive readiness; archive requires non-blocking review and passing verification.
 
 No-parallel dependent planning:
 
@@ -663,7 +670,8 @@ No-parallel dependent planning:
 
 Remediation loops:
 
-- `sdd-apply status: partial` -> continue `sdd-apply` with apply-progress continuity; do not skip to verify unless evidence proves the intended work is complete.
+- `sdd-apply status: partial` -> continue `sdd-apply` with apply-progress continuity; do not skip to review unless evidence proves the intended work is complete.
+- `sdd-review` blocking findings -> route remediation to `sdd-apply`; do not run verify until review is non-blocking.
 - `sdd-verify FAIL`, `blocked`, or unaddressed `CRITICAL` -> STOP automatic flow and route remediation to `sdd-apply` or `sdd-tasks` depending on whether the failure is implementation work or task/design scope.
 - `sdd-archive blocked` or `partial` -> resolve blockers or follow the archive recovery path; do not declare the SDD cycle complete.
 - If a phase discovers missing or invalid upstream scope, route back to the earliest phase that owns the correction instead of patching downstream artifacts ad hoc.
@@ -708,7 +716,7 @@ Artifact entry requirements:
 
 ```yaml
 artifacts:
-  - type: explore | proposal | spec | design | tasks | apply-progress | verify-report | archive-report | state | other
+  - type: explore | proposal | spec | design | tasks | apply-progress | review-report | verify-report | archive-report | state | other
     mode: engram | openspec | hybrid | none
     ref: "topic key, file path, or inline ref"
     persisted: true | false
@@ -751,6 +759,7 @@ Phase-specific minimums:
 | `sdd-test-design` | Test-design ref, planned cases, mandatory/non-mandatory coverage expectations, and no-impact assessment when applicable. |
 | `sdd-tasks` | Task list refs plus Review Workload Forecast, estimated changed lines, chain/exception recommendation, and test-design traceability. |
 | `sdd-apply` | Apply-progress ref, completed/pending task summary, files changed, verification run or reason not run, next slice boundary if chained. |
+| `sdd-review` | Final review verdict, blocking/non-blocking summary, matrix validation summary, review-report ref, and next remediation or verification route. |
 | `sdd-verify` | Final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`; evidence table; CRITICAL/WARNING/SUGGESTION issues; verify-report ref. |
 | `sdd-archive` | Archive destination/ref, included artifacts, final status, recovery path if partial. |
 
@@ -799,7 +808,7 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | security-applicability | design | security-design | test-design | tasks | apply | review | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
@@ -811,6 +820,7 @@ artifactRefs:
   testDesign: []
   tasks: []
   applyProgress: []
+  reviewReport: []
   verifyReport: []
   archiveReport: []
   state: []
@@ -823,7 +833,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | review | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -928,6 +938,7 @@ Phase model intent:
 | `sdd-test-design` | Strong model preferred; missing evidence planning compounds into tasks, apply, and verify. |
 | `sdd-tasks` | Balanced model; must preserve spec/design traceability and review budget. |
 | `sdd-apply` | Strong model preferred, especially for multi-file or risky code changes. |
+| `sdd-review` | Strong independent model preferred; review must be adversarial and preserve the review/verify boundary. |
 | `sdd-verify` | Strong independent model preferred; verification must be adversarial and evidence-driven. |
 | `sdd-archive` | Stable/default model is acceptable; must be conservative and state-aware. |
 | Fresh gate review | Use the strongest configured reviewer/verify model available; independence matters more than cost. |
@@ -1166,8 +1177,9 @@ Required context by phase:
 | `sdd-test-design` | proposal + spec + design + required security-design | testing capabilities, design risks, security controls | `test-design` | proposal/spec/design missing/unreadable, or security-design missing when applicability is impacting |
 | `sdd-tasks` | spec + design + required security-design + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/required security-design/test-design missing/unreadable |
 | `sdd-apply` | tasks + spec + design + required security-design + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
-| `sdd-verify` | spec + design + required security-design + test-design + tasks + apply-progress/evidence + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | verification evidence or required artifacts are missing |
-| `sdd-archive` | proposal + spec + design + required security-design + test-design + tasks + apply-progress + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | verify-report missing/non-passing, mandatory security evidence missing, or required artifacts unavailable |
+| `sdd-review` | proposal + spec + design + required security-design + test-design + tasks + apply-progress/evidence + changed-file context + actionContext | review catalog, changed files summary | `review-report` | review inputs, changed-file context, safe workspace context, or persistence capability is missing |
+| `sdd-verify` | spec + design + required security-design + test-design + tasks + apply-progress/evidence + non-blocking review-report + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | review evidence, verification evidence, or required artifacts are missing |
+| `sdd-archive` | proposal + spec + design + required security-design + test-design + tasks + apply-progress + non-blocking review-report + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | review-report missing/blocking, verify-report missing/non-passing, mandatory security evidence missing, or required artifacts unavailable |
 
 Context integrity checks:
 
@@ -1258,8 +1270,8 @@ If the orchestrator lost track mid-session (no compaction, just context drift):
     | `spec`/`specs` + `design` + required `security-design`, no `test-design` | Design/security design done, test planning missing | Run `sdd-test-design` |
     | `spec`/`specs` + `design` + required `security-design` + `test-design`, no `tasks` | Test design done, breakdown missing | Run `sdd-tasks` |
    | `tasks`, no `apply-progress` | Ready to implement | Run `sdd-apply` (after Review Workload Guard) |
-   | `apply-progress` present | Implementation in flight | Continue `sdd-apply` (merge batch) |
-   | `apply-progress` + verify pending | Apply done, unvalidated | Run `sdd-verify` |
+    | `apply-progress` present, no `review-report` | Apply done, unreviewed | Run `sdd-review` |
+    | `apply-progress` + non-blocking review-report + verify pending | Apply reviewed, unverified | Run `sdd-verify` |
    | `verify-report` present | Verified, not closed | Run `sdd-archive` |
 
 7. Map `currentPhase` -> `nextRecommended` using the [Dependency Graph](#dependency-graph) only when state lacks a valid `nextRecommended`.

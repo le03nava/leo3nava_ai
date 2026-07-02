@@ -49,10 +49,13 @@ The repository contains a full SDD workflow split into dedicated phase agents an
 - `sdd-test-design`
 - `sdd-tasks`
 - `sdd-apply`
+- `sdd-review`
 - `sdd-verify`
 - `sdd-archive`
 
-Phase order: `explore? -> propose -> spec -> security-applicability -> design -> security-design? -> test-design -> tasks -> apply -> verify -> archive`.
+Phase order: `explore? -> propose -> spec -> security-applicability -> design -> security-design? -> test-design -> tasks -> apply -> review -> verify -> archive`.
+
+The review phase writes `openspec/changes/{change-name}/review-report.md` in OpenSpec mode, or `sdd/{change-name}/review` in Engram/hybrid mode. Verification consumes that non-blocking review evidence without owning the full review matrix, and archive requires both non-blocking review and passing verification.
 
 Shared contracts live under `skills/_shared/` and define persistence, status, security, language-domain, and executor-boundary rules used by the SDD agents.
 

@@ -97,6 +97,7 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
+| Review report | `sdd/{change-name}/review` | `openspec/changes/{change-name}/review-report.md` | Both | Inline phase result only |
 | Verify report | `sdd/{change-name}/verify-report` | `openspec/changes/{change-name}/verify-report.md` | Both | Inline phase result only |
 | Archive report | `sdd/{change-name}/archive-report` | `openspec/changes/archive/YYYY-MM-DD-{change-name}/` | Both | Inline final summary only |
 
@@ -113,6 +114,8 @@ Resolver verification:
 - In `openspec`, read artifacts from the paths in `openspec-convention.md` or the structured status artifact paths. Do not infer alternate paths.
 - In `hybrid`, compare both backends when both refs exist before launching dependent work. Apply the Hybrid Conflict Policy when material content or routing metadata differs.
 - In `none`, report blocked when a required dependency is missing from current context; do not reconstruct artifacts from memory or local guesses.
+- For review evidence, downstream phases MUST resolve exactly one backend identity: Engram/hybrid key `sdd/{change-name}/review` or OpenSpec path `openspec/changes/{change-name}/review-report.md`. Missing, ambiguous, blocking, or unreadable review evidence MUST block verify/archive and route to `resolve-blockers`.
+- The review phase MUST route to `resolve-blockers` when required artifacts, changed-file context, safe workspace context, or review-report persistence evidence are missing.
 
 ## State Persistence (Orchestrator)
 
@@ -145,7 +148,7 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | security-applicability | design | security-design | test-design | tasks | apply | review | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
@@ -157,6 +160,7 @@ artifactRefs:
   testDesign: []
   tasks: []
   applyProgress: []
+  reviewReport: []
   verifyReport: []
   archiveReport: []
   state: []
@@ -169,7 +173,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | security-applicability | design | security-design | test-design | tasks | apply | review | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -210,6 +214,7 @@ Verification rules:
 
 - Do not report `success` for persistent modes if the artifact cannot be read back from the selected backend.
 - For `sdd-apply`, completed work MUST be visible in the selected task/progress artifact before returning success or partial completion.
+- For `sdd-review`, `review-report.md` or `sdd/{change-name}/review` MUST be readable after persistence and MUST state verdict, blocking summary, evidence summary, and next recommendation before downstream phases treat review evidence as present.
 - For `sdd-archive`, archive movement and spec synchronization MUST be verified from the filesystem and/or Engram topic keys selected by mode.
 - If read-back verification fails after a useful artifact or mutation was attempted, return `partial` or `blocked` with the backend, expected reference, observed result, and safest recovery action.
 

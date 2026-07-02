@@ -43,7 +43,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Apply evidence semantics | Record completed tasks, files changed, Standard/Strict TDD mode, test-design coverage or justified deviations, security evidence or no-impact source, issues, remaining tasks, workload/PR boundary, and persisted checkbox verification in `detailed_report` / apply-progress. |
 | Deviation semantics | If implementation cannot follow design or `test-design.md`, record the deviation, rationale, replacement evidence, and downstream verify implication; do not silently drop mandatory planned evidence. |
 | Conditional behavior | `none` mode may edit implementation files only when workspace guards allow it, but must not update SDD/OpenSpec/Engram artifacts; Strict TDD loads `strict-tdd.md` only when active. |
-| Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: verify` only when all implementation tasks are visibly complete in the persisted task artifact. |
+| Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: review` only when all implementation tasks are visibly complete in the persisted task artifact. |
 | Block routing | `next_recommended: resolve-blockers` for unsafe workspace, unresolved workload decision, missing artifact, Strict TDD issue, partial persistence failure, or blocked task. |
 
 ## Output Contract
@@ -52,7 +52,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 
 Routing rules for `next_recommended`:
 - **Assigned batch complete, implementation tasks remain**: return `next_recommended: apply` and report the next pending task/slice.
-- **All implementation tasks complete**: return `next_recommended: verify`. Archive is never a direct successor of apply.
+- **All implementation tasks complete**: return `next_recommended: review`. Verify and archive are never direct successors of apply.
 - **Blocked apply**: return `next_recommended: resolve-blockers` and include the exact unsafe workspace, unresolved workload decision, missing artifact, Strict TDD issue, or blocked task in `risks` / `detailed_report`.
 - **Partial persistence failure**: return `next_recommended: resolve-blockers` unless the same progress/task checkbox update can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -62,7 +62,7 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | `applyState` is `blocked` | Return `blocked` with `next_recommended: resolve-blockers`; do not edit. |
-| `applyState` is `all_done` | Do not edit; return `success` with `next_recommended: verify`. Archive is never a direct successor of apply. |
+| `applyState` is `all_done` | Do not edit; return `success` with `next_recommended: review`. Verify and archive are never direct successors of apply. |
 | `workspace-planning` mode has no `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers`; treat linked repos and folders as read-only. |
 | Needed edit is outside `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and the unsafe path. |
 | Workload decision is required but unresolved | Return `blocked` with `next_recommended: resolve-blockers`, `Decision needed before apply: Yes`, `Chain strategy: pending`, and `Size exception: pending`; do not ask the user directly. |
@@ -76,7 +76,7 @@ Routing rules for `next_recommended`:
 Before reading implementation files or writing code, consume the structured status provided by the orchestrator or build the equivalent status from artifacts.
 
 - If `applyState` is `blocked`, STOP and return `blocked` with `next_recommended: resolve-blockers` plus the missing artifacts or unsafe context.
-- If `applyState` is `all_done`, do not edit. Return `success` with `next_recommended: verify`. Archive is never a direct successor of apply.
+- If `applyState` is `all_done`, do not edit. Return `success` with `next_recommended: review`. Verify and archive are never direct successors of apply.
 - If `applyState` is `ready`, proceed only on the assigned pending tasks.
 - Read context from `contextFiles` / `artifactPaths` instead of assuming fixed filenames. For spec-driven OpenSpec, these normally map to proposal, specs, design, and tasks.
 - If `actionContext.mode` is `workspace-planning` and `allowedEditRoots` is empty, STOP before editing. Treat linked repos and folders as read-only planning context.
@@ -217,7 +217,7 @@ Before persisting or returning, verify:
 - Previous apply-progress was merged when it existed.
 - Strict TDD mode includes the required TDD Cycle Evidence table.
 - Workload / PR Boundary is reported.
-- Do not report `Ready for verify` if assigned work is incomplete or persisted artifacts are not updated.
+- Do not report `Ready for review` if assigned work is incomplete or persisted artifacts are not updated.
 
 ### Step 7: Persist Progress
 
@@ -241,7 +241,7 @@ When saving apply-progress:
 
 ### Step 8: Return Summary
 
-Before returning, re-read the persisted tasks artifact in `engram`, `openspec`, and `hybrid` modes and confirm every task you report as completed is marked `[x]` there. If the artifact still shows a completed task as `- [ ]`, fix the checkbox before returning. Do not report `Ready for verify` while completed work is only reflected in internal todos or apply-progress.
+Before returning, re-read the persisted tasks artifact in `engram`, `openspec`, and `hybrid` modes and confirm every task you report as completed is marked `[x]` there. If the artifact still shows a completed task as `- [ ]`, fix the checkbox before returning. Do not report `Ready for review` while completed work is only reflected in internal todos or apply-progress.
 
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put this implementation progress summary in `detailed_report`:
 
@@ -288,7 +288,7 @@ If none, say "None."}
 - Estimated review budget impact: {brief note}
 
 ### Status
-{N}/{total} tasks complete. {Ready for next batch / Ready for verify / Blocked by X}
+{N}/{total} tasks complete. {Ready for next batch / Ready for review / Blocked by X}
 ```
 
 ## Rules
