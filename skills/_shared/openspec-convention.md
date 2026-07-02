@@ -1,4 +1,8 @@
-# OpenSpec File Convention (shared across all SDD skills)
+# OpenSpec File Convention (backend reference only)
+
+NOTE: This document is a backend-specific reference for OpenSpec paths, directory layout, and file-format details. The authoritative cross-mode persistence rules live in `skills/_shared/persistence-contract.md`; phase skills MUST follow that contract for mode resolution, read/write behavior, hybrid conflict handling, and persistence verification.
+
+Use this file only when an OpenSpec-specific path, folder shape, or archive-file convention is needed. Do not treat it as a competing source for artifact-store mode behavior.
 
 ## Directory Structure
 

@@ -31,15 +31,20 @@ From the orchestrator:
 - Chain strategy when already resolved (`stacked-to-main | feature-branch-chain | pending`)
 - Size exception state when already resolved (`approved | pending | none`)
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), `sdd/{change-name}/security-applicability` (required), `sdd/{change-name}/design` (required), `sdd/{change-name}/security-design` when applicability is impacting, and `sdd/{change-name}/test-design` (required). Save as `sdd/{change-name}/tasks`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Write only `openspec/changes/{change-name}/tasks.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram as `sdd/{change-name}/tasks` AND write `openspec/changes/{change-name}/tasks.md`. Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
-- **none**: Return SDD artifact content inline only. Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
-- Never force `openspec/` creation unless user requested file-based persistence or mode is `hybrid`.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal, specs, `security-applicability`, design, mandatory `test-design`, delivery context, testing capabilities, and required `security-design` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Produced artifact | `sdd/{change-name}/tasks` or `openspec/changes/{change-name}/tasks.md`. |
+| Mutates | None outside the produced tasks artifact. |
+| Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
+| Security consumption | Mandatory security controls and evidence expectations from required `security-design.md` and `test-design.md` must be represented as tasks or complete approved exceptions. |
+| Review workload behavior | Preserve the Review Workload Forecast guard lines, resolved delivery strategy, chain strategy, size-exception field, and reviewable work-unit split. |
+| Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
+| Block routing | `next_recommended: resolve-blockers`, except missing security applicability may recommend `security-applicability` and missing required security design may recommend `security-design`. |
 
 ## Output Contract
 
@@ -60,10 +65,6 @@ Routing rules for `next_recommended`:
 | `security-applicability.md` is missing | Return `blocked` with `next_recommended: security-applicability`; do not write tasks. |
 | Applicability is security-impacting and `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write tasks. |
 | Mandatory security control evidence from `security-design.md` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
-| `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/tasks`. |
-| `openspec` mode | Write only `openspec/changes/{change-name}/tasks.md`; do not call `mem_save`. |
-| `hybrid` mode | Write OpenSpec tasks and persist the Engram artifact. |
-| `none` mode | Return inline only; do not write files and do not call `mem_save`. |
 | Task draft contains vague, non-verifiable, or oversized tasks | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 | Review workload risk is `High` against the received review budget and chain strategy is missing | Set `Decision needed before apply: Yes` and `Chain strategy: pending`; do not ask the user directly. |
 | Strict TDD is active | Include RED/GREEN/REFACTOR task ordering for affected behavior. |

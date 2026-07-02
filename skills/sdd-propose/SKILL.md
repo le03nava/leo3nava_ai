@@ -28,15 +28,18 @@ From the orchestrator:
 - Exploration analysis (from sdd-explore) OR direct user description
 - Artifact store mode (`engram | openspec | hybrid | none`)
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 
-- **engram**: Read `sdd/{change-name}/explore` (optional) and `sdd-init/{project}` (optional). Save artifact as `sdd/{change-name}/proposal`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram AND write to filesystem. Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
-- **none**: Return SDD artifact content inline only. Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
-- Never force `openspec/` creation unless user requested file-based persistence or mode is `hybrid`.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Change name plus exploration artifact `sdd/{change-name}/explore` / `openspec/changes/{change-name}/explore.md` when available, or direct user description. |
+| Produced artifact | `sdd/{change-name}/proposal` or `openspec/changes/{change-name}/proposal.md`. |
+| Mutates | None outside the produced proposal artifact. |
+| Conditional behavior | Interactive proposal-shaping blockers return to the orchestrator; proposal updates must read existing proposal first. |
+| Success routing | `next_recommended: spec`. |
+| Block routing | `next_recommended: resolve-blockers` with missing product/business decision, dependency, or artifact issue. |
 
 ## Output Contract
 

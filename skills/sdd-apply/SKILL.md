@@ -30,14 +30,21 @@ From the orchestrator:
 - Structured status from `skills/_shared/sdd-status-contract.md`: `schemaName`, `planningHome`, `changeRoot`, `artifactPaths`, `contextFiles`, `applyState`, task progress, dependency states, and `actionContext`
 - Delivery strategy and resolved workload decision (`ask-on-risk | auto-chain | single-pr | exception-ok`, plus PR slice, `Chain strategy`, and `Size exception` when applicable)
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/security-applicability`, `sdd/{change-name}/design`, required `sdd/{change-name}/security-design`, `sdd/{change-name}/test-design`, `sdd/{change-name}/tasks` (all required except security-design for no-impact changes — keep tasks ID for updates). Mark tasks complete via `mem_update(id: {tasks-observation-id}, content: "...")`. Save progress as `sdd/{change-name}/apply-progress`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Update only `openspec/changes/{change-name}/tasks.md` for task checkboxes; implementation file edits are controlled by `allowedEditRoots`.
-- **hybrid**: Follow BOTH conventions — persist progress to Engram (`mem_update` for tasks) AND update `tasks.md` with `[x]` marks on filesystem.
-- **none**: May edit assigned implementation files when workspace guards allow it, but do not update SDD artifacts and do not call `mem_save`; return progress inline only.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal, specs, `security-applicability`, design, required `security-design`, `test-design`, and tasks from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Produced artifact | Apply progress as `sdd/{change-name}/apply-progress`; in OpenSpec, the durable progress source is `openspec/changes/{change-name}/tasks.md` checkbox state plus the returned Section D evidence. |
+| Mutates | Assigned implementation files inside `allowedEditRoots`; task progress in `sdd/{change-name}/tasks` / `openspec/changes/{change-name}/tasks.md`; apply-progress when the selected mode supports it. |
+| Task progress semantics | Read previous progress first, preserve existing `[x]` marks, skip already-complete assigned tasks, and mark only completed assigned tasks. Hybrid writes must keep Engram progress and OpenSpec checkboxes aligned. |
+| Apply evidence semantics | Record completed tasks, files changed, Standard/Strict TDD mode, test-design coverage or justified deviations, security evidence or no-impact source, issues, remaining tasks, workload/PR boundary, and persisted checkbox verification in `detailed_report` / apply-progress. |
+| Deviation semantics | If implementation cannot follow design or `test-design.md`, record the deviation, rationale, replacement evidence, and downstream verify implication; do not silently drop mandatory planned evidence. |
+| Conditional behavior | `none` mode may edit implementation files only when workspace guards allow it, but must not update SDD/OpenSpec/Engram artifacts; Strict TDD loads `strict-tdd.md` only when active. |
+| Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: verify` only when all implementation tasks are visibly complete in the persisted task artifact. |
+| Block routing | `next_recommended: resolve-blockers` for unsafe workspace, unresolved workload decision, missing artifact, Strict TDD issue, partial persistence failure, or blocked task. |
 
 ## Output Contract
 

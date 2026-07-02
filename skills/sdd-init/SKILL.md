@@ -30,16 +30,29 @@ Follow `skills/_shared/language-domain-contract.md`.
 Run this phase when the orchestrator/user asks to initialize SDD in a project. 
 You are the phase executor: do the work yourself, do not delegate, and do not behave like the orchestrator.
 
+## Phase Artifact Contract
+
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
+
+| Concern | Contract |
+| --- | --- |
+| Required inputs | User/orchestrator initialization request, resolved artifact-store mode, project root, and real repository files used for stack/tooling detection. |
+| Produced artifacts | Project context `sdd-init/{project}`; testing capabilities `sdd/{project}/testing-capabilities`; `openspec/config.yaml`; local support registry `.atl/skill-registry.md`; Engram `skill-registry` when the selected mode supports each artifact. |
+| Mutates | OpenSpec bootstrap directories/files only in OpenSpec-capable modes; Engram init/testing/registry observations only in Engram-capable modes; `.atl/skill-registry.md` only in modes that allow local support files. |
+| Initialization semantics | Detect real stack, conventions, architecture, testing tools, strict TDD status, and persistence context before writing. Existing OpenSpec artifacts require explicit update handling instead of blind overwrite. |
+| Local support artifact semantics | Build the skill registry from actual skill paths and persist it as `.atl/skill-registry.md` only when local support files are allowed; in `none`, return the registry inline only. |
+| Conditional behavior | `engram` does not create `openspec/`; `openspec` does not call Engram; `hybrid` writes both selected backends; `none` writes no SDD/OpenSpec/Engram artifacts and no local support files. |
+| Success routing | `next_recommended: sdd-new` or `sdd-explore`, according to the initialization envelope. |
+| Block routing | `next_recommended: resolve-blockers` for unsafe paths, unresolved existing OpenSpec update decisions, unavailable persistence backend, or failed read-back verification. |
+
 ## Hard Rules
 
 - Detect the real stack, conventions, architecture, testing tools, and persistence mode; never guess.
-- In `engram` mode, do **not** create `openspec/`.
-- In `openspec` mode, follow `../_shared/openspec-convention.md` and write file artifacts.
-- In `hybrid` mode, write both openspec files and Engram observations.
-- In Engram-capable modes, persist project context as `sdd-init/{project}` and testing capabilities separately as `sdd/{project}/testing-capabilities`.
-- In OpenSpec-capable modes, persist project context and testing capabilities in `openspec/config.yaml`.
-- Build the skill registry following `skill-registry` rules. Persist `.atl/skill-registry.md` only in modes that allow local support files; in `mode=none`, return the registry inline only.
-- Save the registry to Engram as `skill-registry` when Engram is available.
+- Follow the Phase Artifact Contract for produced artifacts, mutation boundaries, and mode-specific write eligibility; follow `skills/_shared/persistence-contract.md` for common backend mechanics.
+- Persist project context as `sdd-init/{project}` and testing capabilities separately as `sdd/{project}/testing-capabilities` when Engram-capable modes allow those writes.
+- Persist project context and testing capabilities in `openspec/config.yaml` when OpenSpec-capable modes allow those writes.
+- Build the skill registry following `skill-registry` rules and preserve the local support artifact rules from the Phase Artifact Contract.
+- Save the registry to Engram as `skill-registry` when Engram-capable modes allow that write.
 - Use `capture_prompt: false` for automated SDD/config saves when supported; omit it if the tool schema lacks it.
 - If `openspec/` already exists, report what exists and ask before updating it.
 

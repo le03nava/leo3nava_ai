@@ -27,25 +27,18 @@ From the orchestrator:
 - Change name
 - Artifact store mode (`engram | openspec | hybrid | none`)
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 
-- **engram**:
-    Read `sdd/{change-name}/proposal` (required). 
-    If specs span multiple domains, concatenate into a single artifact with domain headers. 
-    Save as `sdd/{change-name}/spec`.
-- **openspec**: 
-    Read and follow `skills/_shared/openspec-convention.md`. 
-    Write spec artifacts only under `openspec/changes/{change-name}/specs/{domain}/spec.md`.
-- **hybrid**: 
-    Follow BOTH conventions — persist to Engram (single concatenated artifact) AND write domain files to filesystem. 
-    Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
-- **none**: 
-    Return result only. 
-    Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
-    
-- Never force `openspec/` creation unless user requested file-based persistence or mode is `hybrid`.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal `sdd/{change-name}/proposal` or `openspec/changes/{change-name}/proposal.md`; existing source specs when modifying OpenSpec capabilities. |
+| Produced artifact | Engram single concatenated `sdd/{change-name}/spec`; OpenSpec domain files `openspec/changes/{change-name}/specs/{domain}/spec.md`. |
+| Mutates | None outside produced delta/new spec artifacts. |
+| Conditional behavior | Capabilities drive domain selection; `MODIFIED` requirements must contain full replacement blocks. |
+| Success routing | `next_recommended: design`. |
+| Block routing | `next_recommended: resolve-blockers` for missing proposal/capability/source spec or validation issue. |
 
 ## Output Contract
 

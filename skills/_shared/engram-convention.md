@@ -1,10 +1,12 @@
-# Engram Artifact Convention (reference documentation)
+# Engram Artifact Convention (backend reference only)
 
-NOTE: Critical engram calls (`mem_search`, `mem_save`, `mem_get_observation`) are inlined directly in each skill's SKILL.md. This document is supplementary reference — sub-agents do NOT need to read it to function.
+NOTE: This document is a backend-specific reference for Engram names, calls, and recovery details. The authoritative cross-mode persistence rules live in `skills/_shared/persistence-contract.md`; phase skills MUST follow that contract for mode resolution, read/write behavior, hybrid conflict handling, and persistence verification.
+
+Use this file only when an Engram-specific key, call shape, or recovery example is needed. Do not treat it as a competing source for artifact-store mode behavior.
 
 ## Naming Rules
 
-ALL SDD artifacts persisted to Engram MUST follow this deterministic naming:
+All SDD artifacts persisted to the Engram backend MUST follow this deterministic naming:
 
 ```
 title:     sdd/{change-name}/{artifact-type}

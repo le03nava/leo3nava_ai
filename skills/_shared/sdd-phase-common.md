@@ -16,55 +16,17 @@ Executor boundary: every SDD phase agent is an EXECUTOR, not an orchestrator. Do
 
 NOTE: the preferred path is (1) — exact skill paths selected by the orchestrator. Paths (2) and (3) are fallbacks. Searching the registry is SKILL LOADING, not delegation. If `## Skills to load before work` is present, IGNORE redundant `SKILL: Load` instructions.
 
-## B. Artifact Retrieval (Engram Mode)
+## B. Artifact Retrieval
 
-**CRITICAL**: `mem_search` returns 300-char PREVIEWS, not full content. You MUST call `mem_get_observation(id)` for EVERY artifact. **Skipping this produces wrong output.**
+Follow `skills/_shared/persistence-contract.md` for artifact-store mode resolution, artifact references, backend read behavior, Engram preview handling, OpenSpec paths, hybrid conflict policy, and missing-artifact behavior.
 
-**Run all searches in parallel** — do NOT search sequentially.
-
-```
-mem_search(query: "sdd/{change-name}/{artifact-type}", project: "{project}") → save ID
-```
-
-Then **run all retrievals in parallel**:
-
-```
-mem_get_observation(id: {saved_id}) → full content (REQUIRED)
-```
-
-Do NOT use search previews as source material.
+Phase skills remain responsible for naming their required inputs and reading every required dependency before producing phase output.
 
 ## C. Artifact Persistence
 
-Every phase that produces an artifact MUST persist it. Skipping this BREAKS the pipeline — downstream phases will not find your output.
+Every phase that produces or mutates an artifact MUST persist and verify it according to `skills/_shared/persistence-contract.md`. Skipping persistence or read-back verification BREAKS the pipeline because downstream phases cannot trust the artifact references.
 
-### Engram mode
-
-```
-mem_save(
-  title: "sdd/{change-name}/{artifact-type}",
-  topic_key: "sdd/{change-name}/{artifact-type}",
-  type: "architecture",
-  project: "{project}",
-  capture_prompt: false,
-  content: "{your full artifact markdown}"
-)
-```
-
-`topic_key` enables upserts — saving again updates, not duplicates.
-`capture_prompt: false` is mandatory for SDD artifacts because they are automated pipeline outputs, not human/proactive memory saves. Set it when the Engram tool schema supports it; if an older schema rejects or does not expose the field, omit it rather than failing.
-
-### OpenSpec mode
-
-File was already written during the phase's main step. No additional action needed.
-
-### Hybrid mode
-
-Do BOTH: write the file to the filesystem AND call `mem_save` as above.
-
-### None mode
-
-Return result inline only. Do not write any files or call `mem_save`.
+Phase skills remain responsible for defining the artifact key/path, artifact content, phase-local mutations, and any conditional persistence requirements.
 
 ## D. Return Envelope
 

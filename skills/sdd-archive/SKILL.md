@@ -31,14 +31,22 @@ From the orchestrator:
 - Structured status from `skills/_shared/sdd-status-contract.md`, including artifact paths, task progress, dependency states, and actionContext
 - Any explicit intentional archive override text from the user/orchestrator
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`, `sdd/{change-name}/security-applicability`, `sdd/{change-name}/design`, required `sdd/{change-name}/security-design`, `sdd/{change-name}/test-design`, `sdd/{change-name}/tasks`, `sdd/{change-name}/verify-report` (all required except security-design for no-impact changes). Record all observation IDs in the archive report for traceability. Save as `sdd/{change-name}/archive-report`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Perform merge and archive folder moves.
-- **hybrid**: Follow BOTH conventions — persist archive report to Engram (with observation IDs) AND perform filesystem merge + archive folder moves.
-- **none**: Return inline closure summary only. Do not perform archive file operations, and do not claim durable archive, source-of-truth sync, or recoverable completion.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal, specs, `security-applicability`, design, required `security-design`, `test-design`, tasks, and `verify-report` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Produced artifact | Archive report as `sdd/{change-name}/archive-report`; in OpenSpec, the archive audit-trail reference is `openspec/changes/archive/YYYY-MM-DD-{change-name}/`. |
+| Mutates | OpenSpec/hybrid source specs under `openspec/specs/{domain}/spec.md`; OpenSpec/hybrid change folder location from active change to dated archive; Engram/hybrid archive report lineage. |
+| Spec sync semantics | Merge delta specs before moving the change folder. Preserve unrelated requirements; create missing main specs from full new specs; require explicit reason/migration for removals and explicit old/new names for renames. |
+| Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
+| Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
+| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, verify verdict, security applicability/design evidence or no-impact source, archive destination, warnings, and any approved reconciliation. |
+| Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
+| Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
+| Block routing | `next_recommended: verify`, `apply`, `security-design`, or `resolve-blockers` according to missing verify evidence, unchecked tasks, required security design, unsafe context, destructive merge, destination conflict, or persistence failure. |
 
 ## Output Contract
 

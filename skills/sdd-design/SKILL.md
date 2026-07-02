@@ -27,23 +27,18 @@ From the orchestrator:
 - Change name
 - Artifact store mode (`engram | openspec | hybrid | none`)
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 
-- **engram**: 
-    Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), and `sdd/{change-name}/security-applicability` (required).
-    Save as `sdd/{change-name}/design`.
-- **openspec**: 
-    Read and follow `skills/_shared/openspec-convention.md`. 
-    Write only `openspec/changes/{change-name}/design.md`.
-- **hybrid**: 
-    Follow BOTH conventions — persist to Engram as `sdd/{change-name}/design` AND write `openspec/changes/{change-name}/design.md`. 
-    Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
-- **none**: 
-    Return result only. 
-    Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
-- Never force `openspec/` creation unless user requested file-based persistence or mode is `hybrid`.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal, specs, and `security-applicability.md`: `sdd/{change-name}/{proposal|spec|security-applicability}` or OpenSpec change-folder equivalents. |
+| Produced artifact | `sdd/{change-name}/design` or `openspec/changes/{change-name}/design.md`. |
+| Mutates | None outside the produced design artifact. |
+| Conditional behavior | `securityImpact: true` routes to security design; explicit no-impact routes to test design. |
+| Success routing | `next_recommended: security-design` when security-impacting; otherwise `next_recommended: test-design`. |
+| Block routing | `next_recommended: resolve-blockers`, except missing/unreadable applicability may recommend `security-applicability`. |
 
 ## Output Contract
 

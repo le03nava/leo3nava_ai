@@ -29,15 +29,20 @@ From the orchestrator:
 - Structured status from `skills/_shared/sdd-status-contract.md` when available
 - Artifact refs/paths for proposal, specs, security applicability, design, and security design when required
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
 
-- **engram**: Read `sdd/{change-name}/proposal` (required), `sdd/{change-name}/spec` (required), `sdd/{change-name}/security-applicability` (required), `sdd/{change-name}/design` (required), and `sdd/{change-name}/security-design` when applicability is impacting. Save as `sdd/{change-name}/test-design`.
-- **openspec**: Read and follow `skills/_shared/openspec-convention.md`. Write only `openspec/changes/{change-name}/test-design.md`.
-- **hybrid**: Follow BOTH conventions — persist to Engram as `sdd/{change-name}/test-design` AND write `openspec/changes/{change-name}/test-design.md`. Retrieve both Engram and OpenSpec dependencies when both refs exist; fallback only when one backend is absent; block on material mismatch.
-- **none**: Return SDD artifact content inline only. Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
-- Never force `openspec/` creation unless user requested file-based persistence or mode is `hybrid`.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal, specs, `security-applicability`, design, testing capabilities, and required `security-design` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Produced artifact | Mandatory `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md` for every change, including no-impact changes. |
+| Mutates | None outside the produced test design artifact. |
+| Mandatory artifact behavior | Do not route directly from design to tasks without a complete `test-design` artifact. No-impact changes still produce a concise no-impact assessment rather than omitting the artifact. |
+| Planned evidence mapping | Preserve scenario, design-risk, security-control, check type, severity, expected evidence, no-impact assessment, and open-question mapping. Mandatory cases are verification-blocking when uncovered. |
+| Downstream consumption | `sdd-tasks`, `sdd-apply`, `sdd-verify`, and archive readiness checks consume `test-design` as the test-planning source of truth. |
+| Success routing | `next_recommended: tasks`. |
+| Block routing | `next_recommended: resolve-blockers`, except missing security applicability may recommend `security-applicability` and missing required security design may recommend `security-design`. |
 
 ## Output Contract
 
@@ -59,10 +64,6 @@ Routing rules for `next_recommended`:
 | Specs/design have no behavior or testability impact | Write a no-impact assessment in `test-design.md`; do not treat the artifact as absent. |
 | A mandatory spec scenario or design risk has no planned check and no justified skip | Return `blocked` or fix the draft before persistence. |
 | A mandatory security-design control has no planned check, non-test evidence, or complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; uncovered mandatory security controls cannot proceed to tasks. |
-| `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/test-design`. |
-| `openspec` mode | Write only `openspec/changes/{change-name}/test-design.md`; do not call `mem_save`. |
-| `hybrid` mode | Write OpenSpec test design and persist the Engram artifact. |
-| `none` mode | Return inline only; do not write files and do not call `mem_save`. |
 | Test-design draft fails validation | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 
 ## What to Do

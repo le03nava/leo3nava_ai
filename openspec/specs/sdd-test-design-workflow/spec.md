@@ -33,7 +33,7 @@ The SDD workflow MUST run `sdd-test-design` after `sdd-design` succeeds and afte
 
 ### Requirement: test-design.md Artifact Contract
 
-The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and required security-design controls to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document no-impact assessments when no behavior, security, or testability impact exists.
+The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and required security-design controls to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document no-impact assessments when no behavior, security, or testability impact exists. The phase artifact contract MUST preserve mandatory artifact creation and downstream consumption while delegating common artifact-store mode semantics, artifact resolution, and persistence verification to the shared persistence authority.
 
 #### Scenario: Behavior-impacting change
 
@@ -56,6 +56,13 @@ The `sdd-test-design` phase MUST create `test-design.md` for every change. The a
 - THEN `test-design.md` MUST state a no-impact assessment
 - AND downstream phases MUST treat the artifact as complete rather than absent.
 
+#### Scenario: Persistence boundary is delegated
+
+- GIVEN `sdd-test-design` writes or resolves `test-design.md` in any supported artifact-store mode
+- WHEN backend behavior is required
+- THEN it MUST follow the shared persistence authority
+- AND it MUST keep the mandatory artifact contract local to the phase.
+
 ### Requirement: Check Types and Severity
 
 Test-design cases MUST support automated checks, manual checks, and static/file-contract checks. Mandatory cases MUST be treated as verification-blocking; non-mandatory cases MUST be advisory and reported as warnings when uncovered.
@@ -75,7 +82,7 @@ Test-design cases MUST support automated checks, manual checks, and static/file-
 
 ### Requirement: Downstream Consumption
 
-Downstream phases MUST use `test-design.md` as the test-planning source of truth. `sdd-tasks` MUST derive implementation and verification tasks from it; `sdd-apply` SHOULD follow planned cases or report justified deviations; `sdd-verify` MUST compare evidence against it.
+Downstream phases MUST use `test-design.md` as the test-planning source of truth. `sdd-tasks` MUST derive implementation and verification tasks from it; `sdd-apply` SHOULD follow planned cases or report justified deviations; `sdd-verify` MUST compare evidence against it. Updates to persistence contract wording MUST NOT weaken this downstream consumption requirement or route tasks directly from design without the required test-design artifact.
 
 #### Scenario: Tasks derive testing work
 
@@ -90,6 +97,13 @@ Downstream phases MUST use `test-design.md` as the test-planning source of truth
 - WHEN `sdd-apply` records evidence
 - THEN it SHOULD document the deviation and replacement evidence
 - AND `sdd-verify` MUST evaluate that justification against the planned case
+
+#### Scenario: Persistence refactor preserves consumption
+
+- GIVEN common persistence rules move to a shared authority
+- WHEN downstream phases resolve test-planning inputs
+- THEN they MUST still consume `test-design.md` from the established key or path
+- AND they MUST NOT treat the artifact as optional.
 
 ### Requirement: Continuation, State, and Status Contracts
 

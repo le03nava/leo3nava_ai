@@ -32,10 +32,25 @@ The orchestrator should provide structured status from `skills/_shared/sdd-statu
 - Compare security-design controls and mandatory evidence before archive readiness can be claimed.
 - Compare `test-design.md` planned cases against apply/verification evidence. Uncovered mandatory cases fail verification; uncovered non-mandatory cases are warnings only.
 - Do not fix issues; report them for the orchestrator/user.
-- Persist `verify-report` according to mode: Engram `sdd/{change-name}/verify-report`, OpenSpec `openspec/changes/{change-name}/verify-report.md`, hybrid both, or inline-only for `none`.
+- Persist `verify-report` according to `skills/_shared/persistence-contract.md` and the phase artifact contract below.
 - If Strict TDD is active, load `strict-tdd-verify.md` from this skill directory; if inactive, never load it.
 - Apply any `rules.verify` from `openspec/config.yaml`.
 - Return the Section D envelope from `skills/_shared/sdd-phase-common.md`.
+
+## Phase Artifact Contract
+
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
+
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Structured status plus available proposal, specs, `security-applicability`, design, mandatory `test-design`, tasks, apply-progress/task checkbox evidence, and required `security-design` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Produced artifact | `sdd/{change-name}/verify-report` or `openspec/changes/{change-name}/verify-report.md`. |
+| Mutates | None outside the produced verification report artifact. |
+| Test-design consumption | Compare every planned `test-design.md` case against implementation, execution, apply-progress, security evidence, or justified skip evidence; uncovered mandatory cases fail verification, while uncovered non-mandatory cases are warnings. |
+| Security consumption | Compare required `security-design.md` controls and mandatory evidence before archive readiness; complete approved exceptions are the only valid substitute for missing mandatory evidence. |
+| Runtime/static evidence | Execute configured commands when available; when no runner exists, report unavailable runtime evidence explicitly and do not invent commands. |
+| Success routing | `next_recommended: archive` only for `PASS` or eligible `PASS WITH WARNINGS`. |
+| Block/fail routing | `next_recommended: apply` for failed verification or unchecked tasks; `next_recommended: resolve-blockers` for unsafe workspace, missing selected change/artifacts, unresolved configuration, or persistence failure. |
 
 ## Decision Gates
 

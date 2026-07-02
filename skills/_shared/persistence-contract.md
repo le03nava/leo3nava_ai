@@ -1,5 +1,9 @@
 # Persistence Contract (shared across all SDD skills)
 
+This file is the authoritative SDD persistence contract. SDD phase skills and shared execution contracts MUST delegate detailed artifact-store mode behavior, backend read/write semantics, artifact reference resolution, hybrid conflict handling, state persistence, and persistence verification to this file.
+
+Phase skills MAY define phase-local artifact obligations such as required inputs, produced artifacts, mutations, conditional behavior, validation, and routing. They MUST NOT redefine the common persistence mechanics below.
+
 ## Mode Resolution
 
 The orchestrator passes `artifact_store.mode` with one of: `engram | openspec | hybrid | none`.
@@ -38,6 +42,8 @@ Engram uses `topic_key`-based upserts. Re-running a phase for the same change **
 | `openspec` | Filesystem | Filesystem | Yes |
 | `hybrid` | Engram + Filesystem; read both when both refs exist, fallback only when one backend is absent | Both | Yes |
 | `none` | Orchestrator prompt context | Nowhere | Never |
+
+Mode behavior is intentionally centralized here. If a phase-specific instruction appears to conflict with this table, keep the phase-local artifact obligation only and resolve backend behavior from this contract.
 
 ### Hybrid Mode
 
@@ -100,6 +106,13 @@ Resolver rules:
 - `openspec`: read/write only paths defined by `openspec-convention.md`.
 - `hybrid`: require both writes for phase success; read both Engram and OpenSpec when both refs exist, fall back only when one backend is absent, and apply the Hybrid Conflict Policy before using either result.
 - `none`: never write SDD artifacts, OpenSpec files, Engram observations, or local support files. If required dependency content is not present in current conversation context, return blocked and recommend a persistent mode. Implementation code edits are allowed only for `sdd-apply` when the orchestrator explicitly requested implementation and `actionContext`/`allowedEditRoots` prove the edit is safe.
+
+Resolver verification:
+
+- Treat `mem_search` results as previews only; call `mem_get_observation` before using Engram artifact content.
+- In `openspec`, read artifacts from the paths in `openspec-convention.md` or the structured status artifact paths. Do not infer alternate paths.
+- In `hybrid`, compare both backends when both refs exist before launching dependent work. Apply the Hybrid Conflict Policy when material content or routing metadata differs.
+- In `none`, report blocked when a required dependency is missing from current context; do not reconstruct artifacts from memory or local guesses.
 
 ## State Persistence (Orchestrator)
 
@@ -181,6 +194,24 @@ Failure handling:
 - If one side of `hybrid` succeeds and the other fails, report partial persistence and require repair/reconciliation before continuing.
 - If existing state has a newer `stateRevision` or `updatedAt` than the state about to be written, stop and reconcile; do not overwrite newer state.
 - If Engram state and OpenSpec state materially disagree in `hybrid`, apply the Hybrid Conflict Policy and ask for reconciliation before launching dependent work.
+
+## Artifact Persistence Verification
+
+Every phase that produces or mutates a persistent artifact MUST verify the selected backend before reporting success.
+
+| Mode | Required verification |
+|------|-----------------------|
+| `engram` | Save with the expected `topic_key`, then retrieve the observation by ID or topic and confirm the artifact identity and content needed by downstream phases. |
+| `openspec` | Re-read the written file path and confirm the expected artifact identity, required sections, and task/status mutations are present. |
+| `hybrid` | Verify both Engram and OpenSpec writes, then confirm the two artifacts describe the same phase result or apply the Hybrid Conflict Policy. |
+| `none` | No persistent verification is possible; the phase envelope is the only artifact evidence. |
+
+Verification rules:
+
+- Do not report `success` for persistent modes if the artifact cannot be read back from the selected backend.
+- For `sdd-apply`, completed work MUST be visible in the selected task/progress artifact before returning success or partial completion.
+- For `sdd-archive`, archive movement and spec synchronization MUST be verified from the filesystem and/or Engram topic keys selected by mode.
+- If read-back verification fails after a useful artifact or mutation was attempted, return `partial` or `blocked` with the backend, expected reference, observed result, and safest recovery action.
 
 ## Common Rules
 

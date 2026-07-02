@@ -29,16 +29,20 @@ Read before writing:
 - `skills/_shared/sdd-security-contract.md` for schema, vocabulary, and exception/evidence rules.
 - `openspec/config.yaml` when in OpenSpec or hybrid mode.
 
-## Persistence
+## Phase Artifact Contract
 
-Follow **Section B** and **Section C** from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
 
-| Mode | Read | Write |
-| --- | --- | --- |
-| `engram` | `sdd/{change-name}/proposal`, `sdd/{change-name}/spec` | `sdd/{change-name}/security-applicability` |
-| `openspec` | `openspec/changes/{change-name}/proposal.md`, `specs/**/spec.md` | `openspec/changes/{change-name}/security-applicability.md` |
-| `hybrid` | Both backends; block on material mismatch | Both backends |
-| `none` | Current launch context only | Inline result only |
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Proposal and specs from the selected backend, plus `skills/_shared/security-guideline-catalog.md`, `skills/_shared/sdd-security-contract.md`, and OpenSpec config when applicable. |
+| Produced artifact | `sdd/{change-name}/security-applicability` or `openspec/changes/{change-name}/security-applicability.md`. |
+| Mutates | None outside the produced security applicability artifact. |
+| Artifact identity | Preserve `schemaName: gentle-ai.sdd-security-applicability`, `schemaVersion`, `changeName`, `classification`, `securityImpact`, taxonomy categories, guideline mappings, evidence summary, unknowns, risks, and artifact-local `nextRecommended`. |
+| Classification behavior | No-impact changes require explicit evidence and keep `securityImpact: false`; any applicable taxonomy category classifies the change as security-impacting and maps catalog guideline IDs. |
+| Routing behavior | Artifact-local `nextRecommended` remains `design`; downstream orchestrator routing uses `securityImpact` to skip or require `sdd-security-design` after technical design. Missing `security-design.md` is not a blocker for no-impact changes. |
+| Success routing | `next_recommended: design`. |
+| Block routing | `next_recommended: resolve-blockers` for missing required inputs, design-changing unknowns, invalid guideline IDs, or validation failures. |
 
 ## Decision Gates
 

@@ -4,14 +4,14 @@ Repository for reusable AI agent prompts, opencode skills, and Spec-Driven Devel
 
 ## Quick path
 
-From the repository root, sync the current repository content into your Windows opencode configuration:
+From the repository root, sync the current repository content into your Windows agent configurations:
 
 ```powershell
-# Install or refresh opencode skills
-.\scripts\sdd_init_opencode_skills.ps1
+# Install or refresh skills
+.\scripts\sdd_init_skills.ps1
 
-# Install or refresh opencode prompts/agents
-.\scripts\sdd_init_opencode_prompts.ps1
+# Install or refresh agents
+.\scripts\sdd_init_agents.ps1
 ```
 
 Expected destinations:
@@ -19,9 +19,11 @@ Expected destinations:
 | Source | Destination |
 |--------|-------------|
 | `skills/` | `%USERPROFILE%\.config\opencode\skills` |
+| `skills/` | `C:\Users\leo3n\.copilot\skills` |
 | `agents/` | `%USERPROFILE%\.config\opencode\prompts` |
+| `agents/` | `C:\Users\leo3n\.copilot\agents` |
 
-The scripts create the destination directories when needed and overwrite matching files on rerun. They do not hardcode a user-specific home path.
+The scripts only sync to tools whose base directories already exist. Missing destinations are skipped with an informational message, and existing destinations still receive the files. Destination subdirectories are created when needed and matching files are overwritten on rerun.
 
 ## Repository layout
 
@@ -29,7 +31,7 @@ The scripts create the destination directories when needed and overwrite matchin
 |------|---------|
 | `agents/` | Agent prompt definitions, including SDD phase agents. |
 | `skills/` | Reusable opencode skills and shared SDD contracts. |
-| `scripts/` | Windows PowerShell sync scripts for opencode setup. |
+| `scripts/` | Windows PowerShell sync scripts for opencode and Copilot setup. |
 | `openspec/` | Spec-driven documentation for repository capabilities and archived changes. |
 | `LICENSE` | MIT license for this repository. |
 
@@ -58,6 +60,7 @@ Shared contracts live under `skills/_shared/` and define persistence, status, se
 
 - Windows PowerShell.
 - `USERPROFILE` must be set for sync scripts.
+- At least one supported base directory must exist to receive synced files: `%USERPROFILE%\.config\opencode` or `C:\Users\leo3n\.copilot`.
 - No package manager, build system, or test runner is required by this repository.
 
 ## Verification

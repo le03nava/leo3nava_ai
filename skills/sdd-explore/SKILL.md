@@ -27,24 +27,18 @@ The orchestrator will give you:
 - A topic or feature to explore
 - Artifact store mode (`engram | openspec | hybrid | none`)
 
-## Execution and Persistence Contract
+## Phase Artifact Contract
 
-> Follow **Section B** (retrieval) and **Section C** (persistence) from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 
-- **engram**: 
-    Optionally read `sdd-init/{project}` for project context. 
-    Save named-change artifacts as `sdd/{change-name}/explore`. 
-    Do NOT create `openspec/` directories or files.
-- **openspec**: 
-    Read and follow `skills/_shared/openspec-convention.md`. 
-    Write only `openspec/changes/{change-name}/explore.md`, and only for a named change.
-- **hybrid**: 
-    Follow BOTH conventions — persist to Engram as `sdd/{change-name}/explore` AND write `openspec/changes/{change-name}/explore.md`.
-- **none**:
-    Return result only.
-    Never create or modify SDD/OpenSpec files, Engram observations, or local support files.
-- **standalone exploration**: 
-    If no change name is provided, return inline only unless the orchestrator explicitly provides a standalone artifact key.
+| Concern | Contract |
+| --- | --- |
+| Required inputs | Topic/request; optional project context `sdd-init/{project}` or `openspec/config.yaml`/`openspec/specs/` when available. |
+| Produced artifact | Named changes produce `sdd/{change-name}/explore` or `openspec/changes/{change-name}/explore.md`; standalone exploration returns inline only unless an explicit standalone artifact key is provided. |
+| Mutates | None outside the produced exploration artifact. |
+| Conditional behavior | No change name means no SDD persistence unless the orchestrator explicitly provides a standalone artifact key. |
+| Success routing | Named change: `next_recommended: propose`; standalone: `next_recommended: none`. |
+| Block routing | `next_recommended: resolve-blockers` with the missing clarification or dependency. |
 
 ## Output Contract
 

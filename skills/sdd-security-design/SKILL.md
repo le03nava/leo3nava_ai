@@ -30,16 +30,20 @@ Read before writing:
 - `skills/_shared/sdd-security-contract.md`.
 - `openspec/config.yaml` when in OpenSpec or hybrid mode.
 
-## Persistence
+## Phase Artifact Contract
 
-Follow **Section B** and **Section C** from `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
 
-| Mode | Read | Write when required |
-| --- | --- | --- |
-| `engram` | `sdd/{change-name}/security-applicability`, proposal, spec, design | `sdd/{change-name}/security-design` |
-| `openspec` | Change folder artifacts | `openspec/changes/{change-name}/security-design.md` |
-| `hybrid` | Both backends; block on material mismatch | Both backends |
-| `none` | Current launch context only | Inline result only |
+| Concern | Contract |
+| --- | --- |
+| Required inputs | `security-applicability.md`, proposal, specs, technical `design.md`, `skills/_shared/security-guideline-catalog.md`, `skills/_shared/sdd-security-contract.md`, and OpenSpec config when applicable. |
+| Produced artifact | `sdd/{change-name}/security-design` or `openspec/changes/{change-name}/security-design.md` only when `securityImpact: true`. |
+| Mutates | None outside the conditional security design artifact. No artifact is created for no-impact changes. |
+| Conditional behavior | If applicability is `no-impact` or `securityImpact: false`, return success with `next_recommended: test-design` and preserve `security-design.md` as not required. |
+| Control/evidence mapping | For security-impacting changes, preserve guideline IDs, taxonomy categories, mandatory flags, required controls, expected evidence owners/statuses, residual risks, carried applicability risks, and complete approved exceptions. |
+| Downstream obligations | Required controls and mandatory evidence expectations must remain consumable by `sdd-test-design`, `sdd-apply`, `sdd-verify`, and archive readiness checks. |
+| Success routing | `next_recommended: test-design` whether the artifact is created or explicitly not required. |
+| Block routing | `next_recommended: resolve-blockers` for missing required inputs, unknown guideline IDs, incomplete mandatory evidence/exception data, or validation failures. |
 
 ## Decision Gates
 
