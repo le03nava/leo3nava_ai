@@ -1,16 +1,32 @@
 # Security Guideline Catalog
 
-Initial compact catalog for SDD security applicability and security design phases.
+Operational security checklist for SDD security applicability, security design, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
 
 ## Snapshot Metadata
 
 | Field | Value |
 | --- | --- |
 | Snapshot ID | `security-guidelines-initial-user-snapshot-2026-06-30` |
+| Catalog version | `1` |
+| Taxonomy version | `1` |
 | Source | Initial in-repo snapshot from user-provided corporate security guideline text |
-| Status | Bootstrap catalog for SDD workflow automation |
+| Status | Operational checklist catalog for SDD workflow automation |
 | Scope | Security-impact classification, control mapping, evidence planning, verification, and archive gates |
+| Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
+| Operational severity vocabulary | `blocking`, `conditional`, `advisory` |
 | Migration note | This file can later migrate to an official external versioned source. Preserve this snapshot ID and guideline IDs in archived evidence for audit continuity. |
+
+## Checklist Usage
+
+Use this catalog as a checklist when a change is security-impacting or when `sdd-review` raises a security-related concern.
+
+| Column | Required value |
+| --- | --- |
+| Default Complies | `Yes`, `No`, or `N/A`. Use `N/A` only when the evidence explains why the guideline does not apply to the reviewed change. |
+| Evidence Hint | Concrete artifact, file, function, test, command result, manual inspection note, or approved exception that proves the answer. Do not write generic values like "reviewed" without a location. |
+| Notes | Short reviewer note for context, risk, exception rationale, or follow-up. Use `None` when there is nothing material to add. |
+
+The compact records below are the authoritative checklist rows for SDD phases. The full corporate snapshot remains source fidelity and should not be rewritten as evidence.
 
 ## Taxonomy
 
@@ -27,20 +43,57 @@ Use these compact category IDs in `security-applicability.md`, `security-design.
 | `database-access` | Database access | Queries, migrations, persistence, tenant isolation, data access paths |
 | `sensitive-logging` | Sensitive logging | Logs, traces, metrics, analytics, error reporting, audit trails containing sensitive context |
 
-## Guideline Records
+## Guideline Checklist Records
 
-Each guideline has a stable ID. Do not rename IDs after archive evidence exists; add a replacement guideline and mark the old one superseded in audit notes instead.
+Each guideline has a stable ID. Do not rename IDs after archive evidence exists; add a replacement guideline and mark the old one superseded in observations instead.
 
-| ID | Category | Mandatory when applicable | Source summary | Expected evidence | Audit notes |
-| --- | --- | --- | --- | --- | --- |
-| `SEC-AUTH-001` | `authentication` | Yes | Authentication changes must preserve trustworthy identity verification and protect credential-handling boundaries. | Design control for auth flow; implementation refs; negative/abuse test or manual review evidence; verification note. | Map all login, recovery, MFA, impersonation, and credential validation changes. |
-| `SEC-SESS-001` | `sessions` | Yes | Session and token changes must define secure lifetime, revocation, renewal, storage, and fixation protections. | Design control for session lifecycle; cookie/token attribute evidence; test-design coverage or justified static/manual check. | Applies to browser cookies, bearer tokens, refresh tokens, and server-side sessions. |
-| `SEC-DATA-001` | `sensitive-data-pan` | Yes | Sensitive data, including PAN, must be minimized, protected in transit/storage, masked when displayed, and retained only as required. | Data-flow summary; masking/encryption control; implementation refs; verification or manual review evidence. | Treat unknown data sensitivity as a design-changing unknown during applicability. |
-| `SEC-SECRET-001` | `secrets` | Yes | Secrets must not be hardcoded, logged, committed, or exposed to clients; storage and rotation expectations must be explicit. | Secret source/config reference; no-hardcode evidence; redaction/logging check; rotation or owner note. | Applies to credentials, API keys, certificates, tokens, and cryptographic keys. |
-| `SEC-ACCESS-001` | `permissions-access-control` | Yes | Authorization must enforce least privilege, ownership boundaries, and denial-by-default behavior for protected resources. | Access-control design matrix; implementation refs; positive and negative permission checks or manual evidence. | Applies to role changes, ownership checks, tenant boundaries, and admin operations. |
-| `SEC-FILE-001` | `files` | Yes | File handling must validate type, size, names/paths, storage location, malware-risk controls, and download authorization. | File-flow design; validation controls; path traversal/authorization evidence; manual or automated check. | Applies to uploads, downloads, generated exports, and filesystem paths. |
-| `SEC-DB-001` | `database-access` | Yes | Database access must use safe query patterns, preserve tenant/ownership isolation, and avoid unintended data exposure. | Query/access design; implementation refs; injection/isolation check evidence; migration review when relevant. | Applies to raw SQL, ORM filters, migrations, reporting, and background jobs. |
-| `SEC-LOG-001` | `sensitive-logging` | Yes | Logs, traces, metrics, and error reports must not expose secrets, PAN, credentials, or unnecessary sensitive data. | Logging inventory; redaction/masking control; implementation refs; verification or manual review evidence. | Applies to new logs and changed observability/error handling paths. |
+| ID | Category | Mandatory when applicable | Operational severity | Conditional predicate | Source IDs | Requirement | Validator fields | Exception fields | Default Complies | Evidence Hint | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `SEC-AUTH-001` | `authentication` | Yes | `blocking` | `N/A` | `1.1-1.10`, `2.1-2.23`, `6.3`, `14.8` | Authentication changes must preserve trustworthy identity verification and protect credential-handling boundaries. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Auth-flow design control; implementation refs; negative/abuse test or manual review evidence; verification note. | Map all login, recovery, MFA, impersonation, and credential validation changes. |
+| `SEC-SESS-001` | `sessions` | Yes | `blocking` | `N/A` | `7.1-7.13` | Session and token changes must define secure lifetime, revocation, renewal, storage, and fixation protections. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Session lifecycle design control; cookie/token attribute evidence; test-design coverage or justified static/manual check. | Applies to browser cookies, bearer tokens, refresh tokens, and server-side sessions. |
+| `SEC-DATA-001` | `sensitive-data-pan` | Yes | `blocking` | `N/A` | `4.1`, `13.1-13.9`, `15.1-15.2` | Sensitive data, including PAN, must be minimized, protected in transit/storage, masked when displayed, and retained only as required. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Data-flow summary; masking/encryption control; implementation refs; verification or manual review evidence. | Treat unknown data sensitivity as a design-changing unknown during applicability. |
+| `SEC-SECRET-001` | `secrets` | Yes | `blocking` | `N/A` | `2.1`, `4.2`, `4.8`, `5.5`, `6.1`, `13.5` | Secrets must not be hardcoded, logged, committed, or exposed to clients; storage and rotation expectations must be explicit. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Secret source/config reference; no-hardcode evidence; redaction/logging check; rotation or owner note. | Applies to credentials, API keys, certificates, tokens, and cryptographic keys. |
+| `SEC-ACCESS-001` | `permissions-access-control` | Yes | `blocking` | `N/A` | `1.4`, `6.2-6.4`, `6.12`, `13.1`, `14.1-14.9` | Authorization must enforce least privilege, ownership boundaries, and denial-by-default behavior for protected resources. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Access-control design matrix; implementation refs; positive and negative permission checks or manual evidence. | Applies to role changes, ownership checks, tenant boundaries, and admin operations. |
+| `SEC-FILE-001` | `files` | Yes | `blocking` | `N/A` | `9.1-9.12`, `14.7` | File handling must validate type, size, names/paths, storage location, malware-risk controls, and download authorization. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | File-flow design; validation controls; path traversal/authorization evidence; manual or automated check. | Applies to uploads, downloads, generated exports, and filesystem paths. |
+| `SEC-DB-001` | `database-access` | Yes | `blocking` | `N/A` | `5.1-5.12`, `11.1-11.16`, `12.2` | Database access must use safe query patterns, preserve tenant/ownership isolation, and avoid unintended data exposure. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Query/access design; implementation refs; injection/isolation check evidence; migration review when relevant. | Applies to raw SQL, ORM filters, migrations, reporting, and background jobs. |
+| `SEC-LOG-001` | `sensitive-logging` | Yes | `blocking` | `N/A` | `3.1-3.11`, `8.1-8.5` | Logs, traces, metrics, and error reports must not expose secrets, PAN, credentials, or unnecessary sensitive data. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Logging inventory; redaction/masking control; implementation refs; verification or manual review evidence. | Applies to new logs and changed observability/error handling paths. |
+
+## Operational Severity Contract
+
+Applicability severity controls phase routing and evidence obligations. It is intentionally separate from review finding severity.
+
+| Severity | Applicability behavior | Required evidence |
+| --- | --- | --- |
+| `blocking` | Unresolved applicable evidence prevents phase success, verify success, or archive readiness unless a complete approved exception is recorded. | Name the guideline, missing evidence, owner phase, and implementation or verification reference. |
+| `conditional` | Applies only when the recorded predicate is true; false predicates may be marked not applicable. | Record predicate, predicate result, rationale, evidence refs, and downstream owner when true. |
+| `advisory` | Does not block by itself, but must remain downstream-visible as risk, guidance, or archive-readable context. | Preserve guideline ID, source IDs, rationale, and risk/guidance note. |
+
+Do not use review finding labels for security applicability routing, catalog blocking behavior, or validator severity checks.
+
+## Catalog Validator Contract
+
+Static validation of `security-applicability.md` artifacts must use the snapshot metadata and compact records above.
+
+Required checks:
+
+- `catalog.snapshotId` is `security-guidelines-initial-user-snapshot-2026-06-30` and `catalog.taxonomyVersion` is `1`.
+- Every referenced compact guideline ID exists in the checklist records.
+- Every referenced taxonomy category exists in the taxonomy table.
+- Every compact guideline has one or more Source IDs and every Source ID resolves in the preserved snapshot tables.
+- `operationalSeverity` and category decision `severity` values are limited to `blocking`, `conditional`, and `advisory`.
+- Conditional records include a predicate and predicate rationale when the predicate is evaluated false or true.
+- Exception records for missing mandatory evidence include `status: exception-approved`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, and `evidenceGap`.
+- Advisory evidence is preserved in downstream risks, guidance, or archive evidence rather than dropped because it is non-blocking.
+
+## Source Snapshot Checklist Template
+
+When a review needs one-to-one corporate source coverage, copy only the applicable source rows from the snapshot into the SDD artifact and use this checklist shape. This mirrors `skills/sdd-review/references/control-catalog.md` by keeping stable item IDs while adding reviewer-facing compliance, evidence, and notes fields.
+
+| Source ID | Guideline | Default Complies | Evidence Hint | Notes |
+| --- | --- | --- | --- | --- |
+| `1.1` | Example source guideline copied from the snapshot. | Yes/No/N/A | File, artifact, command result, inspection note, or approved exception. | Context, risk, or `None`. |
+
+Do not add `Default Complies`, `Evidence Hint`, or `Notes` to the preserved source snapshot tables below; those tables are immutable source evidence. Add checklist answers in generated SDD artifacts, review reports, or copied working checklists instead.
 
 ## Full Corporate Guideline Snapshot
 

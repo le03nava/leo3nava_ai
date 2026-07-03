@@ -48,7 +48,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Produced artifact | `sdd/{change-name}/verify-report` or `openspec/changes/{change-name}/verify-report.md`. |
 | Mutates | None outside the produced verification report artifact. |
 | Test-design consumption | Compare every planned `test-design.md` case against implementation, execution, apply-progress, security evidence, or justified skip evidence; uncovered mandatory cases fail verification, while uncovered non-mandatory cases are warnings. |
-| Security consumption | Compare required `security-design.md` controls and mandatory evidence before archive readiness; complete approved exceptions are the only valid substitute for missing mandatory evidence. |
+| Security consumption | Compare applicability validation metadata, required `security-design.md` controls, no-impact proof, and mandatory evidence before archive readiness; complete approved exceptions are the only valid substitute for missing mandatory evidence. |
 | Review consumption | Resolve exactly one review artifact identity from the selected backend, cite its verdict/blocking summary/evidence summary, and fail or block when review evidence is missing, unreadable, blocking, or ambiguous. Do not duplicate the full 96-control review matrix in `verify-report`. |
 | Runtime/static evidence | Execute configured commands when available; when no runner exists, report unavailable runtime evidence explicitly and do not invent commands. |
 | Success routing | `next_recommended: archive` only for `PASS` or eligible `PASS WITH WARNINGS`. |
@@ -70,6 +70,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Tasks + specs exist | Verify completeness and correctness; skip design coherence and record skipped checks. |
 | Proposal/specs/design/test-design/tasks exist | Verify all dimensions, including planned case coverage. |
 | Applicability is security-impacting and `security-design.md` is missing | CRITICAL blocker; return `next_recommended: security-design`. |
+| Applicability is no-impact but no-impact proof is missing, incomplete, or validation metadata is absent/failing | CRITICAL `INVALID_NO_IMPACT_PROOF`; return `next_recommended: resolve-blockers`. |
 | Review report is missing, unreadable, ambiguous, or lacks a non-blocking verdict | CRITICAL blocker; return `next_recommended: resolve-blockers` for missing/ambiguous/unreadable evidence or `next_recommended: apply` for blocking review findings. |
 | Verification report duplicates the full 96-control review matrix instead of citing review summary evidence | Fix before persistence; verification owns spec/test/security evidence, not review matrix ownership. |
 | Mandatory security-design control has no implementation, verification evidence, or complete approved exception | CRITICAL `SECURITY_EVIDENCE_MISSING` and verdict `FAIL`. |
@@ -78,6 +79,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Test command exits non-zero | CRITICAL. |
 | Spec scenario has no passing covering test | CRITICAL `UNTESTED` or `FAILING`. |
 | Mandatory test-design case has no matching implementation, execution, or justified skip evidence | CRITICAL `UNTESTED` and verdict `FAIL`. |
+| Runtime test, linter, type-checker, formatter, or coverage command is unavailable | Report the unavailable tool explicitly in runtime/static evidence; do not mark the missing command as passed. |
 | Non-mandatory test-design case has no matching evidence | WARNING; do not fail solely because of this uncovered non-mandatory case. |
 | Design deviation exists | WARNING unless it breaks a spec. |
 | Verification failure discovered | Report only; do not patch implementation. |
@@ -91,17 +93,18 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 4. Count completed and incomplete tasks. Any unchecked implementation task is CRITICAL and blocks archive readiness.
 5. Resolve the review artifact and cite its verdict, blocking summary, evidence summary, and next recommendation. If the report is missing, ambiguous, unreadable, or blocking, classify it according to Decision Gates before continuing.
 6. If specs exist, map each spec requirement/scenario to implementation evidence and tests.
-7. If security design exists, map each mandatory control to implementation references, test-design cases, verification evidence, or complete approved exceptions; classify gaps as CRITICAL.
-8. If test design exists, map each planned case to implementation, execution, apply-progress, security evidence, review evidence summary, or justified skip evidence and classify mandatory gaps as CRITICAL and non-mandatory gaps as WARNING.
-9. If design exists, check design decisions against changed code. If design is missing, skip design coherence and record why.
-10. Run test, build/type-check, and coverage commands when available. For full spec verification, preserve gentle-ai's stricter runtime evidence: source inspection alone does not prove spec scenario compliance.
-11. Build the behavioral and security compliance matrices from actual test results and evidence when specs/scenarios/security controls exist; cite review summary evidence separately without duplicating the full review matrix.
-12. Validate the report before persistence: completeness table present, review evidence citation present, every spec scenario has a status, every security control has evidence/exception status when required, every test-design case has a coverage status, runtime evidence includes command and result, skipped dimensions are listed, Strict TDD sections are present when active, and any CRITICAL issue forces verdict `FAIL`.
-13. Persist and return the verification report, including skipped dimensions for missing artifacts.
+7. If security applicability exists, validate routing evidence: security-impacting changes require security design, while no-impact skips require complete no-impact proof and non-failing validation metadata.
+8. If security design exists, map each mandatory control to implementation references, test-design cases, verification evidence, archive evidence fields, or complete approved exceptions; classify gaps as CRITICAL.
+9. If test design exists, map each planned case to implementation, execution, apply-progress, validation metadata, security evidence, review evidence summary, unavailable-runtime-tooling report, or justified skip evidence and classify mandatory gaps as CRITICAL and non-mandatory gaps as WARNING.
+10. If design exists, check design decisions against changed code. If design is missing, skip design coherence and record why.
+11. Run test, build/type-check, and coverage commands when available. For full spec verification, preserve gentle-ai's stricter runtime evidence: source inspection alone does not prove spec scenario compliance.
+12. Build the behavioral and security compliance matrices from actual test results and evidence when specs/scenarios/security controls exist; cite review summary evidence separately without duplicating the full review matrix.
+13. Validate the report before persistence: completeness table present, review evidence citation present, every spec scenario has a status, every security control has evidence/exception status when required, every test-design case has a coverage status, validation metadata is covered, unavailable tooling is explicit, runtime evidence includes command and result when available, skipped dimensions are listed, Strict TDD sections are present when active, and any CRITICAL issue forces verdict `FAIL`.
+14. Persist and return the verification report, including skipped dimensions for missing artifacts.
 
 ## Output Contract
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Verification Report` in `detailed_report` with change, mode, completeness table, review evidence citation, build/tests/coverage evidence, spec compliance matrix, security evidence matrix, test-design coverage matrix, correctness table, design coherence table, skipped/degraded dimensions, issues grouped as CRITICAL/WARNING/SUGGESTION, and final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`. Cite `review-report.md` by path/topic and summarize verdict/blocking state only; do not reproduce the full 96-control matrix.
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Verification Report` in `detailed_report` with change, mode, completeness table, review evidence citation, build/tests/coverage evidence, unavailable-tooling report, applicability validation/no-impact routing evidence, spec compliance matrix, security evidence matrix, test-design coverage matrix, correctness table, design coherence table, skipped/degraded dimensions, issues grouped as CRITICAL/WARNING/SUGGESTION, and final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`. Cite `review-report.md` by path/topic and summarize verdict/blocking state only; do not reproduce the full 96-control matrix.
 
 ## Routing Contract
 

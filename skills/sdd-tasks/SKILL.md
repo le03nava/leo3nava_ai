@@ -37,10 +37,10 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, `security-applicability`, design, mandatory `test-design`, delivery context, testing capabilities, and required `security-design` from the selected backend. `security-design` is required only when security applicability is security-impacting. |
+| Required inputs | Proposal, specs, `security-applicability`, design, mandatory `test-design`, delivery context, testing capabilities, and required `security-design` from the selected backend. `security-design` is required only when security applicability is security-impacting; valid no-impact proof with non-failing validation metadata keeps it optional. |
 | Produced artifact | `sdd/{change-name}/tasks` or `openspec/changes/{change-name}/tasks.md`. |
 | Mutates | None outside the produced tasks artifact. |
-| Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
+| Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
 | Security consumption | Mandatory security controls and evidence expectations from required `security-design.md` and `test-design.md` must be represented as tasks or complete approved exceptions. |
 | Review workload behavior | Preserve the Review Workload Forecast guard lines, resolved delivery strategy, chain strategy, size-exception field, and reviewable work-unit split. |
 | Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
@@ -64,6 +64,7 @@ Routing rules for `next_recommended`:
 | Required proposal, spec, design, or test-design is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write tasks. |
 | `security-applicability.md` is missing | Return `blocked` with `next_recommended: security-applicability`; do not write tasks. |
 | Applicability is security-impacting and `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write tasks. |
+| Applicability is no-impact but no-impact proof is missing, incomplete, or validation metadata is absent/failing | Return `blocked` with `next_recommended: resolve-blockers`; missing `security-design.md` is compatible only for valid no-impact proof. |
 | Mandatory security control evidence from `security-design.md` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
 | Task draft contains vague, non-verifiable, or oversized tasks | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 | Review workload risk is `High` against the received review budget and chain strategy is missing | Set `Decision needed before apply: Yes` and `Chain strategy: pending`; do not ask the user directly. |
@@ -89,6 +90,7 @@ From `test-design.md`, identify:
 
 From `security-applicability.md` and required `security-design.md`, identify:
 - Whether security design is required or explicitly not required.
+- Applicability validation metadata (`validator`, `status`, `checkedAt`, notes), catalog snapshot identity, category matrix completeness, and no-impact proof state.
 - Mandatory guideline controls, expected evidence owners, residual risks, and complete approved exceptions.
 - Implementation, apply-evidence, verification, or archive-evidence tasks needed to satisfy mandatory controls.
 
@@ -99,6 +101,8 @@ Also read testing capabilities when available:
 - None: use only current-session testing context provided by the orchestrator
 
 Use testing capabilities to decide whether test-first RED/GREEN/REFACTOR tasks are required. Do not invent TDD tasks when Strict TDD is unavailable or disabled.
+
+If runtime test, coverage, linter, type-checker, or formatter commands are unavailable, create static/manual evidence tasks and require later apply/verify reports to state the unavailable tooling explicitly.
 
 ### Step 3: Write tasks.md
 
@@ -260,6 +264,7 @@ Before persisting or returning, verify:
 - Security evidence tasks reference guideline IDs and controls from `security-design.md` when required.
 - Every mandatory planned case in `test-design.md` is represented by implementation, testing, or evidence work; omitted mandatory cases are blockers.
 - Every mandatory applicable security guideline has implementation, test-design, apply, verify, archive evidence, or a complete approved exception represented in tasks.
+- Validation metadata, invalid no-impact blockers, archive evidence fields, and unavailable-runtime-test reporting from `test-design.md` are represented in tasks when applicable.
 - The Review Workload Forecast includes the required plain-text guard lines.
 - If `Review budget risk` or `400-line budget risk` is `High`, Suggested Work Units are present.
 - If `feature-branch-chain` is selected, work units name the intended base boundaries.

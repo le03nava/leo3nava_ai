@@ -40,7 +40,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Produced artifact | `sdd/{change-name}/security-design` or `openspec/changes/{change-name}/security-design.md` only when `securityImpact: true`. |
 | Mutates | None outside the conditional security design artifact. No artifact is created for no-impact changes. |
 | Conditional behavior | If applicability is `no-impact` or `securityImpact: false`, return success with `next_recommended: test-design` and preserve `security-design.md` as not required. |
-| Control/evidence mapping | For security-impacting changes, preserve guideline IDs, taxonomy categories, mandatory flags, required controls, expected evidence owners/statuses, residual risks, carried applicability risks, and complete approved exceptions. |
+| Control/evidence mapping | For security-impacting changes, preserve guideline IDs, taxonomy categories, mandatory flags, operational severity, source refs, validation metadata, required controls, expected evidence owners/statuses, residual risks, carried applicability risks, and complete approved exceptions. |
 | Downstream obligations | Required controls and mandatory evidence expectations must remain consumable by `sdd-test-design`, `sdd-apply`, `sdd-verify`, and archive readiness checks. |
 | Success routing | `next_recommended: test-design` whether the artifact is created or explicitly not required. |
 | Block routing | `next_recommended: resolve-blockers` for missing required inputs, unknown guideline IDs, incomplete mandatory evidence/exception data, or validation failures. |
@@ -52,6 +52,8 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Security applicability or technical design is missing | Return `blocked` with `next_recommended: resolve-blockers`. |
 | Applicability is `no-impact` or `securityImpact: false` | Do not create `security-design.md`; return success with `next_recommended: test-design`. |
 | Applicability is `security-impacting` | Create `security-design.md`. |
+| Applicability has enriched fields but `securityImpact: false` | Treat enriched fields as no-impact proof context only; do not require or create `security-design.md` when proof and validation metadata are complete. |
+| Applicability has incomplete no-impact proof or failed validation metadata | Return `blocked` with `next_recommended: resolve-blockers`; do not silently skip security design. |
 | Applicable guideline ID is unknown | Return `blocked`; do not invent controls. |
 | Mandatory evidence is missing without complete approved exception | Return `blocked` or fix the draft before persistence. |
 | Applicability has `nonBlockingRisks` | Resolve each risk or carry it forward with owner phase and evidence expectation. |
@@ -60,10 +62,15 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 For every applicable guideline:
 - Preserve `guidelineId`, `taxonomyCategory`, and `mandatoryWhenApplicable` from the catalog.
+- Preserve applicability `catalog.snapshotId`, `catalog.taxonomyVersion`, source refs, operational severity, decision-matrix rationale/evidence refs, and `validation` metadata when `securityImpact: true`.
 - Create a required control grounded in technical `design.md`.
+- Translate `blocking` and true `conditional` obligations into controls, downstream evidence expectations, residual risks, or complete approved exceptions.
+- Preserve `advisory` obligations as downstream-visible risk or guidance rather than dropping them because they are non-blocking.
 - Add downstream evidence expectations for mandatory controls, normally owned by `test-design`, `apply`, `verify`, and/or `archive`.
 - Use contract evidence statuses only: `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked`.
 - Record residual risk explicitly; use `None` only when no residual risk remains.
+
+Do not consume enriched decision-matrix fields as mandatory security-design inputs for no-impact artifacts. Valid no-impact routing remains compatible when every category is `not-applicable`, no-impact proof is complete, validation metadata is present and non-failing, and `securityImpact: false`.
 
 Approved exceptions are valid only when all fields exist: `status: exception-approved`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, and `evidenceGap`.
 
@@ -79,10 +86,16 @@ schemaName: gentle-ai.sdd-security-design
 schemaVersion: 1
 changeName: {change-name}
 sourceApplicability: {path-or-topic-key}
+catalog:
+  snapshotId: {catalog-snapshot-id}
+  taxonomyVersion: 1
+  source: skills/_shared/security-guideline-catalog.md
 controls:
   - guidelineId: SEC-...
     taxonomyCategory: <taxonomyCategory>
     mandatoryWhenApplicable: true
+    operationalSeverity: blocking | conditional | advisory
+    sourceRefs: []
     requiredControl: <control description>
     expectedEvidence:
       - type: design-control | implementation-reference | test-design-check | verification-evidence | approved-exception
@@ -117,6 +130,8 @@ nextRecommended: test-design
 
 Before persisting or returning, verify:
 - `security-design.md` exists only for security-impacting changes.
+- No-impact artifacts with complete proof and non-failing validation metadata skip `security-design.md`; incomplete proof or failed validation blocks instead of silently skipping.
+- Security-impacting artifacts preserve `catalog` identity, matrix/source refs, operational severity, and validation metadata in controls or carried risks.
 - Every applicable guideline is represented in `controls` or explicitly justified as not applicable.
 - Mandatory controls include downstream evidence expectations.
 - Evidence statuses and owner phases use shared-contract vocabulary.
