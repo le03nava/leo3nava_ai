@@ -1,6 +1,6 @@
 # Security Guideline Catalog
 
-Operational security checklist for SDD security applicability, security design, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
+Operational security checklist for mandatory SDD security design, security review, verification evidence, archive gates, and legacy applicability compatibility. Stable guideline IDs are preserved for audit continuity.
 
 ## Snapshot Metadata
 
@@ -11,14 +11,16 @@ Operational security checklist for SDD security applicability, security design, 
 | Taxonomy version | `1` |
 | Source | Initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
-| Scope | Security-impact classification, control mapping, evidence planning, verification, and archive gates |
+| Scope | Security-impact classification inside `security-design.md`, control mapping, evidence planning, `review-security-report.md`, verification, archive gates, and legacy applicability compatibility |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
 | Operational severity vocabulary | `blocking`, `conditional`, `advisory` |
+| Matrix vocabulary | `Yes`, `No`, `N/A` |
+| Lifecycle status vocabulary | `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked` |
 | Migration note | This file can later migrate to an official external versioned source. Preserve this snapshot ID and guideline IDs in archived evidence for audit continuity. |
 
 ## Checklist Usage
 
-Use this catalog as a checklist when a change is security-impacting or when `sdd-review` raises a security-related concern.
+Use this catalog as a checklist for every new `security-design.md` and `review-security-report.md`. Legacy `security-applicability.md` artifacts may still cite it as historical/archive evidence, but new changes classify and review security through mandatory security design and security review.
 
 | Column | Required value |
 | --- | --- |
@@ -28,9 +30,17 @@ Use this catalog as a checklist when a change is security-impacting or when `sdd
 
 The compact records below are the authoritative checklist rows for SDD phases. The full corporate snapshot remains source fidelity and should not be rewritten as evidence.
 
+Matrix rows MUST use `Yes`, `No`, or `N/A`:
+
+- `Yes`: the guideline applies and has planned, implemented, verified, or exception-approved evidence.
+- `No`: the guideline applies but required evidence is missing, failing, blocked, or covered only by an incomplete exception.
+- `N/A`: the guideline is out of scope and includes evidence plus rationale proving why the category, platform, API, workflow, or data class is irrelevant.
+
+Lifecycle status MUST be one of `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, or `blocked`.
+
 ## Taxonomy
 
-Use these compact category IDs in `security-applicability.md`, `security-design.md`, task evidence, verification reports, and archive blockers.
+Use these compact category IDs in `security-design.md`, `review-security-report.md`, task/apply evidence, verification reports, archive blockers, and legacy `security-applicability.md` compatibility readers.
 
 | Category ID | Category | Applies when a change touches |
 | --- | --- | --- |
@@ -72,17 +82,21 @@ Do not use review finding labels for security applicability routing, catalog blo
 
 ## Catalog Validator Contract
 
-Static validation of `security-applicability.md` artifacts must use the snapshot metadata and compact records above.
+Static validation of new security artifacts must target `security-design.md` and `review-security-report.md` using the snapshot metadata and compact records above. Static validation of `security-applicability.md` is legacy/archive-only and MUST NOT block new-change routing.
 
 Required checks:
 
 - `catalog.snapshotId` is `security-guidelines-initial-user-snapshot-2026-06-30` and `catalog.taxonomyVersion` is `1`.
 - Every referenced compact guideline ID exists in the checklist records.
 - Every referenced taxonomy category exists in the taxonomy table.
+- Matrix answers are limited to `Yes`, `No`, and `N/A`.
+- Lifecycle statuses are limited to `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, and `blocked`.
 - Every compact guideline has one or more Source IDs and every Source ID resolves in the preserved snapshot tables.
 - `operationalSeverity` and category decision `severity` values are limited to `blocking`, `conditional`, and `advisory`.
 - Conditional records include a predicate and predicate rationale when the predicate is evaluated false or true.
 - Exception records for missing mandatory evidence include `status: exception-approved`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, and `evidenceGap`.
+- Evidence fields use review-safe locations, summaries, command outputs, or redacted placeholders rather than raw PAN, PII, credentials, tokens, private keys, or confidential values.
+- `N/A` rows include rationale and evidence proving out-of-scope status.
 - Advisory evidence is preserved in downstream risks, guidance, or archive evidence rather than dropped because it is non-blocking.
 
 ## Source Snapshot Checklist Template
@@ -337,22 +351,30 @@ Security design should turn each applicable guideline into one or more evidence 
 - `implementation-reference`: file, function, config, or prompt change where the control is implemented.
 - `test-design-check`: planned automated, static, or manual check in `test-design.md`.
 - `verification-evidence`: result recorded by `sdd-verify`.
+- `security-review-evidence`: row-level implementation validation recorded by `sdd-review-security` in `review-security-report.md`.
 - `approved-exception`: explicit risk acceptance when mandatory evidence cannot be produced.
 
 Mandatory applicable guidelines block archive unless evidence is complete or an approved exception follows `skills/_shared/sdd-security-contract.md`.
 
 ## Review-Phase Cross-Reference Guidance
 
-`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Security applicability and security design remain authoritative for taxonomy applicability, mandatory controls, expected evidence, and approved exceptions.
+`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Mandatory `security-design.md` and `review-security-report.md` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions. Legacy `security-applicability.md` remains readable only for archived/old changes.
 
 Review-safe evidence types for security-related review rows:
 
 | Evidence Type | Review Use | Boundary |
 | --- | --- | --- |
-| `implementation-reference` | Cite a changed file, function, prompt, configuration entry, or artifact section inspected during review. | Does not replace a required security-design implementation reference when security applicability is impacting. |
+| `implementation-reference` | Cite a changed file, function, prompt, configuration entry, or artifact section inspected during review. | Does not replace a required security-design implementation reference. |
 | `static-inspection` | Cite static/manual inspection evidence, including line references or artifact sections. | Does not prove runtime security behavior unless the approved test design allows manual/static evidence. |
 | `test-evidence` | Cite a configured command result, verify evidence, or planned test-design check when available. | Must not invent commands; unavailable runners remain explicit warnings/blockers according to phase rules. |
 | `approved-exception` | Cite a complete exception already owned by security design or downstream governance. | Review cannot create or approve mandatory security exceptions. |
 | `n/a-evidence` | Prove a platform, framework, API, data class, artifact, or workflow is irrelevant to the reviewed change. | Must include an evidence location and a comment explaining why no security-design control is required. |
 
-When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `security-applicability.md` or `security-design.md`, downstream phases must resolve the conflict in favor of the security applicability/design outputs and report the review row as a finding rather than treating it as new authority.
+Safe-evidence rules for mandatory controls:
+
+- `SEC-DATA-001`: cite artifact paths, sections, data-flow summaries, masking/encryption decisions, or redacted examples instead of PAN, PII, credentials, or confidential values.
+- `SEC-SECRET-001`: cite secret/config names, storage mechanisms, ownership notes, or redacted placeholders; never include real secret values.
+- `SEC-ACCESS-001`: cite workflow gates, status examples, phase routing, and blocker evidence proving denial-by-default progression.
+- `SEC-LOG-001`: cite report templates, observations, redaction rules, and audit evidence locations without raw sensitive payloads.
+
+When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `security-design.md` or `review-security-report.md`, downstream phases must resolve the conflict in favor of those security authorities and report the review row as a finding rather than treating it as new authority.

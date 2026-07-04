@@ -2,139 +2,132 @@
 
 ## Purpose
 
-Define the always-run security applicability phase that classifies whether an SDD change has security impact and records guideline mapping or no-impact evidence.
+Define legacy security applicability compatibility after new-change classification moved into mandatory `sdd-security-design`.
 
 ## Requirements
 
-### Requirement: Always-Run Applicability Classification
+### Requirement: Legacy-Only Applicability Classification
 
-The SDD workflow MUST run `sdd-security-applicability` after `sdd-spec` succeeds and before technical design proceeds. The phase MUST classify the change as security-impacting or no-impact using available proposal and spec evidence.
+The SDD workflow MUST NOT provide, launch, or require a repo-local `sdd-security-applicability` executor or skill for new changes. Applicability classification MUST live in mandatory `sdd-security-design`. Legacy `security-applicability.md` artifacts MAY be read as historical data for archived or old changes and MUST NOT create active routing authority, artifact production, or executor availability for new changes.
 
-#### Scenario: Security-impacting change classified
+#### Scenario: New change excludes applicability phase
 
-- GIVEN an SDD change affects authentication, sessions, PAN, secrets, permissions, files, database access, or sensitive logging
-- WHEN `sdd-security-applicability` runs
-- THEN it MUST mark the change as security-impacting
-- AND it MUST identify applicable guideline categories.
+- GIVEN a new SDD change completes `sdd-spec`
+- WHEN routing is computed
+- THEN the next planning phase MUST be `sdd-design`
+- AND `sdd-security-applicability` MUST NOT appear in the active DAG.
 
-#### Scenario: No-impact change classified
+#### Scenario: Legacy artifact is read-only
 
-- GIVEN an SDD change has no plausible security impact
-- WHEN `sdd-security-applicability` runs
-- THEN it MUST record explicit no-impact evidence
-- AND downstream phases MUST treat the applicability artifact as complete.
+- GIVEN an archived change contains `security-applicability.md`
+- WHEN compatibility readers inspect the archive
+- THEN they MAY read it as historical evidence
+- AND they MUST NOT require rerunning the phase.
+
+#### Scenario: Executor and skill are absent
+
+- GIVEN active repo-local SDD agents and skills are enumerated
+- WHEN launchable security phases are resolved
+- THEN no `sdd-security-applicability` executor or skill MUST be offered
+- AND legacy artifacts MUST remain readable without launching one.
 
 ### Requirement: Blocking and Risk Rules
 
-The phase MUST block only when missing information could change security design decisions across authentication, sessions, sensitive data or PAN, secrets, permissions or access control, files, database access, or sensitive logging. Minor evidence gaps SHOULD continue as risks for `sdd-security-design`.
+Security applicability blockers MUST be evaluated inside `sdd-security-design` for new changes. Legacy applicability blockers MAY remain visible when reading old artifacts, but MUST NOT block a new-change DAG edge.
 
 #### Scenario: Design-changing information is missing
 
 - GIVEN security-relevant scope is ambiguous in a way that could change required controls
-- WHEN applicability is evaluated
-- THEN the phase MUST return blocked
-- AND the blocker MUST name the missing decision area.
+- WHEN `sdd-security-design` evaluates classification
+- THEN it MUST block or record risk there
+- AND no `security-applicability.md` MUST be created.
 
 #### Scenario: Minor evidence gap exists
 
 - GIVEN a security impact is known but a non-decisive detail is incomplete
-- WHEN applicability is evaluated
-- THEN the phase SHOULD continue
+- WHEN `sdd-security-design` evaluates classification
+- THEN it SHOULD continue when the gap is non-blocking
 - AND it MUST record the gap as a security-design risk.
 
 ### Requirement: Artifact and Routing Contract
 
-The phase MUST produce `security-applicability.md` with classification, evidence, guideline mapping, risks, and routing recommendation. Security-impacting changes MUST route to `sdd-security-design`; no-impact changes MUST skip security design and continue normal design workflow. The phase artifact contract MUST preserve the existing artifact key/path and routing behavior while delegating common artifact-store mode semantics, artifact resolution, and persistence verification to the shared persistence authority.
+New changes MUST NOT produce `security-applicability.md`. The canonical classification artifact for new changes MUST be `security-design.md`, and routing MUST be `spec -> design -> security-design -> test-design`. Legacy compatibility readers MAY continue resolving old applicability artifact paths as data references without making them authoritative or mapping them to a runnable phase.
 
-#### Scenario: Artifact drives conditional routing
+#### Scenario: Artifact is not produced
 
-- GIVEN `security-applicability.md` marks a change as security-impacting
-- WHEN the orchestrator computes next phases
-- THEN it MUST require `sdd-security-design`
-- AND design-related successors MUST receive the applicability artifact reference.
+- GIVEN a new change needs security classification
+- WHEN planning artifacts are persisted
+- THEN `security-design.md` MUST contain classification
+- AND `security-applicability.md` MUST be absent.
 
-#### Scenario: Persistence boundary is delegated
+#### Scenario: Legacy data reference is resolved
 
-- GIVEN `sdd-security-applicability` writes or reads its artifact in any artifact-store mode
-- WHEN the executor resolves backend behavior
-- THEN it MUST use the shared persistence authority for mode semantics and resolver behavior
-- AND it MUST keep `security-applicability.md` as the phase artifact contract.
-
-#### Scenario: No-impact routing compatibility is preserved
-
-- GIVEN `security-applicability.md` records no-impact evidence
-- WHEN downstream routing is computed
-- THEN the workflow MUST continue to skip `sdd-security-design`
-- AND missing `security-design.md` MUST NOT become a blocker solely because persistence wording changed.
+- GIVEN an old change has `security-applicability.md`
+- WHEN a reader resolves historical artifacts
+- THEN the path MAY be resolved as legacy data
+- AND no runnable applicability executor or skill MUST be required.
 
 ### Requirement: Complete Category Decision Matrix
 
-`security-applicability.md` MUST include the catalog identity, supported taxonomy version, and a decision matrix that evaluates every supported security taxonomy category as `applicable`, `not-applicable`, or `unknown`. Each row MUST include rationale, evidence references, and operational severity using only `blocking`, `conditional`, or `advisory`.
+For new changes, the complete category/guideline matrix MUST be recorded in `security-design.md`. Legacy applicability matrices MAY be parsed for archive readability only.
 
 #### Scenario: Every category is evaluated
 
 - GIVEN the catalog exposes supported taxonomy categories
-- WHEN `sdd-security-applicability` writes `security-applicability.md`
-- THEN every category MUST appear exactly once in the decision matrix
-- AND missing or duplicate categories MUST make the artifact invalid.
+- WHEN `sdd-security-design` writes its artifact
+- THEN every category/guideline MUST be represented there
+- AND applicability artifacts MUST NOT be authoritative.
 
 #### Scenario: Unknown decision is design-changing
 
 - GIVEN a category is marked `unknown` with `blocking` severity
-- WHEN the applicability phase completes
+- WHEN `sdd-security-design` evaluates the matrix
 - THEN it MUST return blocked
 - AND it MUST identify the missing evidence or decision.
 
 ### Requirement: Explicit No-Impact Proof
 
-A no-impact classification MUST be supported by positive no-impact proof and MUST NOT be inferred from absent security evidence. No-impact proof MUST show every supported category as `not-applicable`, include rationale and evidence references, and have no design-changing unknowns.
+No-impact proof for new changes MUST be recorded as `not-applicable` matrix rows in `security-design.md`; absence of `security-design.md` MUST NOT prove no impact. Legacy no-impact proof remains readable only for old artifacts.
 
 #### Scenario: Valid no-impact artifact
 
 - GIVEN every category is `not-applicable` with evidence and rationale
-- WHEN the artifact classifies the change as no-impact
-- THEN downstream routing MUST treat the artifact as complete
-- AND `sdd-security-design` MUST remain skipped.
+- WHEN the new workflow runs
+- THEN `security-design.md` MUST still be created
+- AND `sdd-security-design` MUST NOT be skipped.
 
 #### Scenario: Absence of evidence is insufficient
 
 - GIVEN a change has no mapped guidelines but lacks no-impact rationale for one category
-- WHEN applicability is evaluated
-- THEN the artifact MUST NOT classify the change as no-impact
+- WHEN `sdd-security-design` evaluates the matrix
+- THEN `security-design.md` MUST NOT classify the change as no-impact
 - AND the missing proof MUST be recorded as a blocker or risk by severity.
 
 ### Requirement: Supported Applicability Overrides
 
-`openspec/config.yaml` MAY define `rules.security-applicability` overrides only for extra prompts, stricter source coverage, validator mode, and stricter category severity. Overrides MUST NOT disable required categories, weaken formal source coverage, downgrade `blocking` obligations, or bypass no-impact proof.
+`openspec/config.yaml` MAY define legacy `rules.security-applicability` overrides only for reading old artifacts. New-change security-design overrides MUST NOT disable required categories, weaken formal source coverage, downgrade `blocking` obligations, bypass no-impact proof, or restore the applicability phase.
 
 #### Scenario: Safe override is applied
 
 - GIVEN config adds an extra design-changing unknown prompt
-- WHEN applicability evaluates a change
+- WHEN security design evaluates a new change
 - THEN the prompt MUST be considered in the matrix
-- AND the artifact MUST record the override source.
+- AND `security-design.md` MUST record the override source.
 
 #### Scenario: Unsafe weakening is rejected
 
 - GIVEN config attempts to disable source coverage or remove a required category
-- WHEN applicability loads overrides
+- WHEN security design loads overrides
 - THEN the override MUST be rejected
 - AND the phase MUST continue with the stricter base contract or block if ambiguity remains.
 
 ### Requirement: Static Applicability Validator
 
-The workflow MUST require automatic static validation for `security-applicability.md` artifacts before reporting success. The validator MUST check required schema fields, classification/routing consistency, matrix completeness, no-impact proof, guideline ID validity, source reference validity, supported overrides, and severity vocabulary.
+Static validation for new changes MUST target `security-design.md`. Any applicability validator MAY remain only for legacy archive checks and MUST NOT be required for new phase success.
 
-#### Scenario: Validator accepts a complete artifact
+#### Scenario: Legacy validator remains compatible
 
-- GIVEN an artifact contains valid fields, matrix rows, guideline IDs, source refs, and routing
-- WHEN static validation runs
-- THEN validation MUST pass
-- AND the artifact MUST record validation metadata.
-
-#### Scenario: Validator blocks invalid artifact
-
-- GIVEN an artifact omits a category or uses an unsupported severity
-- WHEN static validation runs
-- THEN validation MUST fail
-- AND the phase MUST NOT report success until the artifact is corrected.
+- GIVEN an archive contains old applicability evidence
+- WHEN legacy validation is requested
+- THEN the validator MAY check old schema fields
+- AND it MUST NOT affect new-change routing.

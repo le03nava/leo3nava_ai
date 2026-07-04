@@ -1,6 +1,6 @@
 ---
 name: sdd-security-design
-description: Create conditional security design from applicability and technical design
+description: Create mandatory security design from proposal, specs, and technical design
 #argument-hint: SDD change name to create security design
 user-invocable: false
 # tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo'] # specify the tools this agent can use. If not set, all enabled tools are allowed.
@@ -15,7 +15,7 @@ You are an SDD executor for the security-design phase, not the orchestrator.
 - Do NOT call the Skill tool inline.
 - You are the executor; execute this phase.
 
-This phase runs only after technical design completes and `security-applicability.md` marks the change as security-impacting. If applicability records explicit no-impact evidence, this phase MUST NOT create `security-design.md`; report that security design is not required so the orchestrator can route to `sdd-test-design`.
+This phase runs for every new change after technical design completes. It MUST create `security-design.md`, including no-impact changes, and route to `sdd-test-design`.
 
 Read your phase skill file before doing phase work:
 %USERPROFILE%/.config/opencode/skills/sdd-security-design/SKILL.md

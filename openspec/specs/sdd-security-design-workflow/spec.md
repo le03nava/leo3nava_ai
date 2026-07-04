@@ -2,51 +2,44 @@
 
 ## Purpose
 
-Define the conditional security design phase that translates applicable guidelines into design controls, evidence expectations, and downstream verification obligations.
+Define the mandatory security design phase that translates proposal, specs, and technical design context into classification, controls, evidence expectations, and downstream verification obligations.
 
 ## Requirements
 
-### Requirement: Conditional Security Design Phase
+### Requirement: Mandatory Security Design Phase
 
-The SDD workflow MUST run `sdd-security-design` only when `security-applicability.md` marks a change as security-impacting. The workflow MUST NOT require `security-design.md` for explicit no-impact changes.
+The SDD workflow MUST run `sdd-security-design` for every new change after `sdd-design` succeeds and before `sdd-test-design`. The phase MUST always create `security-design.md`, including for no-impact changes.
 
-#### Scenario: Applicable change requires security design
+#### Scenario: Every new change requires security design
 
-- GIVEN `security-applicability.md` marks the change as security-impacting
-- WHEN technical design completes
+- GIVEN `sdd-design` has completed for a new change
+- WHEN routing is computed
 - THEN the next required phase MUST be `sdd-security-design`
-- AND task planning MUST remain blocked until `security-design.md` exists or the phase is blocked.
+- AND `sdd-test-design` MUST remain blocked until `security-design.md` exists or the phase blocks.
 
-#### Scenario: No-impact change skips security design
+#### Scenario: No-impact still creates artifact
 
-- GIVEN `security-applicability.md` records no-impact evidence
-- WHEN technical design completes
-- THEN the workflow MUST skip `sdd-security-design`
-- AND downstream phases MUST NOT treat missing `security-design.md` as a blocker.
+- GIVEN no security guideline applies
+- WHEN `sdd-security-design` runs
+- THEN it MUST write `security-design.md`
+- AND the matrix rows MUST record `not-applicable` evidence.
 
 ### Requirement: Security Design Artifact Contract
 
-`sdd-security-design` MUST create `security-design.md` for security-impacting changes. The artifact MUST map applicable guidelines to required controls, expected evidence, mandatory status, residual risks, and downstream test-design obligations. The phase artifact contract MUST preserve conditional artifact creation and existing artifact identity while delegating common artifact-store mode semantics, artifact resolution, and persistence verification to the shared persistence authority.
+`sdd-security-design` MUST create `security-design.md` for every new change. The artifact MUST own classification, catalog snapshot identity, category/guideline matrix, controls, expected evidence, lifecycle statuses, risks, exceptions, and archive gate expectations while delegating backend persistence mechanics to the shared persistence authority.
 
-#### Scenario: Guidelines become controls
+#### Scenario: Classification and controls are unified
 
-- GIVEN applicability identified mandatory authentication or access-control guidelines
-- WHEN `sdd-security-design` runs
-- THEN `security-design.md` MUST define the required controls
-- AND it MUST state evidence expected from apply, test-design, and verify phases.
+- GIVEN design context is available
+- WHEN `sdd-security-design` writes the artifact
+- THEN it MUST classify security impact inside `security-design.md`
+- AND it MUST map applicable guidelines to controls and expected evidence.
 
 #### Scenario: Applicability risks are carried forward
 
 - GIVEN applicability recorded minor evidence gaps as risks
 - WHEN security design is written
 - THEN `security-design.md` MUST either resolve each risk or preserve it with an owner-facing evidence expectation.
-
-#### Scenario: Conditional artifact behavior is preserved
-
-- GIVEN `security-applicability.md` records explicit no-impact evidence
-- WHEN the workflow evaluates required artifacts
-- THEN it MUST NOT require `security-design.md`
-- AND this compatibility MUST hold across supported artifact-store modes.
 
 #### Scenario: Persistence boundary is delegated
 
@@ -57,7 +50,7 @@ The SDD workflow MUST run `sdd-security-design` only when `security-applicabilit
 
 ### Requirement: Mandatory Evidence and Exceptions
 
-Security design MUST identify mandatory applicable guideline evidence. Archive MUST be treated as blocked when mandatory evidence is missing unless an approved exception records approver, guideline, accepted-risk rationale, and mitigation or follow-up.
+Security design MUST identify mandatory evidence for every applicable guideline. Archive MUST be blocked when mandatory evidence is missing unless an approved exception records approver, guideline, accepted-risk rationale, and mitigation or follow-up.
 
 #### Scenario: Missing mandatory evidence blocks archive
 
@@ -75,14 +68,14 @@ Security design MUST identify mandatory applicable guideline evidence. Archive M
 
 ### Requirement: Enriched Applicability Consumption
 
-`sdd-security-design` MUST consume enriched applicability fields for security-impacting changes, including catalog snapshot identity, evaluated categories, decision matrix rows, source evidence refs, operational severity, and validation metadata. It MUST translate applicable `blocking` and `conditional` obligations into controls, evidence expectations, risks, or approved exceptions.
+For new changes, `sdd-security-design` MUST consume proposal, spec, and technical design context directly rather than relying on `security-applicability.md` or a `sdd-security-applicability` executor. Legacy applicability artifacts MAY be read only as compatibility context for old or archived changes. Mandatory `security-design.md` MUST remain the classification authority for every new change.
 
-#### Scenario: Security-impacting artifact provides enriched fields
+#### Scenario: Direct classification
 
-- GIVEN `security-applicability.md` marks a change as security-impacting
-- WHEN `sdd-security-design` runs
-- THEN it MUST use the decision matrix and source refs to build controls
-- AND it MUST preserve catalog snapshot identity in `security-design.md`.
+- GIVEN proposal, specs, and design are readable
+- WHEN security design runs for a new change
+- THEN it MUST classify categories from those inputs
+- AND it MUST NOT require `security-applicability.md`.
 
 #### Scenario: Conditional obligation becomes design predicate
 
@@ -91,20 +84,34 @@ Security design MUST identify mandatory applicable guideline evidence. Archive M
 - THEN it MUST state the predicate and required evidence
 - AND unresolved true predicates MUST remain trackable downstream.
 
+#### Scenario: Retired executor is not consulted
+
+- GIVEN a new change reaches security design
+- WHEN classification inputs are resolved
+- THEN `sdd-security-design` MUST NOT launch or depend on `sdd-security-applicability`
+- AND the absence of that executor MUST NOT block classification.
+
 ### Requirement: No-Impact Compatibility Preservation
 
-The workflow MUST preserve no-impact routing compatibility. Enriched applicability fields MUST NOT cause `security-design.md` to be required when `security-applicability.md` contains valid explicit no-impact proof and routes security design as skipped.
+No-impact compatibility MUST apply only to legacy artifacts. For new changes, no-impact means every category/guideline row is justified as `not-applicable` inside `security-design.md`; it MUST NOT skip the phase or artifact, and MUST NOT be inferred from missing or retired applicability artifacts.
 
-#### Scenario: Valid no-impact still skips security design
+#### Scenario: Legacy no-impact is readable
 
-- GIVEN applicability records complete no-impact proof and validation metadata
-- WHEN technical design completes
-- THEN the workflow MUST skip `sdd-security-design`
-- AND missing `security-design.md` MUST NOT block tasks, verify, or archive.
+- GIVEN an old archive lacks `security-design.md` but has valid no-impact applicability
+- WHEN archive compatibility is evaluated
+- THEN the archive MAY remain valid
+- AND new changes MUST still require `security-design.md`.
 
 #### Scenario: Invalid no-impact does not silently skip
 
-- GIVEN no-impact proof is incomplete or validator metadata reports failure
+- GIVEN no-impact matrix evidence is incomplete for a new change
 - WHEN downstream routing is evaluated
-- THEN the workflow MUST NOT rely on the no-impact classification
-- AND orchestration MUST route to resolve the applicability blocker before design proceeds.
+- THEN the workflow MUST NOT treat missing `security-design.md` as no-impact proof
+- AND orchestration MUST route to resolve the security-design blocker.
+
+#### Scenario: Missing applicability is not no-impact proof
+
+- GIVEN no `security-applicability.md` artifact or executor exists for a new change
+- WHEN no-impact classification is evaluated
+- THEN `security-design.md` MUST still provide row-level rationale
+- AND absence of applicability data MUST NOT prove no impact.

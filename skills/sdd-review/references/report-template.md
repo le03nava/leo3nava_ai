@@ -15,7 +15,7 @@
 | Verdict | PASS \| PASS WITH WARNINGS \| FAIL |
 | Blocking failures | {count} |
 | Non-blocking findings | {count} |
-| Next recommendation | verify \| apply \| resolve-blockers |
+| Next recommendation | review-security \| apply \| resolve-blockers |
 
 ## Blocking Summary
 
@@ -25,9 +25,9 @@
 
 ## Evidence Summary
 
-- Inputs inspected: {proposal/specs/security-applicability/design/test-design/tasks/apply-progress/changed files}.
+- Inputs inspected: {proposal/specs/design/security-design/test-design/tasks/apply-progress/changed files; optional legacy security-applicability only for old/archive compatibility context}.
 - Catalog coverage: 96 unique review controls from `skills/sdd-review/references/control-catalog.md`.
-- Security boundary: review cites security guideline/source IDs where applicable; security applicability/design remain authoritative.
+- Security boundary: review cites security guideline/source IDs where applicable; `security-design.md` and `review-security-report.md` remain authoritative for new changes. Legacy `security-applicability.md` may be cited only as optional old/archive compatibility evidence and must not replace security design or security review evidence.
 - Runtime checks: {commands executed or explicit unavailable-runner statement from config}.
 
 ## Review Matrix
@@ -46,4 +46,4 @@
   - Evidence Location proving the platform, framework, API, data class, artifact, or workflow is irrelevant.
   - Observations/Comments explaining the scope decision.
 - `No` rows with `Critical`, `Blocking`, or explicitly blocking severity MUST make the verdict `FAIL` and route to `apply`.
-- Non-blocking `No` rows MAY route to `verify` only when they are captured in the Evidence Summary as warning evidence and do not hide failed mandatory controls.
+- Non-blocking `No` rows MAY route to `review-security` only when they are captured in the Evidence Summary as warning evidence and do not hide failed mandatory controls. General review MUST NOT route directly to `verify`.

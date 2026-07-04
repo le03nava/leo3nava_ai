@@ -2,20 +2,20 @@
 
 ## Purpose
 
-Define the mandatory `sdd-test-design` phase that produces `test-design.md` after technical design and before task planning in the SDD workflow.
+Define the mandatory `sdd-test-design` phase that produces `test-design.md` after technical design, mandatory security design, and before task planning in the SDD workflow.
 
 ## Requirements
 
 ### Requirement: Mandatory Phase Order
 
-The SDD workflow MUST run `sdd-test-design` after `sdd-design` succeeds and after required `sdd-security-design` succeeds for security-impacting changes. `sdd-tasks` MUST be blocked until the required test-design artifact exists or the phase is explicitly blocked.
+The SDD workflow MUST run `sdd-test-design` after both `sdd-design` and mandatory `sdd-security-design` succeed for every new change. `sdd-tasks` MUST be blocked until `test-design.md` exists or the phase explicitly blocks.
 
-#### Scenario: Successful design routes to security design or test design
+#### Scenario: Design routes through mandatory security design
 
 - GIVEN an SDD change has completed `sdd-design`
 - WHEN the phase returns a successful envelope
-- THEN the next recommended phase MUST be `security-design` or `sdd-security-design` when security applicability is impacting
-- AND otherwise the next recommended phase MUST be `test-design` or `sdd-test-design`.
+- THEN the next recommended phase MUST be `security-design` or `sdd-security-design`
+- AND `test-design` MUST NOT be the direct successor.
 
 #### Scenario: Tasks requested too early
 
@@ -24,16 +24,16 @@ The SDD workflow MUST run `sdd-test-design` after `sdd-design` succeeds and afte
 - THEN the launch MUST be rejected or returned as blocked
 - AND the blocker MUST name the missing `sdd-test-design` phase or artifact.
 
-#### Scenario: Security design required before test design
+#### Scenario: Test design requires security design
 
-- GIVEN security applicability marks a change as security-impacting and `security-design.md` is missing
+- GIVEN `security-design.md` is missing for a new active change
 - WHEN `sdd-test-design` is launched
 - THEN the launch MUST be rejected or returned as blocked
-- AND the blocker MUST name the missing `sdd-security-design` phase or artifact.
+- AND the blocker MUST name the missing mandatory security-design artifact.
 
 ### Requirement: test-design.md Artifact Contract
 
-The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and required security-design controls to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document no-impact assessments when no behavior, security, or testability impact exists. The phase artifact contract MUST preserve mandatory artifact creation and downstream consumption while delegating common artifact-store mode semantics, artifact resolution, and persistence verification to the shared persistence authority.
+The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and the mandatory `security-design.md` matrix to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document justified no-impact assessments. The phase artifact contract MUST preserve mandatory artifact creation and downstream consumption while delegating common artifact-store mode semantics, artifact resolution, and persistence verification to the shared persistence authority. Common persistence behavior MUST remain delegated to the shared persistence authority.
 
 #### Scenario: Behavior-impacting change
 
@@ -42,12 +42,19 @@ The `sdd-test-design` phase MUST create `test-design.md` for every change. The a
 - THEN `test-design.md` MUST list planned checks linked to those inputs
 - AND each check MUST include type, severity, and expected evidence.
 
-#### Scenario: Security-impacting change
+#### Scenario: Security matrix is consumed
 
-- GIVEN `security-design.md` lists required controls or mandatory evidence
+- GIVEN `security-design.md` lists guideline rows and lifecycle statuses
 - WHEN `sdd-test-design` runs
-- THEN `test-design.md` MUST include planned checks or justified non-test evidence for each required control
-- AND uncovered mandatory security evidence MUST be reported as a blocker.
+- THEN `test-design.md` MUST include checks or justified non-test evidence for applicable mandatory rows
+- AND blocked security rows MUST remain blockers.
+
+#### Scenario: No-impact matrix rows are handled
+
+- GIVEN all security rows are `not-applicable` with evidence
+- WHEN `sdd-test-design` runs
+- THEN it MUST cite that assessment
+- AND it MUST still produce `test-design.md`.
 
 #### Scenario: No-impact change
 
@@ -82,7 +89,14 @@ Test-design cases MUST support automated checks, manual checks, and static/file-
 
 ### Requirement: Downstream Consumption
 
-Downstream phases MUST use `test-design.md` as the test-planning source of truth. `sdd-tasks` MUST derive implementation and verification tasks from it; `sdd-apply` SHOULD follow planned cases or report justified deviations; `sdd-verify` MUST compare evidence against it. Updates to persistence contract wording MUST NOT weaken this downstream consumption requirement or route tasks directly from design without the required test-design artifact.
+Downstream phases MUST use `test-design.md` as the test-planning source of truth and MUST preserve links to mandatory security-design evidence. `sdd-tasks` MUST derive implementation and verification tasks from it; `sdd-apply` SHOULD follow planned cases or report justified deviations; `sdd-verify` MUST compare evidence against both test cases and security evidence obligations. Updates to persistence contract wording MUST NOT weaken this downstream consumption requirement or route tasks directly from design without the required test-design artifact.
+
+#### Scenario: Verify compares security evidence
+
+- GIVEN test design references mandatory security-design evidence
+- WHEN `sdd-verify` runs
+- THEN it MUST evaluate matching evidence or justified exceptions
+- AND missing mandatory evidence MUST remain blocking.
 
 #### Scenario: Tasks derive testing work
 

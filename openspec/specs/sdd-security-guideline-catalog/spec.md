@@ -2,20 +2,20 @@
 
 ## Purpose
 
-Define the in-repo corporate security guideline snapshot, compact taxonomy, and evidence model used by security applicability, security design, verification, and archive checks.
+Define the in-repo corporate security guideline snapshot, compact taxonomy, matrix vocabulary, and evidence model used by mandatory security design, security review, verification, and archive checks.
 
 ## Requirements
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the initial corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve enough source text, identifiers, and version metadata for auditability until an official external versioned source replaces it.
+The repository MUST maintain the initial corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by `security-design.md` and `review-security-report.md` until an official external versioned source replaces it.
 
 #### Scenario: Catalog snapshot is available
 
 - GIVEN an SDD security phase needs guideline context
 - WHEN it reads the catalog
-- THEN it MUST find guideline identifiers, source snapshot metadata, and applicable guideline text or summaries
-- AND it MUST NOT depend on unavailable external policy documents.
+- THEN it MUST find guideline identifiers, source snapshot metadata, and applicable summaries
+- AND it MUST support mandatory security-design and security-review matrices.
 
 #### Scenario: Catalog source changes later
 
@@ -28,30 +28,30 @@ The repository MUST maintain the initial corporate security guideline catalog as
 
 The catalog MUST expose a compact taxonomy for phase prompts. The taxonomy MUST include authentication, sessions, sensitive data or PAN, secrets, permissions or access control, files, database access, and sensitive logging categories.
 
-#### Scenario: Applicability uses taxonomy
+#### Scenario: Security design uses taxonomy
 
 - GIVEN a change modifies session behavior
-- WHEN applicability maps the change
+- WHEN security design maps the change
 - THEN it MUST be able to select the sessions category
 - AND it SHOULD avoid injecting unrelated full guideline text.
 
 #### Scenario: Multiple categories apply
 
 - GIVEN a change touches secrets and database access
-- WHEN applicability maps guidelines
+- WHEN security design maps guidelines
 - THEN it MUST record both categories
-- AND security design MUST receive both mappings.
+- AND downstream security review MUST receive both mappings.
 
 ### Requirement: Mandatory Evidence Model
 
-Each catalog guideline MUST declare whether it is mandatory when applicable and what evidence is expected. Mandatory evidence MAY include design controls, implementation references, tests, static checks, manual review, or explicit approved exceptions.
+Each catalog guideline MUST declare whether it is mandatory when applicable and what evidence is expected across design, implementation, test/static/manual checks, security review, archive, or approved exceptions.
 
 #### Scenario: Mandatory guideline has evidence expectations
 
 - GIVEN a guideline is mandatory when applicable
 - WHEN security design consumes it
 - THEN the guideline MUST provide expected evidence types
-- AND downstream phases MUST be able to verify coverage.
+- AND security review MUST be able to verify coverage.
 
 #### Scenario: Exception fields are required
 
@@ -62,36 +62,36 @@ Each catalog guideline MUST declare whether it is mandatory when applicable and 
 
 ### Requirement: Review Control Cross-References
 
-The security guideline catalog MUST support cross-references from `sdd-review` controls to applicable guideline identifiers. These references MUST help reviewers cite security standards in `review-report.md` without transferring security applicability, security design, or exception authority to review.
+The security guideline catalog MUST support cross-references from `sdd-review` controls and `sdd-review-security` rows to applicable guideline identifiers. These references MUST help reviewers cite standards without transferring guideline authority away from security design and security review.
 
 #### Scenario: Review cites a security guideline
 
 - GIVEN a review checklist control evaluates a security concern
 - WHEN the control maps to a catalog guideline
 - THEN the review control SHOULD cite that guideline identifier
-- AND security applicability/design MUST remain authoritative for applicability and required controls.
+- AND security design/review MUST remain authoritative for required controls and final security verdict.
 
 ### Requirement: Review-Safe Security Evidence
 
-The catalog SHOULD identify evidence types suitable for code review rows, including implementation reference, static inspection, test evidence, approved exception, or N/A evidence. N/A for platform-specific security controls MUST include evidence that the platform, framework, API, or data class is irrelevant to the change.
+The catalog SHOULD identify evidence types suitable for review rows, including implementation reference, static inspection, test evidence, approved exception, or N/A evidence. N/A MUST include evidence proving the category, platform, framework, API, or data class is irrelevant.
 
-#### Scenario: Platform-specific security control is N/A
+#### Scenario: Security row is N/A
 
-- GIVEN a security review control applies only to an unused platform
-- WHEN review marks the control N/A
-- THEN the evidence MUST show the platform is out of scope
-- AND the comment MUST explain why no security design control is required.
+- GIVEN a guideline row is marked N/A
+- WHEN security review validates it
+- THEN evidence MUST show why it is out of scope
+- AND observations MUST explain why no security design control is required.
 
 ### Requirement: Catalog Boundary Preservation
 
-The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, and exception fields. `sdd-review` MAY reference catalog entries but MUST NOT duplicate or redefine catalog guideline text.
+The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, and matrix vocabulary. `sdd-review` MAY reference catalog entries but MUST NOT duplicate or redefine guideline text.
 
 #### Scenario: Catalog authority is preserved
 
-- GIVEN review and security design both reference a guideline
+- GIVEN security design and security review reference a guideline
 - WHEN downstream verification compares evidence
-- THEN catalog identifiers MUST remain consistent
-- AND conflicts MUST be resolved in favor of security applicability/design outputs.
+- THEN catalog identifiers and statuses MUST remain consistent
+- AND conflicts MUST be resolved in favor of `security-design.md` plus `review-security-report.md`.
 
 ### Requirement: Formal Source Coverage Mapping
 
@@ -100,7 +100,7 @@ Each compact `SEC-*` guideline MUST declare formal corporate source coverage thr
 #### Scenario: Guideline maps to corporate sources
 
 - GIVEN a compact `SEC-*` guideline is listed in the catalog
-- WHEN security applicability references it
+- WHEN security design references it
 - THEN the guideline MUST expose one or more valid Source IDs
 - AND the artifact MUST be able to cite those IDs as evidence refs.
 
@@ -118,24 +118,24 @@ The catalog MUST define operational applicability severity with only `blocking`,
 #### Scenario: Blocking obligation prevents success
 
 - GIVEN an applicable guideline has unresolved `blocking` evidence
-- WHEN applicability or security design evaluates completion
+- WHEN security design or security review evaluates completion
 - THEN the phase MUST block
 - AND the blocker MUST name the guideline and missing evidence.
 
 #### Scenario: Conditional obligation predicate is false
 
 - GIVEN a guideline is `conditional` and its predicate is not met
-- WHEN applicability evaluates the guideline
+- WHEN security design evaluates the guideline
 - THEN the artifact MAY mark it not applicable
 - AND it MUST record the predicate rationale.
 
 ### Requirement: Catalog Validator Contract
 
-The catalog MUST support static validation of guideline IDs, taxonomy categories, Source IDs, severity values, mandatory evidence fields, and exception fields used by `security-applicability.md`. Validation MUST compare artifact references against the same catalog snapshot identity recorded in the artifact.
+The catalog MUST support static validation of guideline IDs, taxonomy categories, Source IDs, severity values, lifecycle statuses, matrix values, mandatory evidence fields, and exception fields used by `security-design.md` and `review-security-report.md`. Validation MUST compare artifact references against the same catalog snapshot identity recorded in the artifact.
 
 #### Scenario: Artifact references current catalog snapshot
 
-- GIVEN `security-applicability.md` records a catalog snapshot identity
+- GIVEN a security artifact records a catalog snapshot identity
 - WHEN static validation checks guideline and source references
 - THEN references MUST resolve within that snapshot
 - AND mismatched or unknown references MUST fail validation.
@@ -143,6 +143,17 @@ The catalog MUST support static validation of guideline IDs, taxonomy categories
 #### Scenario: Advisory evidence is preserved
 
 - GIVEN an advisory guideline is applicable
-- WHEN applicability records it
+- WHEN security design records it
 - THEN downstream phases SHOULD preserve it as risk or guidance
 - AND archive evidence MUST remain understandable even if it does not block.
+
+### Requirement: Security Matrix Vocabulary
+
+The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecycle statuses `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, and `blocked`.
+
+#### Scenario: Matrix row uses valid vocabulary
+
+- GIVEN security design or security review writes a matrix row
+- WHEN validation runs
+- THEN its answer and lifecycle status MUST use catalog vocabulary
+- AND unsupported values MUST fail validation.

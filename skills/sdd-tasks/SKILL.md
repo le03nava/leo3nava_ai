@@ -37,14 +37,14 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, `security-applicability`, design, mandatory `test-design`, delivery context, testing capabilities, and required `security-design` from the selected backend. `security-design` is required only when security applicability is security-impacting; valid no-impact proof with non-failing validation metadata keeps it optional. |
+| Required inputs | Proposal, specs, design, mandatory `security-design`, mandatory `test-design`, delivery context, and testing capabilities from the selected backend. |
 | Produced artifact | `sdd/{change-name}/tasks` or `openspec/changes/{change-name}/tasks.md`. |
 | Mutates | None outside the produced tasks artifact. |
 | Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
-| Security consumption | Mandatory security controls and evidence expectations from required `security-design.md` and `test-design.md` must be represented as tasks or complete approved exceptions. |
+| Security consumption | Mandatory security controls, N/A rationale, review-security expectations, and evidence expectations from `security-design.md` and `test-design.md` must be represented as tasks or complete approved exceptions. |
 | Review workload behavior | Preserve the Review Workload Forecast guard lines, resolved delivery strategy, chain strategy, size-exception field, and reviewable work-unit split. |
 | Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
-| Block routing | `next_recommended: resolve-blockers`, except missing security applicability may recommend `security-applicability` and missing required security design may recommend `security-design`. |
+| Block routing | `next_recommended: resolve-blockers`, except missing mandatory security design may recommend `security-design`. |
 
 ## Output Contract
 
@@ -53,7 +53,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 Routing rules for `next_recommended`:
 - **Successful tasks with no blocking workload decision**: return `next_recommended: apply`. The orchestrator normalizes this into state `nextRecommended: apply` before routing or persisting state.
 - **Tasks created but workload decision is required**: return `next_recommended: apply`, include `Decision needed before apply: Yes`, and leave the blocker for the orchestrator's Review Workload Guard. Do not ask the user directly.
-- **Blocked tasks**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, security-applicability, required security-design, test-design artifact, testing capability, or task validation issue in `risks` / `detailed_report`.
+- **Blocked tasks**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, security-design, test-design artifact, testing capability, or task validation issue in `risks` / `detailed_report`.
 - **Partial persistence failure**: return `next_recommended: resolve-blockers` unless the same artifact can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
 
@@ -62,9 +62,7 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | Required proposal, spec, design, or test-design is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write tasks. |
-| `security-applicability.md` is missing | Return `blocked` with `next_recommended: security-applicability`; do not write tasks. |
-| Applicability is security-impacting and `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write tasks. |
-| Applicability is no-impact but no-impact proof is missing, incomplete, or validation metadata is absent/failing | Return `blocked` with `next_recommended: resolve-blockers`; missing `security-design.md` is compatible only for valid no-impact proof. |
+| Mandatory `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write tasks. |
 | Mandatory security control evidence from `security-design.md` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
 | Task draft contains vague, non-verifiable, or oversized tasks | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 | Review workload risk is `High` against the received review budget and chain strategy is missing | Set `Decision needed before apply: Yes` and `Chain strategy: pending`; do not ask the user directly. |
@@ -88,11 +86,10 @@ From `test-design.md`, identify:
 - Non-mandatory cases that should become advisory evidence tasks when feasible
 - Expected evidence that `sdd-apply` and `sdd-verify` will later consume
 
-From `security-applicability.md` and required `security-design.md`, identify:
-- Whether security design is required or explicitly not required.
-- Applicability validation metadata (`validator`, `status`, `checkedAt`, notes), catalog snapshot identity, category matrix completeness, and no-impact proof state.
-- Mandatory guideline controls, expected evidence owners, residual risks, and complete approved exceptions.
-- Implementation, apply-evidence, verification, or archive-evidence tasks needed to satisfy mandatory controls.
+From mandatory `security-design.md`, identify:
+- Classification, validation metadata (`validator`, `status`, `checkedAt`, notes), catalog snapshot identity, category/guideline matrix completeness, and N/A rationale.
+- Mandatory guideline controls, expected evidence owners, residual risks, review-security expectations, and complete approved exceptions.
+- Implementation, apply-evidence, review-security, verification, or archive-evidence tasks needed to satisfy mandatory controls.
 
 Also read testing capabilities when available:
 - Engram: `sdd/{project}/testing-capabilities`
@@ -112,9 +109,8 @@ If runtime test, coverage, linter, type-checker, or formatter commands are unava
 openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
-├── security-applicability.md
 ├── design.md
-├── security-design.md      ← Required only for security-impacting changes
+├── security-design.md      ← Required for every new change
 ├── test-design.md
 └── tasks.md               ← You create this
 ```
@@ -264,7 +260,7 @@ Before persisting or returning, verify:
 - Security evidence tasks reference guideline IDs and controls from `security-design.md` when required.
 - Every mandatory planned case in `test-design.md` is represented by implementation, testing, or evidence work; omitted mandatory cases are blockers.
 - Every mandatory applicable security guideline has implementation, test-design, apply, verify, archive evidence, or a complete approved exception represented in tasks.
-- Validation metadata, invalid no-impact blockers, archive evidence fields, and unavailable-runtime-test reporting from `test-design.md` are represented in tasks when applicable.
+- Validation metadata, review-security evidence, archive evidence fields, and unavailable-runtime-test reporting from `security-design.md` / `test-design.md` are represented in tasks when applicable.
 - The Review Workload Forecast includes the required plain-text guard lines.
 - If `Review budget risk` or `400-line budget risk` is `High`, Suggested Work Units are present.
 - If `feature-branch-chain` is selected, work units name the intended base boundaries.
