@@ -1,32 +1,11 @@
-# sdd-review-security-workflow Specification
+# Delta for sdd-review-security-workflow
 
-## Purpose
-
-Define the mandatory post-review security evidence gate that validates embedded `design.md#secure-development-design` rows and produces `review-security-report.md` before verification.
-
-## Requirements
-
-### Requirement: Mandatory Security Review Gate
-
-The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` and before `sdd-verify` for every new change.
-
-#### Scenario: General review routes to security review
-
-- GIVEN `review-report.md` has no blocking findings
-- WHEN routing is computed
-- THEN the next required phase MUST be `sdd-review-security`
-- AND `sdd-verify` MUST remain blocked until security review evidence exists.
-
-#### Scenario: General review is blocking
-
-- GIVEN `sdd-review` reports blocking findings
-- WHEN routing is computed
-- THEN `sdd-review-security` MUST NOT run
-- AND the workflow MUST route back to `sdd-apply` or `resolve-blockers`.
+## MODIFIED Requirements
 
 ### Requirement: Security Review Artifact
 
 `sdd-review-security` MUST persist `review-security-report.md`. The report MUST validate the embedded `design.md` secure development rows, include verdict, row-level evidence locations, observations, blocking findings, exceptions, and next recommendation, and MUST NOT depend on the active validator `scripts/validate_security_design.ps1`.
+(Previously: the report required readable `security-design.md` as the security matrix source.)
 
 #### Scenario: Report is persisted
 
@@ -45,6 +24,7 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 ### Requirement: Security Matrix Validation
 
 Security review MUST validate every embedded `design.md` secure development row using `Yes`, `No`, or `N/A`, evidence location, observations, and lifecycle status: `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, or `blocked`.
+(Previously: validation consumed rows from `security-design.md`.)
 
 #### Scenario: Mandatory evidence is missing
 
@@ -60,16 +40,7 @@ Security review MUST validate every embedded `design.md` secure development row 
 - THEN evidence MUST prove irrelevance
 - AND observations MUST explain the scope decision.
 
-### Requirement: Boundary with General Review
-
-Security review MUST NOT replace `sdd-review` or duplicate the 96-control matrix. It MUST focus on security guideline evidence and MAY cite general review findings as supporting evidence.
-
-#### Scenario: General review evidence is reused
-
-- GIVEN a review row supports a security guideline
-- WHEN security review records evidence
-- THEN it MAY cite that review row
-- AND it MUST keep the security verdict in `review-security-report.md`.
+## ADDED Requirements
 
 ### Requirement: Active Security Validator Retirement
 

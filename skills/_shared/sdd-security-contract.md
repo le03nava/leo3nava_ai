@@ -1,6 +1,6 @@
 # SDD Security Contract
 
-Shared schema and vocabulary for mandatory `security-design.md`, `review-security-report.md`, downstream evidence, archive checks, and legacy read-only `security-applicability.md` compatibility.
+Shared schema and vocabulary for mandatory `design.md#secure-development-design`, `review-security-report.md`, downstream evidence, archive checks, and legacy read-only standalone `security-design.md` / `security-applicability.md` compatibility.
 
 ## Shared Vocabulary
 
@@ -15,7 +15,7 @@ Shared schema and vocabulary for mandatory `security-design.md`, `review-securit
 | `categoryDecisionMatrix[].decision` | `applicable`, `not-applicable`, `unknown` |
 | `operationalSeverity` / `categoryDecisionMatrix[].severity` | `blocking`, `conditional`, `advisory` |
 | `evidenceStatus` | `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked` |
-| `ownerPhase` | `design`, `security-design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive` |
+| `ownerPhase` | `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive` |
 | `mandatoryWhenApplicable` | `true`, `false` |
 | `validation.status` | `pass`, `fail`, `manual-pending` |
 
@@ -25,7 +25,7 @@ Evidence fields MUST be review-safe. Use artifact paths, section anchors, change
 
 ## `security-applicability.md` Schema (Legacy/Read-Only)
 
-The applicability artifact is legacy evidence for old or archived changes only. New changes MUST NOT create it, require it, or route through `sdd-security-applicability`; classification and no-impact proof now live in mandatory `security-design.md`.
+The applicability artifact is legacy evidence for old or archived changes only. New changes MUST NOT create it, require it, or route through `sdd-security-applicability`; classification and no-impact proof now live in `design.md#secure-development-design`.
 
 ```yaml
 schemaName: gentle-ai.sdd-security-applicability
@@ -82,14 +82,14 @@ Rules:
 - Unsafe overrides MUST be rejected or ignored in favor of the stricter base contract and recorded in `overridesApplied`.
 - `validation` metadata MUST be recorded before phase success. When executable validation is unavailable, the artifact MUST say so explicitly with `manual-pending` or a failure status; missing runtime tooling is not pass evidence.
 - `designChangingUnknowns` blocks applicability only when missing information could change security design decisions.
-- `nonBlockingRisks` carries minor evidence gaps into `security-design.md`.
+- `nonBlockingRisks` carries minor evidence gaps into `design.md#secure-development-design`.
 
-## `security-design.md` Schema
+## `design.md#secure-development-design` Schema
 
-The security design artifact is mandatory for every new change after technical design and before test design. It owns classification, catalog identity, every guideline matrix row, controls, expected evidence, lifecycle status, N/A rationale, exceptions, validation metadata, and archive gates. No-impact changes still create `security-design.md` and record justified `N/A` / `not-applicable` rows.
+The `## Secure Development Design` section is mandatory inside `design.md` for every new change and replaces the standalone active `security-design.md` phase. It owns classification, catalog identity, every guideline matrix row, controls, expected evidence, lifecycle status, N/A rationale, exceptions, validation metadata or manual/static validation notes, and archive gates. No-impact changes still record justified `N/A` / `not-applicable` rows.
 
 ```yaml
-schemaName: gentle-ai.sdd-security-design
+schemaName: gentle-ai.sdd-embedded-secure-design
 schemaVersion: 1
 changeName: <change-name>
 classification: security-impacting | no-impact
@@ -98,7 +98,7 @@ securityImpactRationale: <why this classification was chosen>
 sourceInputs:
   proposal: <path-or-topic-key>
   specs: []
-  design: <path-or-topic-key>
+  design: <path-or-topic-key>#secure-development-design
 catalog:
   snapshotId: security-guidelines-initial-user-snapshot-2026-06-30
   catalogVersion: 1
@@ -135,7 +135,7 @@ notApplicableGuidelines:
 exceptions: null
 carriedRisks: []
 validation:
-  validator: scripts/validate_security_design.ps1
+  validator: design.md#secure-development-design static/manual review
   status: pass | fail | manual-pending
   checkedAt: <iso-8601-or-manual>
   notes: <static validation notes, unavailable-tooling note, or failure summary>
@@ -146,7 +146,7 @@ nextRecommended: test-design
 Rules:
 
 - Every compact catalog guideline ID MUST appear exactly once in the matrix/evaluation, either as applicable (`Yes`) or with explicit `N/A` rationale and evidence. `No` is reserved for security review/reporting when required evidence is missing or failing.
-- Security design for new changes MUST preserve catalog identity, source refs, matrix evidence, operational severity, and validation metadata.
+- Embedded secure development design for new changes MUST preserve catalog identity, source refs, matrix evidence, operational severity, and validation/manual-review metadata.
 - `blocking` and true `conditional` obligations MUST become controls, downstream evidence expectations, risks, or complete approved exceptions.
 - `advisory` obligations SHOULD remain downstream-visible as risk or guidance and archive-readable even when they do not block.
 - Mandatory controls MUST include expected evidence owned by `test-design`, `apply`, `review-security`, `verify`, or `archive`.
@@ -156,12 +156,12 @@ Rules:
 
 ## `review-security-report.md` Contract
 
-`sdd-review-security` MUST validate `security-design.md` after non-blocking general review and persist `review-security-report.md` before verify.
+`sdd-review-security` MUST validate `design.md#secure-development-design` after non-blocking general review and persist `review-security-report.md` before verify.
 
 Required report content:
 
 - Verdict: blocking or non-blocking.
-- Source refs: `security-design.md`, `review-report.md`, changed-file/task/apply evidence.
+- Source refs: `design.md#secure-development-design`, `review-report.md`, changed-file/task/apply evidence.
 - One validation row per compact guideline ID with answer `Yes`, `No`, or `N/A`, lifecycle status, evidence location, observations, and exception reference when applicable.
 - Blocking findings for applicable mandatory rows with missing evidence or incomplete exceptions.
 - Review-safe evidence only: paths, section refs, sanitized command summaries, and redacted placeholders.
@@ -199,4 +199,4 @@ Exception rules:
 
 ## PR 1 Compatibility Notes
 
-This schema migration is additive for legacy archives but authoritative for new changes. Downstream phases MUST preserve legacy read compatibility for archived `security-applicability.md` artifacts while treating mandatory `security-design.md` and `review-security-report.md` as the new-change security authorities.
+This schema migration is additive for legacy archives but authoritative for new changes. Downstream phases MUST preserve legacy read compatibility for archived standalone `security-design.md` and `security-applicability.md` artifacts while treating `design.md#secure-development-design` and `review-security-report.md` as the new-change security authorities.

@@ -23,7 +23,7 @@ openspec/
         │       └── spec.md  <- Delta spec
         ├── security-applicability.md <- legacy/read-only; old or archived changes only
         ├── design.md        <- from sdd-design
-        ├── security-design.md <- mandatory from sdd-security-design
+        ├── security-design.md <- legacy/read-only; old or archived changes only
         ├── test-design.md   <- from sdd-test-design
         ├── tasks.md         <- from sdd-tasks (updated by sdd-apply)
         ├── review-report.md <- from sdd-review
@@ -42,7 +42,7 @@ openspec/
 | sdd-spec | Creates | `openspec/changes/{change-name}/specs/{domain}/spec.md` |
 | Legacy security applicability data | Read-only archive compatibility only; no launchable phase | `openspec/changes/{change-name}/security-applicability.md` |
 | sdd-design | Creates | `openspec/changes/{change-name}/design.md` |
-| sdd-security-design | Creates for every new change | `openspec/changes/{change-name}/security-design.md` |
+| Legacy security design data | Read-only archive compatibility only; no launchable phase for new changes | `openspec/changes/{change-name}/security-design.md` |
 | sdd-test-design | Creates | `openspec/changes/{change-name}/test-design.md` |
 | sdd-tasks | Creates | `openspec/changes/{change-name}/tasks.md` |
 | sdd-apply | Updates | `openspec/changes/{change-name}/tasks.md` (marks `[x]`) |
@@ -59,7 +59,7 @@ Proposal:   openspec/changes/{change-name}/proposal.md
 Specs:      openspec/changes/{change-name}/specs/  (all domain subdirectories)
 Security applicability: openspec/changes/{change-name}/security-applicability.md (legacy/read-only for old or archived changes)
 Design:     openspec/changes/{change-name}/design.md
-Security design: openspec/changes/{change-name}/security-design.md (mandatory for every new change)
+Security design: openspec/changes/{change-name}/design.md#secure-development-design (new changes); openspec/changes/{change-name}/security-design.md is legacy/read-only for old or archived changes
 Test design: openspec/changes/{change-name}/test-design.md
 Tasks:      openspec/changes/{change-name}/tasks.md
 Review:     openspec/changes/{change-name}/review-report.md
@@ -138,6 +138,6 @@ openspec/changes/archive/YYYY-MM-DD-{change-name}/
 
 Use today's date in ISO format. The archive is an AUDIT TRAIL — never delete or modify archived changes.
 
-Archived change folders preserve every produced phase artifact. New-change archives must include mandatory `security-design.md`, `test-design.md`, `review-report.md`, and `review-security-report.md` before verify/archive evidence is trusted. Legacy archives may include `security-applicability.md` as historical read-only evidence; new changes must not create or require it. Partial archives that omit mandatory `test-design.md`, `review-report.md`, `review-security-report.md`, or required security evidence must document the explicit exception in the archive report.
+Archived change folders preserve every produced phase artifact. New-change archives must include `design.md#secure-development-design`, `test-design.md`, `review-report.md`, and `review-security-report.md` before verify/archive evidence is trusted. Legacy archives may include `security-applicability.md` or standalone `security-design.md` as historical read-only evidence; new changes must not create or require those standalone artifacts. Partial archives that omit mandatory `test-design.md`, `review-report.md`, `review-security-report.md`, or required security evidence must document the explicit exception in the archive report.
 
 Archive sync keeps active-change delta specs as the source for main spec updates. For review-phase changes, expected main-spec targets include `openspec/specs/sdd-review-workflow/spec.md`, `openspec/specs/sdd-execution-persistence-contracts/spec.md`, and `openspec/specs/sdd-security-guideline-catalog/spec.md` when matching deltas exist under `openspec/changes/{change-name}/specs/`.

@@ -37,16 +37,16 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design, mandatory `security-design`, `test-design`, tasks, non-blocking `review-report.md` / `sdd/{change-name}/review`, non-blocking `review-security-report.md` / `sdd/{change-name}/review-security-report`, and passing `verify-report` from the selected backend. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, tasks, non-blocking `review-report.md` / `sdd/{change-name}/review`, non-blocking `review-security-report.md` / `sdd/{change-name}/review-security-report`, and passing `verify-report` from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | Archive report as `sdd/{change-name}/archive-report`; in OpenSpec, the archive audit-trail reference is `openspec/changes/archive/YYYY-MM-DD-{change-name}/`. |
 | Mutates | OpenSpec/hybrid source specs under `openspec/specs/{domain}/spec.md`; OpenSpec/hybrid change folder location from active change to dated archive; Engram/hybrid archive report lineage. |
 | Spec sync semantics | Merge delta specs before moving the change folder. Preserve unrelated requirements; create missing main specs from full new specs; require explicit reason/migration for removals and explicit old/new names for renames. |
 | Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
-| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, general review verdict/blocking state, security review verdict/blocking state, verify verdict, security-design validation metadata, security design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. |
+| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, general review verdict/blocking state, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. |
 | Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
 | Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
-| Block routing | `next_recommended: review`, `verify`, `apply`, `security-design`, or `resolve-blockers` according to missing/blocking review evidence, missing verify evidence, unchecked tasks, required security design, unsafe context, destructive merge, destination conflict, or persistence failure. |
+| Block routing | `next_recommended: review`, `review-security`, `verify`, `apply`, or `resolve-blockers` according to missing/blocking review evidence, missing verify evidence, unchecked tasks, missing embedded secure design, unsafe context, destructive merge, destination conflict, or persistence failure. |
 
 ## Output Contract
 
@@ -61,7 +61,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - Missing or non-passing `verify-report` -> return `next_recommended: verify`.
 - Persisted tasks contain unchecked implementation tasks without approved stale-checkbox reconciliation -> return `next_recommended: apply`.
 - Missing proposal/spec/design/test-design without explicit partial-archive approval -> return `next_recommended: resolve-blockers`.
-- Missing mandatory security-design or mandatory security evidence without complete approved exceptions -> return `next_recommended: resolve-blockers`.
+- Missing mandatory embedded secure design or mandatory security evidence without complete approved exceptions -> return `next_recommended: resolve-blockers`.
 - Destructive merge confirmation, unsafe action context, archive destination conflict, or archive operation outside `allowedEditRoots` -> return `next_recommended: resolve-blockers`.
 - Status `partial` after filesystem operations -> return `next_recommended: resolve-blockers` and include exact recovery steps in `detailed_report`.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -110,7 +110,8 @@ OpenSpec permits archiving with incomplete artifacts or tasks after a user confi
 | `verify-report` contains CRITICAL issues or verdict `FAIL` | Return `blocked` with `next_recommended: apply`; do not accept an override. |
 | Persisted tasks contain unchecked implementation tasks | Return `blocked` with `next_recommended: apply` unless explicitly approved stale-checkbox reconciliation is backed by apply-progress and verify-report proof. |
 | Proposal/spec/design/test-design artifacts are missing | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides explicit intentional partial archive approval. |
-| Mandatory `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not archive. |
+| `design.md#secure-development-design` is missing for a new active change | Return `blocked` with `next_recommended: resolve-blockers`; do not archive. |
+| Standalone `security-design.md` is missing for a new active change | Continue; do not require it. It is legacy/read-only compatibility data only. |
 | Mandatory applicable security evidence is missing | Return `blocked` with `next_recommended: resolve-blockers` unless each gap has a complete approved exception. |
 | Security exception lacks approver, guideline ID, accepted-risk rationale, or mitigation/follow-up | Return `blocked` with `next_recommended: resolve-blockers`; incomplete exceptions do not satisfy archive readiness. |
 | `actionContext.mode: workspace-planning` | Return `blocked` with `next_recommended: resolve-blockers`; do not move folders or edit linked repos. |
@@ -189,8 +190,8 @@ If the destination already exists, STOP and return `blocked` with the existing d
 - [ ] Main specs updated correctly
 - [ ] Change folder moved to archive
 - [ ] Archive contains all artifacts (proposal, specs, design, test-design, tasks)
-- [ ] Archive contains mandatory security-design artifact
-- [ ] Security-design validation metadata is preserved (`validator`, `status`, `checkedAt`, notes) and non-failing, or archive stops with a blocker
+- [ ] Archive contains design artifact with mandatory `## Secure Development Design`
+- [ ] Embedded secure-design validation metadata or static/manual notes are preserved and non-failing, or archive stops with a blocker
 - [ ] Archive contains `review-report.md` / review artifact with a non-blocking verdict
 - [ ] Archive contains `review-security-report.md` / security review artifact with a non-blocking verdict
 - [ ] Missing `test-design.md` is blocked unless an explicit partial archive exception is provided and recorded in the archive report
@@ -213,8 +214,8 @@ Before persistence, validate the archive report includes:
 - `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
 - `review-report` artifact ref/path and confirmation that review verdict is non-blocking
 - `review-security-report` artifact ref/path and confirmation that security review verdict is non-blocking
-- Mandatory `security-design` artifact ref/path, including no-impact N/A rows when applicable
-- Security-design validation metadata: validator path, status, checkedAt, catalog snapshot identity, and validation notes
+- Mandatory `design.md#secure-development-design` ref/path, including no-impact N/A rows when applicable
+- Embedded secure-design validation metadata or static/manual notes: source section, status, catalog snapshot identity, lifecycle vocabulary, and validation notes
 - Mandatory security evidence status and complete approved exception details for any accepted gaps
 - Archive evidence fields for applicable controls: guideline IDs, taxonomy categories, source refs, operational severity, expected evidence status, residual risks, and exception state
 - Task completion status and any stale-checkbox reconciliation proof
@@ -250,7 +251,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - proposal.md ✅
 - specs/ ✅
 - design.md ✅
-- security-design.md ✅
+- design.md#secure-development-design ✅
 - test-design.md ✅
 - review-report.md ✅ (non-blocking)
 - review-security-report.md ✅ (non-blocking)

@@ -1,6 +1,6 @@
 ---
 name: sdd-security-design
-description: "Create the mandatory SDD security design artifact. Trigger: orchestrator launches security-design after technical design for every new change."
+description: "Legacy/read-only security-design workflow. New changes use design.md#secure-development-design instead."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-Create `security-design.md` for every new change. Classify security impact directly from proposal, specs, and technical design; map every catalog category/guideline to matrix rows, applicable controls, downstream evidence, residual risks, N/A rationale, and complete approved exceptions.
+This standalone phase is retired for new changes. Secure development design is owned by `sdd-design` inside `design.md#secure-development-design`; standalone `security-design.md` is legacy/read-only archive compatibility data only.
 
 ## Inputs
 
@@ -37,12 +37,12 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Concern | Contract |
 | --- | --- |
 | Required inputs | Proposal, specs, technical `design.md`, `skills/_shared/security-guideline-catalog.md`, `skills/_shared/sdd-security-contract.md`, and OpenSpec config when applicable. |
-| Produced artifact | Mandatory `sdd/{change-name}/security-design` or `openspec/changes/{change-name}/security-design.md` for every new change. |
-| Mutates | None outside the mandatory security design artifact. |
-| Conditional behavior | No new-change skip path. No-impact is represented as justified `N/A` / `not-applicable` rows inside `security-design.md`. |
+| Produced artifact | None for new changes. Legacy `sdd/{change-name}/security-design` or `openspec/changes/{change-name}/security-design.md` may be read only as archive compatibility data. |
+| Mutates | None. New changes do not create or update standalone security-design artifacts. |
+| Conditional behavior | New-change launches MUST block and route back to `design`/`test-design`; no-impact is represented as justified rows inside `design.md#secure-development-design`. |
 | Control/evidence mapping | Preserve guideline IDs, taxonomy categories, mandatory flags, operational severity/source refs where available, validation metadata, required controls, expected evidence owners/statuses, residual risks, carried risks, N/A rationale, and complete approved exceptions. |
 | Downstream obligations | Required controls and mandatory evidence expectations must remain consumable by `sdd-test-design`, `sdd-apply`, `sdd-verify`, and archive readiness checks. |
-| Success routing | `next_recommended: test-design` after the mandatory artifact is created and read back. |
+| Success routing | None for new changes; this phase should not be launched. |
 | Block routing | `next_recommended: resolve-blockers` for missing required inputs, unknown guideline IDs, incomplete mandatory evidence/exception data, or validation failures. |
 
 ## Decision Gates
@@ -50,8 +50,8 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Situation | Action |
 | --- | --- |
 | Proposal, specs, technical design, catalog, or security contract is missing | Return `blocked` with `next_recommended: resolve-blockers`. |
-| No catalog guideline applies | Still create `security-design.md` with every row justified as `N/A` / `not-applicable`. |
-| One or more catalog guidelines apply | Create `security-design.md` with controls and downstream evidence expectations. |
+| New active change launches this phase | Return `blocked` with `next_recommended: resolve-blockers`; route active work through `sdd-design` and `sdd-test-design`. |
+| Legacy/archive context explicitly provided | Read only for compatibility; do not create or mutate standalone `security-design.md`. |
 | Applicable guideline ID is unknown | Return `blocked`; do not invent controls. |
 | Mandatory evidence is missing without complete approved exception | Return `blocked` or fix the draft before persistence. |
 | Proposal/spec/design context leaves classification ambiguous | Return `blocked` or carry non-blocking risks forward with owner phase and evidence expectation when safe. |
@@ -68,13 +68,13 @@ For every guideline row:
 - Use contract evidence statuses only: `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked`.
 - Record residual risk explicitly; use `None` only when no residual risk remains.
 
-Do not consume legacy applicability decision-matrix fields as mandatory new-change inputs. Legacy no-impact routing remains archive-readable only for old artifacts; new changes always produce `security-design.md`.
+Do not consume legacy applicability decision-matrix fields as mandatory new-change inputs. Legacy no-impact routing remains archive-readable only for old artifacts; new changes always use `design.md#secure-development-design`.
 
 Approved exceptions are valid only when all fields exist: `status: exception-approved`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, and `evidenceGap`.
 
-## Artifact Format
+## Legacy Artifact Format
 
-Use this structure for every new security design:
+Legacy archived standalone security-design artifacts may use this historical structure. Do not create it for new changes:
 
 ````markdown
 # Security Design: {Change Title}
@@ -98,7 +98,7 @@ controls:
     requiredControl: <control description>
     expectedEvidence:
       - type: design-control | implementation-reference | test-design-check | verification-evidence | approved-exception
-        ownerPhase: design | security-design | test-design | apply | verify | archive
+        ownerPhase: design | test-design | apply | verify | archive
         status: planned
         detail: <expected or observed evidence>
     residualRisk: <none-or-risk>
@@ -106,7 +106,7 @@ controls:
 carriedRisks: []
 validation:
   status: manual-pending | pass | fail
-  validator: scripts/validate_security_design.ps1
+    validator: legacy/archive manual validation only; no active validator script is required
   notes: <manual/static validation metadata or unavailable-validator note>
 nextRecommended: test-design
 ```
@@ -133,7 +133,7 @@ nextRecommended: test-design
 ## Validation
 
 Before persisting or returning, verify:
-- `security-design.md` exists for every new change.
+- New changes do not create or require standalone `security-design.md`.
 - No-impact changes still contain every guideline/category row with `N/A` / `not-applicable` rationale and evidence.
 - Artifacts preserve `catalog` identity, matrix/source refs, operational severity where known, and validation metadata in controls, rows, or carried risks.
 - Every guideline is represented in controls, matrix rows, or explicitly justified as not applicable.
@@ -146,12 +146,12 @@ Before persisting or returning, verify:
 
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`.
 
-- Success: `next_recommended: test-design` and report classification, controls/evidence/risks/exceptions, N/A rationale, and artifact location.
-- Blocked: `next_recommended: resolve-blockers`.
+- New-change launch: `blocked`, `next_recommended: resolve-blockers`, and report that `design.md#secure-development-design` is the active authority.
+- Legacy/archive read: report compatibility context only; do not mutate artifacts.
 
 ## Rules
 
 - NEVER run before technical design completes.
-- NEVER skip `security-design.md` for new changes; no-impact must be documented inside the artifact.
+- NEVER create or require standalone `security-design.md` for new changes; no-impact must be documented inside `design.md#secure-development-design`.
 - Use only shared catalog and security-contract vocabulary.
-- Apply any `rules.security-design` from `openspec/config.yaml` if present.
+- Treat any `rules.security-design` from `openspec/config.yaml` as legacy/read-only compatibility context only.

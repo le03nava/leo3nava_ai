@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for TEST DESIGN. You take the proposal, specs, technical design, and required `security-design.md`, then produce `test-design.md` that maps scenarios, design risks, security controls, and behavior contracts to planned automated, manual, or static checks before task planning begins.
+You are a sub-agent responsible for TEST DESIGN. You take the proposal, specs, technical design with mandatory `design.md#secure-development-design`, then produce `test-design.md` that maps scenarios, design risks, embedded security rows, and behavior contracts to planned automated, manual, or static checks before task planning begins.
 
 ## What You Receive
 
@@ -27,7 +27,7 @@ From the orchestrator:
 - Change name
 - Artifact store mode (`engram | openspec | hybrid | none`)
 - Structured status from `skills/_shared/sdd-status-contract.md` when available
-- Artifact refs/paths for proposal, specs, design, and mandatory security design
+- Artifact refs/paths for proposal, specs, design, and embedded secure development design section
 
 ## Phase Artifact Contract
 
@@ -35,14 +35,14 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design, testing capabilities, and mandatory `security-design` from the selected backend. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, and testing capabilities from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | Mandatory `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md` for every change, including no-impact changes. |
 | Mutates | None outside the produced test design artifact. |
 | Mandatory artifact behavior | Do not route directly from design to tasks without a complete `test-design` artifact. No-impact changes still produce a concise no-impact assessment rather than omitting the artifact. |
 | Planned evidence mapping | Preserve scenario, design-risk, security-control, validation metadata, check type, severity, expected evidence, no-impact assessment, and open-question mapping. Mandatory cases are verification-blocking when uncovered. |
 | Downstream consumption | `sdd-tasks`, `sdd-apply`, `sdd-verify`, and archive readiness checks consume `test-design` as the test-planning source of truth. |
 | Success routing | `next_recommended: tasks`. |
-| Block routing | `next_recommended: resolve-blockers`, except missing mandatory security design may recommend `security-design`. |
+| Block routing | `next_recommended: resolve-blockers` for missing proposal/spec/design, missing embedded secure development design, testability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
 
 ## Output Contract
 
@@ -59,10 +59,11 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | Required proposal, spec, or design is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write test design. |
-| Mandatory `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write test design. |
+| `design.md#secure-development-design` is missing for a new active change | Return `blocked` with `next_recommended: resolve-blockers`; name the missing embedded section and do not write test design. |
+| Standalone `security-design.md` is missing for a new active change | Continue; do not require it. It is legacy/read-only compatibility data only. |
 | Specs/design have no behavior or testability impact | Write a no-impact assessment in `test-design.md`; do not treat the artifact as absent. |
 | A mandatory spec scenario or design risk has no planned check and no justified skip | Return `blocked` or fix the draft before persistence. |
-| A mandatory security-design control has no planned check, non-test evidence, or complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; uncovered mandatory security controls cannot proceed to tasks. |
+| A mandatory embedded secure-design control has no planned check, non-test evidence, or complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; uncovered mandatory security controls cannot proceed to tasks. |
 | Test-design draft fails validation | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 
 ## What to Do
@@ -77,7 +78,7 @@ Before writing the artifact, read:
 - Proposal: user intent, scope, non-goals, risks, and success criteria.
 - Specs: requirements and scenarios that need coverage.
 - Design: architecture decisions, data flow, file changes, contracts, and testing strategy.
-- Security design: classification, matrix rows, required controls, mandatory evidence, N/A rationale, residual risks, validation metadata, and approved exceptions.
+- Embedded secure development design: `design.md#secure-development-design` classification, catalog metadata, matrix rows, required controls, mandatory evidence, N/A rationale, residual risks, lifecycle statuses, and approved exceptions.
 - Testing capabilities when available:
   - Engram: `sdd/{project}/testing-capabilities`
   - OpenSpec: `openspec/config.yaml` `testing` section
@@ -89,7 +90,7 @@ Before writing the artifact, read:
 Collect planned checks from:
 - Spec scenarios and RFC 2119 requirements.
 - Design risks, compatibility decisions, routing/state/persistence contracts, migrations, and rollout notes.
-- Security-design controls, mandatory evidence expectations, carried risks, and archive-gate notes.
+- Embedded secure-development controls, mandatory evidence expectations, carried risks, and archive-gate notes.
 - Testing capability constraints such as unavailable runners, missing coverage tooling, or static-only repositories.
 
 When runtime test runner, coverage, linter, type checker, or formatter commands are unavailable, plan static/manual evidence explicitly. Missing tooling is a reported constraint, not passing evidence.
@@ -105,8 +106,7 @@ openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
 ├── design.md
-├── security-design.md      ← Required for every new change
-└── test-design.md          ← You create this
+└── test-design.md          ← You create this; consumes design.md#secure-development-design
 ```
 
 **IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the test-design content in memory; persist it only if the mode allows persistence.
@@ -127,7 +127,7 @@ openspec/changes/{change-name}/
 | Proposal | {path-or-topic} | {scope/intent summary} |
 | Spec | {path-or-topic} | {requirements/scenarios summary} |
 | Design | {path-or-topic} | {architecture/risk summary} |
-| Security Design | {path-or-topic} | {classification, controls, evidence obligations, and N/A rationale} |
+| Secure Development Design | {design path-or-topic}#secure-development-design | {classification, controls, evidence obligations, lifecycle statuses, and N/A rationale} |
 
 ## Test Cases
 
@@ -139,7 +139,7 @@ openspec/changes/{change-name}/
 
 | Guideline ID | Required Control | Mandatory | Planned Check or Evidence | Status | Exception |
 | --- | --- | --- | --- | --- | --- |
-| `SEC-...` | {control from security-design.md} | Yes/No | {test case ID, manual/static evidence, or complete exception} | covered/blocked/not-applicable | {None or complete approved exception} |
+| `SEC-...` | {control from design.md#secure-development-design} | Yes/No | {test case ID, manual/static evidence, or complete exception} | covered/blocked/not-applicable | {None or complete approved exception} |
 
 ## No-Impact Assessment
 
@@ -149,8 +149,8 @@ openspec/changes/{change-name}/
 
 - Mandatory cases require implementation, execution, static/manual evidence, or a justified skip.
 - Non-mandatory cases should be reported as warnings when uncovered, but they do not block verification by themselves.
-- Security-design validation evidence should cite validator metadata (`validator`, `status`, `checkedAt`, and notes) or planned static/manual command output.
-- No-impact routing is valid only as justified `N/A` / `not-applicable` rows inside mandatory `security-design.md`; absence of `security-design.md` is a blocker.
+- Security validation evidence should cite embedded `design.md` metadata, catalog snapshot/version, lifecycle status, and planned static/manual evidence.
+- No-impact routing is valid only as justified `N/A` / `not-applicable` rows inside mandatory `design.md#secure-development-design`; absence of standalone `security-design.md` is not a blocker for new changes.
 - Runtime tests, linters, type checkers, formatters, and coverage commands that are unavailable must be reported as unavailable evidence, not treated as passed checks.
 
 ## Open Questions
@@ -165,7 +165,7 @@ Valid `Severity` values: `mandatory`, `non-mandatory`.
 
 Before persisting or returning, verify:
 - Every behavior-impacting spec scenario or design risk has a linked test case, or a justified omission.
-- `security-design.md` is present and every mandatory security control has a planned check, justified non-test evidence, or complete approved exception.
+- `design.md#secure-development-design` is present and every mandatory embedded security control has a planned check, justified non-test evidence, or complete approved exception.
 - Uncovered mandatory security evidence is a blocker; do not persist a successful `test-design.md` that leaves mandatory controls uncovered.
 - Each test case has `ID`, `Source`, `Check`, `Type`, `Severity`, `Expected Evidence`, and `Notes`.
 - `Type` is one of `automated`, `manual`, or `static`.
@@ -198,7 +198,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 
 ### Summary
 - **Inputs**: Proposal, specs, and design read.
-- **Security Inputs**: Mandatory security design consumed.
+- **Security Inputs**: Embedded `design.md#secure-development-design` consumed.
 - **Cases Planned**: {N mandatory, M non-mandatory; automated/manual/static counts}
 - **No-Impact Assessment**: {present/not applicable}
 - **Testing Constraints**: {detected runner/static/manual constraints}
@@ -213,8 +213,8 @@ Ready for tasks (sdd-tasks).
 ## Rules
 
 - ALWAYS read proposal, specs, and design before writing test design.
-- ALWAYS read mandatory `security-design.md` before writing test design.
-- ALWAYS cover each mandatory security control and justified N/A row before returning success.
+- ALWAYS read mandatory `design.md#secure-development-design` before writing test design; standalone `security-design.md` is legacy/read-only only.
+- ALWAYS cover each mandatory embedded security control and justified N/A row before returning success.
 - DO NOT implement tests or code; this phase plans evidence only.
 - DO NOT skip the artifact for no-impact changes; document the no-impact assessment.
 - Prefer scenario-linked, evidence-focused checks over broad testing wishes.

@@ -93,7 +93,7 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Spec | `sdd/{change-name}/spec` | `openspec/changes/{change-name}/specs/{domain}/spec.md` | Both | Inline phase result only |
 | Security applicability (legacy/read-only) | `sdd/{change-name}/security-applicability` | `openspec/changes/{change-name}/security-applicability.md` | Both | Inline phase result only |
 | Design | `sdd/{change-name}/design` | `openspec/changes/{change-name}/design.md` | Both | Inline phase result only |
-| Security design | `sdd/{change-name}/security-design` | `openspec/changes/{change-name}/security-design.md` | Both | Inline phase result only |
+| Security design (legacy/read-only) | `sdd/{change-name}/security-design` | `openspec/changes/{change-name}/security-design.md` | Both | Inline phase result only |
 | Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
@@ -157,7 +157,7 @@ artifactRefs:
   specs: []
   securityApplicability: [] # legacy/read-only; not an active new-change dependency
   design: []
-  securityDesign: []
+  securityDesign: [] # legacy/read-only; active security authority is design.md#secure-development-design
   testDesign: []
   tasks: []
   applyProgress: []

@@ -1,14 +1,11 @@
-# sdd-review-workflow Specification
+# Delta for sdd-review-workflow
 
-## Purpose
-
-Define `sdd-review` as the mandatory post-apply code-review gate that produces `review-report.md` before security review and verification.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Mandatory Review Gate
 
 The SDD workflow MUST route completed implementation through `sdd-review` before `sdd-review-security` and `sdd-verify`. Review MUST inspect applied changes, required new-change SDD artifacts, and task evidence, then route non-blocking results to security review rather than directly to verify. `security-applicability.md` and standalone `security-design.md` MUST NOT be default required new-change inputs.
+(Previously: new-change review inputs included security design as a standalone artifact.)
 
 #### Scenario: Apply routes to review
 
@@ -31,49 +28,10 @@ The SDD workflow MUST route completed implementation through `sdd-review` before
 - THEN missing `security-applicability.md` or standalone `security-design.md` MUST NOT block review
 - AND any such artifact present MUST be treated only as legacy or archive evidence.
 
-### Requirement: Review Report Artifact
-
-`sdd-review` MUST persist `review-report.md` as a first-class artifact at `openspec/changes/{change-name}/review-report.md`. Missing required artifacts, unknown changed files, unsafe workspace context, or persistence failure MUST route to `resolve-blockers`.
-
-#### Scenario: Report is persisted
-
-- GIVEN review can resolve all required inputs
-- WHEN review completes
-- THEN it MUST write `review-report.md`
-- AND the report MUST include verdict, matrix, evidence summary, and next recommendation.
-
-### Requirement: Code-Review Validation Matrix
-
-`review-report.md` MUST include a matrix with exactly these columns: Item, Artifact/Deliverable, Requirement, Reviewer, Standard, Severity, Complies, Affected Requirement, Evidence Location, Observations/Comments. The 96 source checklist controls MUST have stable IDs and categories. Category MUST be preserved by a stable control catalog or by the Item ID prefix without adding matrix columns. `Complies` MUST support Yes, No, and N/A. N/A MUST include evidence proving the control is irrelevant, especially for platform-specific controls.
-
-#### Scenario: All controls are represented
-
-- GIVEN the source checklist contains 96 controls
-- WHEN review writes the matrix
-- THEN every control MUST appear once with a stable Item ID
-- AND every row MUST use the exact required columns.
-
-#### Scenario: Platform control is irrelevant
-
-- GIVEN a control targets an unused platform or technology
-- WHEN review marks it N/A
-- THEN Evidence Location MUST prove irrelevance
-- AND Observations/Comments MUST explain the scope decision.
-
-### Requirement: Severity and Routing Semantics
-
-Review MUST classify each failed control severity. Critical or explicitly blocking failures MUST prevent security review and verify. Non-blocking findings MAY proceed to `sdd-review-security` as warnings.
-
-#### Scenario: Non-blocking review proceeds
-
-- GIVEN review has no blocking failures
-- WHEN it returns its envelope
-- THEN next_recommended MUST be `sdd-review-security`
-- AND the security review phase MUST consume the review report as evidence.
-
 ### Requirement: Security Boundary
 
 Security-related review controls MUST cross-reference the security guideline catalog where applicable. Review MUST NOT replace embedded secure development design or mandatory security review ownership. Legacy applicability or standalone security-design evidence MAY be cited only for archived or old changes and MUST NOT displace `design.md` or `review-security-report.md` as new-change security authorities.
+(Previously: `security-design.md` and `review-security-report.md` were the new-change security authorities.)
 
 #### Scenario: Security control is reviewed
 
@@ -92,6 +50,7 @@ Security-related review controls MUST cross-reference the security guideline cat
 ### Requirement: Security Review Handoff
 
 `review-report.md` MUST provide enough changed-file, evidence, finding context, and `design.md` references for `sdd-review-security` to validate embedded secure development implementation evidence without duplicating the 96-control matrix.
+(Previously: handoff targeted the security matrix without requiring `design.md` as the embedded source.)
 
 #### Scenario: Handoff evidence is available
 

@@ -24,7 +24,7 @@ Commands that select, continue, apply, verify, or archive an SDD change MUST fir
 
 ## Routing Token Mapping
 
-Native status uses bounded tokens for new changes: `propose`, `spec`, `design`, `security-design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive`, `sdd-new`, `select-change`, `resolve-blockers`, and `none`. Legacy `security-applicability` may appear only when reading old or archived state and MUST NOT be emitted as an active new-change successor.
+Native status uses bounded tokens for new changes: `propose`, `spec`, `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive`, `sdd-new`, `select-change`, `resolve-blockers`, and `none`. Legacy `security-design` and `security-applicability` may appear only when reading old or archived state and MUST NOT be emitted as active new-change successors.
 
 When launching phase agents, normalize through this mapping:
 
@@ -34,7 +34,7 @@ When launching phase agents, normalize through this mapping:
 | `spec` | `sdd-spec` |
 | `security-applicability` | No launch target; legacy/archive data compatibility only |
 | `design` | `sdd-design` |
-| `security-design` | `sdd-security-design` |
+| `security-design` | No launch target for new changes; legacy/archive compatibility only |
 | `test-design` | `sdd-test-design` |
 | `tasks` | `sdd-tasks` |
 | `apply` | `sdd-apply` |
@@ -84,7 +84,7 @@ artifactRefs:
   specs: [<topic keys, file paths, or inline refs>]
   securityApplicability: [<topic keys, file paths, or inline refs>] # legacy/read-only
   design: [<topic keys, file paths, or inline refs>]
-  securityDesign: [<topic keys, file paths, or inline refs>]
+  securityDesign: [<topic keys, file paths, or inline refs>] # legacy/read-only
   testDesign: [<topic keys, file paths, or inline refs>]
   tasks: [<topic keys, file paths, or inline refs>]
   applyProgress: [<topic keys, file paths, or inline refs>]
@@ -98,7 +98,7 @@ artifactPaths:
   specs: [<absolute paths>]
   securityApplicability: [<absolute path>] # legacy/read-only
   design: [<absolute path>]
-  securityDesign: [<absolute path>]
+  securityDesign: [<absolute path>] # legacy/read-only
   testDesign: [<absolute path>]
   tasks: [<absolute path>]
   applyProgress: [<absolute path>]
@@ -112,7 +112,7 @@ contextFiles:
   specs: [<absolute readable files>]
   securityApplicability: [<absolute readable files>] # legacy/read-only
   design: [<absolute readable files>]
-  securityDesign: [<absolute readable files>]
+  securityDesign: [<absolute readable files>] # legacy/read-only
   testDesign: [<absolute readable files>]
   tasks: [<absolute readable files>]
   applyProgress: [<absolute readable files>]
@@ -126,7 +126,7 @@ artifacts:
   specs: missing | done | partial
   securityApplicability: missing | done | partial | legacy
   design: missing | done | partial
-  securityDesign: missing | done | partial
+  securityDesign: missing | done | partial | legacy
   testDesign: missing | done | partial
   tasks: missing | done | partial
   applyProgress: missing | done | partial
@@ -144,7 +144,7 @@ dependencies:
   specs: blocked | ready | all_done
   securityApplicability: blocked | ready | all_done | legacy
   design: blocked | ready | all_done
-  securityDesign: blocked | ready | all_done
+  securityDesign: blocked | ready | all_done | legacy
   testDesign: blocked | ready | all_done
   tasks: blocked | ready | all_done
   apply: blocked | ready | all_done
@@ -191,20 +191,20 @@ Native status JSON is authoritative when available. If native currently emits on
 
 ## Dependency States
 
-- `proposal`, `specs`, `design`, `securityDesign`, `testDesign`, and `tasks` report whether prerequisite artifacts are blocked, ready, or all done. `securityApplicability` is legacy/read-only for old or archived changes and MUST NOT be an active new-change dependency.
-- `design` is `ready` only when proposal and specs are available. Missing `securityApplicability` MUST NOT block technical design for new changes.
-- `securityDesign` is `ready` only when technical design is available; it is `all_done` when mandatory `security-design.md` exists and is readable. New changes MUST NOT mark it `not_required`; no-impact is represented as justified `N/A` / `not-applicable` rows inside `security-design.md`.
-- `testDesign` is `ready` only when proposal, specs, design, and mandatory security design are available; it is `all_done` when the `test-design` artifact exists and is readable.
-- `tasks` is `ready` only when specs, design, mandatory security design, and test design are available. Missing `testDesign` blocks task planning.
-- `apply` is `ready` only when specs, design, mandatory security design, test design, and tasks are available and task progress is not all done.
-- `review` is `ready` when tasks exist, test design is available, mandatory security design evidence is available, and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full review.
-- `reviewSecurity` is `ready` when `security-design.md` exists, all intended implementation work is complete, and `reviewReport` exists with a non-blocking verdict. Missing, blocking, or unreadable general review evidence blocks security review.
-- `verify` is `ready` when tasks exist, test design is available, mandatory security design evidence is available, all intended implementation work is complete, `reviewReport` exists with a non-blocking verdict, and `securityReviewReport` exists with a non-blocking verdict. Missing or blocking review evidence blocks full verification.
-- `archive` is `ready` only when review-report and review-security-report exist with non-blocking verdicts, verify-report exists and is clearly passing, tasks are complete, mandatory artifacts including security design and test design are available, and mandatory applicable security evidence is complete or covered by approved exceptions. A clearly passing report needs an explicit PASS/SUCCESS signal and no blocker or negation signals such as FAIL, FAILURE, BLOCKED, CRITICAL, PENDING, TODO, verification blockers, `not passed`, or `pass: no`. CRITICAL verification issues have no override. Explicit recorded exceptions are limited to complete approved security exceptions, non-critical partial archives, or stale-checkbox reconciliation when apply-progress/verify-report prove completion.
+- `proposal`, `specs`, `design`, `testDesign`, and `tasks` report whether prerequisite artifacts are blocked, ready, or all done. `securityDesign` and `securityApplicability` are legacy/read-only for old or archived changes and MUST NOT be active new-change dependencies.
+- `design` is `ready` only when proposal and specs are available. Missing `securityApplicability` or standalone `securityDesign` MUST NOT block technical design for new changes. A completed new-change design MUST contain `## Secure Development Design`.
+- `securityDesign` is legacy/read-only for new changes. If present in old or archived state, it may be displayed as historical evidence but MUST NOT be required or launched as an active dependency.
+- `testDesign` is `ready` only when proposal, specs, and design with embedded secure development rows are available; it is `all_done` when the `test-design` artifact exists and is readable.
+- `tasks` is `ready` only when specs, design with embedded secure development rows, and test design are available. Missing `testDesign` blocks task planning.
+- `apply` is `ready` only when specs, design with embedded secure development rows, test design, and tasks are available and task progress is not all done.
+- `review` is `ready` when tasks exist, test design is available, embedded design security evidence is available, and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full review.
+- `reviewSecurity` is `ready` when `design.md#secure-development-design` exists, all intended implementation work is complete, and `reviewReport` exists with a non-blocking verdict. Missing, blocking, or unreadable general review evidence blocks security review.
+- `verify` is `ready` when tasks exist, test design is available, embedded design security evidence is available, all intended implementation work is complete, `reviewReport` exists with a non-blocking verdict, and `securityReviewReport` exists with a non-blocking verdict. Missing or blocking review evidence blocks full verification.
+- `archive` is `ready` only when review-report and review-security-report exist with non-blocking verdicts, verify-report exists and is clearly passing, tasks are complete, mandatory artifacts including design embedded security evidence and test design are available, and mandatory applicable security evidence is complete or covered by approved exceptions. A clearly passing report needs an explicit PASS/SUCCESS signal and no blocker or negation signals such as FAIL, FAILURE, BLOCKED, CRITICAL, PENDING, TODO, verification blockers, `not passed`, or `pass: no`. CRITICAL verification issues have no override. Explicit recorded exceptions are limited to complete approved security exceptions, non-critical partial archives, or stale-checkbox reconciliation when apply-progress/verify-report prove completion.
 
 ## Phase Routing Order
 
-The implementation DAG is `apply -> review -> review-security -> verify -> archive`.
+The active new-change DAG is `design -> test-design -> tasks -> apply -> review -> review-security -> verify -> archive`; standalone `security-design` is legacy/read-only. The implementation sub-DAG is `apply -> review -> review-security -> verify -> archive`.
 
 - Completed apply work MUST recommend `review`, not direct `verify`.
 - Non-blocking review evidence MUST recommend `review-security`, not direct `verify`.

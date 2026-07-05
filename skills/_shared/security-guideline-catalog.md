@@ -1,6 +1,6 @@
 # Security Guideline Catalog
 
-Operational security checklist for mandatory SDD security design, security review, verification evidence, archive gates, and legacy applicability compatibility. Stable guideline IDs are preserved for audit continuity.
+Operational security checklist for embedded SDD secure development design in `design.md`, security review, verification evidence, archive gates, and legacy standalone security-design/applicability compatibility. Stable guideline IDs are preserved for audit continuity.
 
 ## Snapshot Metadata
 
@@ -11,7 +11,7 @@ Operational security checklist for mandatory SDD security design, security revie
 | Taxonomy version | `1` |
 | Source | Initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
-| Scope | Security-impact classification inside `security-design.md`, control mapping, evidence planning, `review-security-report.md`, verification, archive gates, and legacy applicability compatibility |
+| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, evidence planning, `review-security-report.md`, verification, archive gates, and legacy standalone security-design/applicability compatibility |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
 | Operational severity vocabulary | `blocking`, `conditional`, `advisory` |
 | Matrix vocabulary | `Yes`, `No`, `N/A` |
@@ -20,7 +20,7 @@ Operational security checklist for mandatory SDD security design, security revie
 
 ## Checklist Usage
 
-Use this catalog as a checklist for every new `security-design.md` and `review-security-report.md`. Legacy `security-applicability.md` artifacts may still cite it as historical/archive evidence, but new changes classify and review security through mandatory security design and security review.
+Use this catalog as a checklist for every new `design.md#secure-development-design` section and `review-security-report.md`. Legacy `security-design.md` and `security-applicability.md` artifacts may still cite it as historical/archive evidence, but new changes classify security through embedded secure development design and validate it through security review.
 
 | Column | Required value |
 | --- | --- |
@@ -40,7 +40,7 @@ Lifecycle status MUST be one of `not-started`, `planned`, `implemented`, `verifi
 
 ## Taxonomy
 
-Use these compact category IDs in `security-design.md`, `review-security-report.md`, task/apply evidence, verification reports, archive blockers, and legacy `security-applicability.md` compatibility readers.
+Use these compact category IDs in `design.md#secure-development-design`, `review-security-report.md`, task/apply evidence, verification reports, archive blockers, and legacy `security-design.md` / `security-applicability.md` compatibility readers.
 
 | Category ID | Category | Applies when a change touches |
 | --- | --- | --- |
@@ -82,7 +82,7 @@ Do not use review finding labels for security applicability routing, catalog blo
 
 ## Catalog Validator Contract
 
-Static validation of new security artifacts must target `security-design.md` and `review-security-report.md` using the snapshot metadata and compact records above. Static validation of `security-applicability.md` is legacy/archive-only and MUST NOT block new-change routing.
+Static validation of new security artifacts must target `design.md#secure-development-design` and `review-security-report.md` using the snapshot metadata and compact records above. Static validation of standalone `security-design.md` or `security-applicability.md` is legacy/archive-only and MUST NOT block new-change routing.
 
 Required checks:
 
@@ -345,7 +345,7 @@ This section preserves the initial user-provided corporate guideline text for au
 
 ## Expected Evidence Model
 
-Security design should turn each applicable guideline into one or more evidence obligations:
+Embedded secure development design should turn each applicable guideline into one or more evidence obligations:
 
 - `design-control`: architecture or data-flow decision that satisfies the guideline.
 - `implementation-reference`: file, function, config, or prompt change where the control is implemented.
@@ -358,17 +358,17 @@ Mandatory applicable guidelines block archive unless evidence is complete or an 
 
 ## Review-Phase Cross-Reference Guidance
 
-`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Mandatory `security-design.md` and `review-security-report.md` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions. Legacy `security-applicability.md` remains readable only for archived/old changes.
+`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Embedded `design.md#secure-development-design` and `review-security-report.md` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions. Legacy standalone `security-design.md` and `security-applicability.md` remain readable only for archived/old changes.
 
 Review-safe evidence types for security-related review rows:
 
 | Evidence Type | Review Use | Boundary |
 | --- | --- | --- |
-| `implementation-reference` | Cite a changed file, function, prompt, configuration entry, or artifact section inspected during review. | Does not replace a required security-design implementation reference. |
+| `implementation-reference` | Cite a changed file, function, prompt, configuration entry, or artifact section inspected during review. | Does not replace a required embedded secure-design implementation reference. |
 | `static-inspection` | Cite static/manual inspection evidence, including line references or artifact sections. | Does not prove runtime security behavior unless the approved test design allows manual/static evidence. |
 | `test-evidence` | Cite a configured command result, verify evidence, or planned test-design check when available. | Must not invent commands; unavailable runners remain explicit warnings/blockers according to phase rules. |
 | `approved-exception` | Cite a complete exception already owned by security design or downstream governance. | Review cannot create or approve mandatory security exceptions. |
-| `n/a-evidence` | Prove a platform, framework, API, data class, artifact, or workflow is irrelevant to the reviewed change. | Must include an evidence location and a comment explaining why no security-design control is required. |
+| `n/a-evidence` | Prove a platform, framework, API, data class, artifact, or workflow is irrelevant to the reviewed change. | Must include an evidence location and a comment explaining why no embedded secure-design control is required. |
 
 Safe-evidence rules for mandatory controls:
 
@@ -377,4 +377,4 @@ Safe-evidence rules for mandatory controls:
 - `SEC-ACCESS-001`: cite workflow gates, status examples, phase routing, and blocker evidence proving denial-by-default progression.
 - `SEC-LOG-001`: cite report templates, observations, redaction rules, and audit evidence locations without raw sensitive payloads.
 
-When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `security-design.md` or `review-security-report.md`, downstream phases must resolve the conflict in favor of those security authorities and report the review row as a finding rather than treating it as new authority.
+When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `design.md#secure-development-design` or `review-security-report.md`, downstream phases must resolve the conflict in favor of those security authorities and report the review row as a finding rather than treating it as new authority.

@@ -5,8 +5,8 @@ Legacy/archive-only validator for SDD security-applicability.md artifacts.
 .DESCRIPTION
 This validator is retained only for explicit legacy/archive compatibility checks.
 It MUST NOT block new-change routing or phase success. New SDD changes classify
-security impact in mandatory security-design.md and should be validated with
-scripts/validate_security_design.ps1 instead. This validator intentionally avoids
+security impact inside design.md#secure-development-design and are validated by
+review-security against the shared catalog and artifact evidence. This validator intentionally avoids
 runtime security scanning and checks only the historical Markdown YAML fence
 contract, routing consistency, category matrix completeness, no-impact proof,
 guideline/source references, override safety, severity values, and validation

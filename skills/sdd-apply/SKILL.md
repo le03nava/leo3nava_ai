@@ -36,11 +36,11 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design, mandatory `security-design`, `test-design`, and tasks from the selected backend. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, and tasks from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | Apply progress as `sdd/{change-name}/apply-progress`; in OpenSpec, the durable progress source is `openspec/changes/{change-name}/tasks.md` checkbox state plus the returned Section D evidence. |
 | Mutates | Assigned implementation files inside `allowedEditRoots`; task progress in `sdd/{change-name}/tasks` / `openspec/changes/{change-name}/tasks.md`; apply-progress when the selected mode supports it. |
 | Task progress semantics | Read previous progress first, preserve existing `[x]` marks, skip already-complete assigned tasks, and mark only completed assigned tasks. Hybrid writes must keep Engram progress and OpenSpec checkboxes aligned. |
-| Apply evidence semantics | Record completed tasks, files changed, Standard/Strict TDD mode, test-design coverage or justified deviations, security-design evidence including N/A rationale where applicable, unavailable tooling, issues, remaining tasks, workload/PR boundary, and persisted checkbox verification in `detailed_report` / apply-progress. |
+| Apply evidence semantics | Record completed tasks, files changed, Standard/Strict TDD mode, test-design coverage or justified deviations, embedded secure-design evidence including N/A rationale where applicable, unavailable runtime/coverage/lint/typecheck/format tooling, issues, remaining tasks, workload/PR boundary, and persisted checkbox verification in `detailed_report` / apply-progress. |
 | Deviation semantics | If implementation cannot follow design or `test-design.md`, record the deviation, rationale, replacement evidence, and downstream verify implication; do not silently drop mandatory planned evidence. |
 | Conditional behavior | `none` mode may edit implementation files only when workspace guards allow it, but must not update SDD/OpenSpec/Engram artifacts; Strict TDD loads `strict-tdd.md` only when active. |
 | Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: review` only when all implementation tasks are visibly complete in the persisted task artifact. |
@@ -94,7 +94,7 @@ Before writing ANY code:
 2. Read every applicable artifact path/topic from `contextFiles`, falling back to `artifactPaths` and `artifactRefs` according to `artifact_store.mode`
 3. Read the specs — understand WHAT the code must do
 4. Read the design — understand HOW to structure the code
-5. Read mandatory `security-design.md` — understand classification, matrix rows, controls, mandatory evidence, N/A rationale, residual risks, and approved exceptions
+5. Read mandatory `design.md#secure-development-design` — understand classification, matrix rows, controls, mandatory evidence, N/A rationale, lifecycle statuses, residual risks, and approved exceptions. Do not block new changes on missing standalone `security-design.md`.
 6. Read `test-design.md` — understand planned automated, manual, static, and security-control checks and expected evidence
 7. Read existing code in affected files — understand current patterns
 8. Check the project's coding conventions from `config.yaml`
@@ -184,7 +184,7 @@ FOR EACH TASK:
 ├── Read the task description
 ├── Read relevant spec scenarios (these are your acceptance criteria)
 ├── Read the design decisions (these constrain your approach)
-├── Read security-design controls and mandatory evidence when required
+├── Read embedded secure-design controls and mandatory evidence when required
 ├── Read planned cases from test-design.md (these constrain evidence and checks)
 ├── Read existing code patterns (match the project's style)
 ├── Write the code
@@ -271,7 +271,7 @@ If none, say "None — implementation matches design."}
 {List planned case IDs covered by this apply batch, the evidence/check performed, and any justified deviations with replacement evidence. If none apply to this slice, state why.}
 
 ### Security Evidence
-{List applicable guideline IDs from `security-design.md`, implementation references, evidence status, N/A row preservation, and approved exceptions if any.}
+{List applicable guideline IDs from `design.md#secure-development-design`, implementation references, evidence status, N/A row preservation, and approved exceptions if any.}
 
 ### Issues Found
 {List any problems discovered during implementation.
@@ -296,7 +296,7 @@ If none, say "None."}
 - ALWAYS read specs before implementing — specs are your acceptance criteria
 - ALWAYS follow the design decisions — don't freelance a different approach
 - ALWAYS read `test-design.md` before implementing — planned cases are the evidence contract for apply and verify
-- ALWAYS read mandatory security design before implementing — mandatory controls are evidence contracts for apply, review-security, verify, and archive
+- ALWAYS read mandatory `design.md#secure-development-design` before implementing — mandatory controls are evidence contracts for apply, review-security, verify, and archive; standalone `security-design.md` is legacy/read-only only
 - ALWAYS match existing code patterns and conventions in the project
 - ALWAYS consume or produce structured status before implementation; do not infer readiness from conversation alone
 - STOP on `applyState: blocked` and do not edit; STOP on unsafe `actionContext` or edit roots

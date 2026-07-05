@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the proposal, specs, design, required security design, and test design, then produce a `tasks.md` with concrete, actionable implementation steps organized by phase.
+You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the proposal, specs, design with embedded secure development design, and test design, then produce a `tasks.md` with concrete, actionable implementation steps organized by phase.
 
 ## What You Receive
 
@@ -37,14 +37,14 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design, mandatory `security-design`, mandatory `test-design`, delivery context, and testing capabilities from the selected backend. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, mandatory `test-design`, delivery context, and testing capabilities from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | `sdd/{change-name}/tasks` or `openspec/changes/{change-name}/tasks.md`. |
 | Mutates | None outside the produced tasks artifact. |
 | Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
-| Security consumption | Mandatory security controls, N/A rationale, review-security expectations, and evidence expectations from `security-design.md` and `test-design.md` must be represented as tasks or complete approved exceptions. |
+| Security consumption | Mandatory security controls, N/A rationale, review-security expectations, and evidence expectations from `design.md#secure-development-design` and `test-design.md` must be represented as tasks or complete approved exceptions. |
 | Review workload behavior | Preserve the Review Workload Forecast guard lines, resolved delivery strategy, chain strategy, size-exception field, and reviewable work-unit split. |
 | Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
-| Block routing | `next_recommended: resolve-blockers`, except missing mandatory security design may recommend `security-design`. |
+| Block routing | `next_recommended: resolve-blockers` for missing required inputs, missing embedded secure development design, test-design gaps, testing capability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
 
 ## Output Contract
 
@@ -53,7 +53,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 Routing rules for `next_recommended`:
 - **Successful tasks with no blocking workload decision**: return `next_recommended: apply`. The orchestrator normalizes this into state `nextRecommended: apply` before routing or persisting state.
 - **Tasks created but workload decision is required**: return `next_recommended: apply`, include `Decision needed before apply: Yes`, and leave the blocker for the orchestrator's Review Workload Guard. Do not ask the user directly.
-- **Blocked tasks**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, security-design, test-design artifact, testing capability, or task validation issue in `risks` / `detailed_report`.
+- **Blocked tasks**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, embedded secure development design, test-design artifact, testing capability, or task validation issue in `risks` / `detailed_report`.
 - **Partial persistence failure**: return `next_recommended: resolve-blockers` unless the same artifact can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
 
@@ -62,8 +62,9 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | Required proposal, spec, design, or test-design is missing | Return `blocked` with `next_recommended: resolve-blockers`; do not write tasks. |
-| Mandatory `security-design.md` is missing | Return `blocked` with `next_recommended: security-design`; do not write tasks. |
-| Mandatory security control evidence from `security-design.md` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
+| `design.md#secure-development-design` is missing for a new active change | Return `blocked` with `next_recommended: resolve-blockers`; do not write tasks. |
+| Standalone `security-design.md` is missing for a new active change | Continue; do not require it. It is legacy/read-only compatibility data only. |
+| Mandatory security control evidence from `design.md#secure-development-design` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
 | Task draft contains vague, non-verifiable, or oversized tasks | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 | Review workload risk is `High` against the received review budget and chain strategy is missing | Set `Decision needed before apply: Yes` and `Chain strategy: pending`; do not ask the user directly. |
 | Strict TDD is active | Include RED/GREEN/REFACTOR task ordering for affected behavior. |
@@ -86,8 +87,8 @@ From `test-design.md`, identify:
 - Non-mandatory cases that should become advisory evidence tasks when feasible
 - Expected evidence that `sdd-apply` and `sdd-verify` will later consume
 
-From mandatory `security-design.md`, identify:
-- Classification, validation metadata (`validator`, `status`, `checkedAt`, notes), catalog snapshot identity, category/guideline matrix completeness, and N/A rationale.
+From mandatory `design.md#secure-development-design`, identify:
+- Classification, static/manual validation notes, catalog snapshot identity, category/guideline matrix completeness, lifecycle statuses, and N/A rationale.
 - Mandatory guideline controls, expected evidence owners, residual risks, review-security expectations, and complete approved exceptions.
 - Implementation, apply-evidence, review-security, verification, or archive-evidence tasks needed to satisfy mandatory controls.
 
@@ -110,9 +111,8 @@ openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
 ├── design.md
-├── security-design.md      ← Required for every new change
 ├── test-design.md
-└── tasks.md               ← You create this
+└── tasks.md               ← You create this; consumes design.md#secure-development-design
 ```
 
 **IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the tasks content in memory; persist it only if the mode allows persistence.
@@ -257,10 +257,10 @@ Before persisting or returning, verify:
 - Every task is specific, actionable, verifiable, and small enough for one session.
 - Tasks are ordered by dependency.
 - Testing/evidence tasks reference specific planned cases from `test-design.md` and scenarios from the specs.
-- Security evidence tasks reference guideline IDs and controls from `security-design.md` when required.
+- Security evidence tasks reference guideline IDs and controls from `design.md#secure-development-design` when required.
 - Every mandatory planned case in `test-design.md` is represented by implementation, testing, or evidence work; omitted mandatory cases are blockers.
 - Every mandatory applicable security guideline has implementation, test-design, apply, verify, archive evidence, or a complete approved exception represented in tasks.
-- Validation metadata, review-security evidence, archive evidence fields, and unavailable-runtime-test reporting from `security-design.md` / `test-design.md` are represented in tasks when applicable.
+- Static/manual validation notes, review-security evidence, archive evidence fields, and unavailable runtime/coverage/lint/typecheck/format reporting from `design.md#secure-development-design` / `test-design.md` are represented in tasks when applicable.
 - The Review Workload Forecast includes the required plain-text guard lines.
 - If `Review budget risk` or `400-line budget risk` is `High`, Suggested Work Units are present.
 - If `feature-branch-chain` is selected, work units name the intended base boundaries.
@@ -319,7 +319,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 - ALWAYS reference concrete file paths in tasks
 - Tasks MUST be ordered by dependency — Phase 1 tasks shouldn't depend on Phase 2
 - Testing/evidence tasks should reference planned case IDs from `test-design.md` plus specific scenarios from the specs
-- Security evidence tasks should reference guideline IDs from `security-design.md` plus planned case IDs from `test-design.md`
+- Security evidence tasks should reference guideline IDs from `design.md#secure-development-design` plus planned case IDs from `test-design.md`
 - Mandatory `test-design.md` cases MUST NOT be omitted. If they cannot be represented in implementation tasks, return `blocked` and name the missing cases.
 - Mandatory security controls MUST NOT be omitted. Missing mandatory evidence without a complete approved exception blocks task creation.
 - Each task should be completable in ONE session (if a task feels too big, split it)

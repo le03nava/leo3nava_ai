@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for TECHNICAL DESIGN. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, baseline security considerations, and technical rationale.
+You are a sub-agent responsible for TECHNICAL DESIGN and embedded secure development design. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, security guideline classification, controls, expected evidence, and technical rationale.
 
 ## What You Receive
 
@@ -33,11 +33,11 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal and specs: `sdd/{change-name}/{proposal|spec}` or OpenSpec change-folder equivalents. |
+| Required inputs | Proposal and specs: `sdd/{change-name}/{proposal|spec}` or OpenSpec change-folder equivalents, plus `skills/_shared/security-guideline-catalog.md` and `skills/_shared/sdd-security-contract.md`. |
 | Produced artifact | `sdd/{change-name}/design` or `openspec/changes/{change-name}/design.md`. |
 | Mutates | None outside the produced design artifact. |
-| Conditional behavior | None for new changes. Security classification happens in mandatory `sdd-security-design` after this phase. |
-| Success routing | `next_recommended: security-design`. |
+| Conditional behavior | For new changes, secure development classification and evidence planning happen inside `design.md#secure-development-design`. Standalone `security-design.md` is legacy/read-only compatibility data only. |
+| Success routing | `next_recommended: test-design`. |
 | Block routing | `next_recommended: resolve-blockers` for missing proposal/specs, missing code context, testing capability ambiguity, or unresolved architecture decisions. |
 
 ## Output Contract
@@ -45,7 +45,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the design summary in `detailed_report`.
 
 Routing rules for `next_recommended`:
-- **Successful design**: return `next_recommended: security-design`. The orchestrator normalizes this into state `nextRecommended: security-design` before routing or persisting state.
+- **Successful design**: return `next_recommended: test-design`. The orchestrator normalizes this into state `nextRecommended: test-design` before routing or persisting state.
 - **Blocked design**: return `next_recommended: resolve-blockers` and include the exact missing proposal, spec, code context, testing capability, or architecture decision in `risks` / `detailed_report`.
 - **Partial design**: return `next_recommended: resolve-blockers` unless the same design artifact can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -78,7 +78,7 @@ Before making claims about existing behavior, read the actual code that will be 
 - Test infrastructure (if any)
 
 Also read before writing:
-- `skills/_shared/sdd-security-contract.md` and `skills/_shared/security-guideline-catalog.md` for baseline security considerations that may shape design decisions.
+- `skills/_shared/sdd-security-contract.md` and `skills/_shared/security-guideline-catalog.md` for the mandatory embedded secure development design row contract.
 - Legacy `security-applicability.md` only when the orchestrator explicitly identifies an archived or old change compatibility context; it is not a new-change dependency.
 
 Also read testing capabilities when available:
@@ -164,10 +164,32 @@ If not applicable, state "No migration required."}
 - [ ] {Any unresolved technical question}
 - [ ] {Any decision that needs team input}
 
-## Security Considerations
+## Secure Development Design
 
-{State baseline security considerations discovered during design, list known security categories/guidelines that may need classification, and state next route: mandatory `security-design`.}
+**Classification**: `security-impacting` or `no-impact`, with rationale.
+**Catalog**: `security-guidelines-initial-user-snapshot-2026-06-30`, catalog version `1`, taxonomy version `1`.
+
+| Guideline | Applies / lifecycle | Rationale | Secure design decision / control | Evidence owner / expected evidence | Residual risk / exception |
+| --- | --- | --- | --- | --- | --- |
+| `SEC-AUTH-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-SESS-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-DATA-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-SECRET-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-ACCESS-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-FILE-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-DB-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+| `SEC-LOG-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
 ```
+
+Secure development design rules:
+
+- Include all eight guideline IDs exactly once: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, and `SEC-LOG-001`.
+- Use only matrix values `Yes` or `N/A` during design. `No` is reserved for review-security when required evidence is missing or failing.
+- Use only lifecycle statuses from the catalog: `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, or `blocked`.
+- Every `N/A` / `not-applicable` row MUST include rationale and evidence proving why the category, platform, API, data class, or workflow is out of scope.
+- Applicable rows MUST identify secure design decisions/controls, downstream evidence owners, expected evidence, residual risks, and archive expectations.
+- Exception rows MUST include approver, approvedAt, accepted-risk rationale, mitigation/follow-up, and evidence gap. Incomplete exceptions do not satisfy archive readiness.
+- Evidence MUST be review-safe: cite paths, sections, summaries, command outputs, or redacted placeholders; never include raw secrets, credentials, PAN, PII, tokens, private keys, connection strings, or confidential values.
 
 ### Step 4: Validate Design
 
@@ -176,7 +198,9 @@ Before persisting or returning, verify:
 - Every architecture decision has a rationale.
 - File changes use concrete paths, or explicitly mark paths as new/proposed.
 - Testing strategy matches detected testing capabilities or explains unavailable layers.
-- Baseline security considerations are documented, and successful routing is always `security-design` for new changes.
+- `## Secure Development Design` is present, records catalog snapshot/version metadata, includes all eight SEC rows exactly once, preserves N/A rationale/evidence, and uses valid lifecycle vocabulary.
+- Applicable rows include controls, evidence owners, expected evidence, residual risk, and archive expectations; exception rows include complete exception fields.
+- Safe-evidence rules are followed for `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, and `SEC-LOG-001`.
 - Migration / Rollout states `No migration required.` when not applicable.
 - Blocking open questions set the return status to `blocked`.
 - The design artifact stays under the 800-word size budget.
@@ -211,20 +235,20 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 {List any unresolved questions, or "None"}
 
 ### Next Step
-Ready for mandatory security design (`sdd-security-design`).
+Ready for test design (`sdd-test-design`).
 ```
 
 ## Rules
 
 - Read real code before making claims about existing behavior; never guess about the codebase.
-- NEVER require `security-applicability.md` for new DAG changes; security classification belongs to mandatory `sdd-security-design`.
+- NEVER require `security-applicability.md` or standalone `security-design.md` for new DAG changes; security classification belongs inside `design.md#secure-development-design`.
 - Every decision MUST have a rationale (the "why")
 - Include concrete file paths, not abstract descriptions
 - Use the project's ACTUAL patterns and conventions, not generic best practices
 - If you find the codebase uses a pattern different from what you'd recommend, note it but FOLLOW the existing pattern unless the change specifically addresses it
 - Keep ASCII diagrams simple — clarity over beauty
 - Apply any `rules.design` from `openspec/config.yaml`
-- Always return `next_recommended: security-design`; do not route directly to `test-design`.
+- Always return `next_recommended: test-design`; do not route through active `security-design` for new changes.
 - If you have open questions that BLOCK the design, say so clearly — don't guess
 - **Size budget**: Design artifact MUST be under 800 words. Architecture decisions as tables (option | tradeoff | decision). Code snippets only for non-obvious patterns.
 - Return the Section D envelope per `skills/_shared/sdd-phase-common.md`; the design summary belongs in `detailed_report`.
