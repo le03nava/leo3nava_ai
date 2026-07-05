@@ -82,7 +82,7 @@ Do not use review finding labels for security applicability routing, catalog blo
 
 ## Catalog Validator Contract
 
-Static validation of new security artifacts must target `design.md#secure-development-design` and `review-security-report.md` using the snapshot metadata and compact records above. Static validation of standalone `security-design.md` or `security-applicability.md` is legacy/archive-only and MUST NOT block new-change routing.
+Static validation of new security artifacts must target `design.md#secure-development-design` and `review-security-report.md` using the snapshot metadata and compact records above. Historical standalone `security-design.md` or `security-applicability.md` validation metadata is legacy/archive-only; no standalone validator may block new-change routing.
 
 Required checks:
 

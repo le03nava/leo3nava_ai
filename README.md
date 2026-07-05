@@ -54,7 +54,7 @@ The repository contains a full SDD workflow split into dedicated phase agents an
 
 Phase order: `explore? -> propose -> spec -> design -> test-design -> tasks -> apply -> review -> review-security -> verify -> archive`.
 
-For new changes, `sdd-design` owns secure development design inside `design.md#secure-development-design`. Standalone `sdd-security-design`, `security-design.md`, and `security-applicability.md` are legacy/archive compatibility data only and MUST NOT gate new-change routing. The previous standalone security-design validator has been removed from active workflow contracts; security review validates embedded rows against the shared catalog and artifact evidence.
+For new changes, `sdd-design` owns secure development design inside `design.md#secure-development-design`. Standalone `security-design.md` and `security-applicability.md` are legacy/archive compatibility data only and MUST NOT gate new-change routing. Previous standalone security validators have been removed from active workflow contracts; security review validates embedded rows against the shared catalog and artifact evidence.
 
 The review phase writes `openspec/changes/{change-name}/review-report.md` in OpenSpec mode, or `sdd/{change-name}/review` in Engram/hybrid mode. Non-blocking general review routes to `sdd-review-security`, which writes `review-security-report.md` before verification. Verification consumes both non-blocking review artifacts without owning their matrices, and archive requires both review reports plus passing verification.
 

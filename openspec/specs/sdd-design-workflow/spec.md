@@ -43,7 +43,7 @@ Each secure design row MUST state applicability, rationale, secure design decisi
 
 ### Requirement: Direct Routing to Test Design
 
-For new changes, successful `sdd-design` MUST route directly to `sdd-test-design`; it MUST NOT require or launch `sdd-security-design`.
+For new changes, successful `sdd-design` MUST route directly to `sdd-test-design`; it MUST NOT require or launch a standalone security-design phase.
 
 #### Scenario: Design routes to test design
 

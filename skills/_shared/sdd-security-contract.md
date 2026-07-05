@@ -57,10 +57,10 @@ overridesApplied:
     effect: <what was added or made stricter>
     safety: accepted-stricter | rejected-unsafe | ignored-unsafe
 validation:
-  validator: scripts/validate_security_applicability.ps1
-  status: pass | fail | manual-pending
+  validator: retired
+  status: legacy-read-only | manual-pending | fail
   checkedAt: <iso-8601-or-manual>
-  notes: <static validation notes, unavailable-tooling note, or failure summary>
+  notes: <historical validation notes, manual inspection notes, or failure summary>
 evidenceSummary:
   - <proposal/spec evidence used for classification>
 designChangingUnknowns: []
@@ -80,7 +80,7 @@ Rules:
 - Absence of mapped guidelines, empty evidence, or missing rationale MUST NOT be treated as no-impact proof.
 - Supported `rules.security-applicability` overrides are limited to extra prompts, stricter source coverage, validator mode, and stricter category severity. Overrides MUST NOT disable required categories, weaken source coverage, downgrade `blocking`, or bypass no-impact proof.
 - Unsafe overrides MUST be rejected or ignored in favor of the stricter base contract and recorded in `overridesApplied`.
-- `validation` metadata MUST be recorded before phase success. When executable validation is unavailable, the artifact MUST say so explicitly with `manual-pending` or a failure status; missing runtime tooling is not pass evidence.
+- `validation` metadata is historical for legacy artifacts. The executable `security-applicability` validator is retired; readers MAY preserve old validation notes but MUST NOT require or invoke a validator for new-change routing.
 - `designChangingUnknowns` blocks applicability only when missing information could change security design decisions.
 - `nonBlockingRisks` carries minor evidence gaps into `design.md#secure-development-design`.
 

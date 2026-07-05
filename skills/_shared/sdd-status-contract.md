@@ -47,7 +47,7 @@ When launching phase agents, normalize through this mapping:
 | `resolve-blockers` | report blockers and stop |
 | `none` | no next phase |
 
-Phase envelopes may return prefixed phase tokens such as `sdd-security-design` or `sdd-verify`; consumers MUST normalize them to the native token before comparing dependency states.
+Phase envelopes may return prefixed phase tokens such as `sdd-verify`; consumers MUST normalize them to the native token before comparing dependency states.
 
 ## Field Naming Across Contracts
 

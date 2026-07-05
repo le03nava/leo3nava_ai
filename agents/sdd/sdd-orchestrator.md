@@ -250,7 +250,7 @@ If `nextRecommended` is `review`, launch `sdd-review` before verification;
 if `nextRecommended` is `review-security`, launch `sdd-review-security` before verification;
 if `nextRecommended` is `verify`, verification/remediation may run only after non-blocking `review-report.md` and `review-security-report.md` evidence exists or to refresh evidence for blockers;
 if `nextRecommended` is `resolve-blockers`, report `blockedReasons` and stop;
-if `nextRecommended` is a planning token (`propose`, `spec`, `design`, `security-design`, `test-design`, or `tasks`), launch the corresponding planning phase.
+if `nextRecommended` is a planning token (`propose`, `spec`, `design`, `test-design`, or `tasks`), launch the corresponding planning phase.
 If the binary is unavailable, fall back to the existing prompt contract and manual status schema.
 
 ### SDD Session Preflight (HARD GATE)
@@ -650,7 +650,7 @@ No-skip rules:
 - Do not launch a phase when its dependency state is `blocked`.
 - Do not infer readiness from free text; use structured status, artifact refs, dependency states, and gatekeeper results.
 - Do not jump from proposal to design; `sdd-spec` must run and pass first.
-- Do not launch `sdd-security-design` for new changes; standalone `security-design.md` is legacy/archive compatibility only.
+- Do not launch a standalone security-design phase for new changes; standalone `security-design.md` is legacy/archive compatibility only.
 - Do not jump from design to test-design unless `design.md` includes `## Secure Development Design`.
 - Do not jump from design to tasks; `sdd-test-design` must run and pass first.
 - Do not jump from apply to verify or archive; `sdd-review` and `sdd-review-security` must run and produce non-blocking reports first.
@@ -685,7 +685,7 @@ Token, phase, and artifact naming:
 | Engram artifact key | `sdd/{change-name}/spec` |
 | OpenSpec collection path | `openspec/changes/{change-name}/specs/{domain}/spec.md` |
 
-Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. `sdd-security-design` and `security-design` may appear only for legacy/archive compatibility; do not launch `sdd-security-design` or emit `security-design` as a new-change successor. `sdd-review-security` is an active phase/agent name; `review-security` is the native/status token; `review-security-report` is the Engram artifact key suffix; `securityDesign` and `securityReviewReport` are camelCase persisted state/status fields, with `securityDesign` legacy/read-only for new changes. `sdd-security-applicability` is a retired phase name that may appear only in old or archived data; do not launch it, map it to an agent/skill, or emit it as a new-change successor. `securityApplicability` may appear only as a compatibility field. For the mandatory test-design phase, `sdd-test-design` is the phase/agent name, `test-design` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/test-design`), and `testDesign` is the camelCase persisted state/status field. Do not invent `sdd-specs`, `sdd-proposal`, `sdd-security-design` artifact keys, `sdd-review-security` artifact keys, or `sdd-test-design` artifact keys.
+Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. `security-design` may appear only for legacy/archive compatibility; do not launch or emit it as a new-change successor. `sdd-review-security` is an active phase/agent name; `review-security` is the native/status token; `review-security-report` is the Engram artifact key suffix; `securityDesign` and `securityReviewReport` are camelCase persisted state/status fields, with `securityDesign` legacy/read-only for new changes. `sdd-security-applicability` is a retired phase name that may appear only in old or archived data; do not launch it, map it to an agent/skill, or emit it as a new-change successor. `securityApplicability` may appear only as a compatibility field. For the mandatory test-design phase, `sdd-test-design` is the phase/agent name, `test-design` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/test-design`), and `testDesign` is the camelCase persisted state/status field. Do not invent `sdd-specs`, `sdd-proposal`, `sdd-review-security` artifact keys, or `sdd-test-design` artifact keys.
 
 Use `sdd/{change-name}/spec` for Engram mode, `openspec/changes/{change-name}/specs/{domain}/spec.md` for OpenSpec mode, and both references for hybrid mode. Use `sdd/{change-name}/design` / `openspec/changes/{change-name}/design.md#secure-development-design` for embedded security obligations, `sdd/{change-name}/test-design` / `openspec/changes/{change-name}/test-design.md`, and `sdd/{change-name}/review-security-report` / `openspec/changes/{change-name}/review-security-report.md` for downstream artifact refs. Use legacy `security-design` and `security-applicability` refs only when reading old or archived changes.
 
@@ -1173,7 +1173,6 @@ Required context by phase:
 | `sdd-propose` | user request or explore result sufficient to avoid material speculation | answered proposal questions, prior product decisions | `proposal` | product/business facts are missing and would require guessing |
 | `sdd-spec` | proposal | explore, product assumptions | `spec` | proposal missing/unreadable |
 | `sdd-design` | proposal + spec | architecture conventions, related files summary, baseline security considerations | `design` | proposal/spec missing/unreadable |
-| `sdd-security-design` | legacy/archive context only | standalone `security-design.md` from old changes | read-only compatibility; no new-change artifact | active new-change launch requested |
 | `sdd-test-design` | proposal + spec + design with `## Secure Development Design` | testing capabilities, design risks, embedded security controls | `test-design` | proposal/spec/design or embedded secure design section missing/unreadable |
 | `sdd-tasks` | spec + design with embedded secure development rows + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/test-design missing/unreadable |
 | `sdd-apply` | tasks + spec + design with embedded secure development rows + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
