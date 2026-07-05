@@ -808,7 +808,7 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | design | security-design | test-design | tasks | apply | review | review-security | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
@@ -816,7 +816,7 @@ artifactRefs:
   specs: []
   securityApplicability: [] # legacy/archive compatibility only
   design: []
-  securityDesign: []
+  securityDesign: [] # legacy/archive compatibility only; read-only for new changes
   testDesign: []
   tasks: []
   applyProgress: []
@@ -834,7 +834,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | design | security-design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -843,6 +843,8 @@ blockedReasons:
 stateRevision: {monotonic-integer-or-iso-timestamp}
 updatedAt: {iso-8601-timestamp}
 ```
+
+Historical compatibility: old or archived state may contain `currentPhase: security-design`, `nextRecommended: security-design`, or `artifactRefs.securityDesign`. Treat those values as read-only recovery input only. Do not emit `security-design` as an active `currentPhase` or `nextRecommended` value for new or continued active changes.
 
 Mode-specific writes:
 

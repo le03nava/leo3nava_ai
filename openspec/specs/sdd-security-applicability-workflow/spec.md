@@ -8,7 +8,7 @@ Define legacy security applicability compatibility after new-change classificati
 
 ### Requirement: Legacy-Only Applicability Classification
 
-The SDD workflow MUST NOT provide, launch, or require a repo-local `sdd-security-applicability` executor or skill for new changes. Applicability classification MUST live in `design.md#secure-development-design`. Legacy `security-applicability.md` artifacts MAY be read as historical data for archived or old changes and MUST NOT create active routing authority, artifact production, or executor availability for new changes.
+The SDD workflow MUST NOT provide, launch, or require a repo-local `sdd-security-applicability` executor or skill for new changes. Applicability classification MUST live in `design.md#secure-development-design`. Historical `security-applicability.md` artifacts MAY be read by status, persistence, or archive display paths as data and MUST NOT create active routing authority, artifact production, or executor availability for new changes.
 
 #### Scenario: New change excludes applicability phase
 
@@ -17,7 +17,7 @@ The SDD workflow MUST NOT provide, launch, or require a repo-local `sdd-security
 - THEN the next planning phase MUST be `sdd-design`
 - AND `sdd-security-applicability` MUST NOT appear in the active DAG.
 
-#### Scenario: Legacy artifact is read-only
+#### Scenario: Historical artifact is read-only
 
 - GIVEN an archived change contains `security-applicability.md`
 - WHEN compatibility readers inspect the archive
@@ -29,7 +29,7 @@ The SDD workflow MUST NOT provide, launch, or require a repo-local `sdd-security
 - GIVEN active repo-local SDD agents and skills are enumerated
 - WHEN launchable security phases are resolved
 - THEN no `sdd-security-applicability` executor or skill MUST be offered
-- AND legacy artifacts MUST remain readable without launching one.
+- AND historical artifacts MUST remain readable without launching one.
 
 ### Requirement: Blocking and Risk Rules
 
@@ -60,11 +60,11 @@ New changes MUST NOT produce `security-applicability.md`. The canonical classifi
 - THEN `design.md#secure-development-design` MUST contain classification
 - AND `security-applicability.md` MUST be absent.
 
-#### Scenario: Legacy data reference is resolved
+#### Scenario: Historical data reference is resolved
 
 - GIVEN an old change has `security-applicability.md`
 - WHEN a reader resolves historical artifacts
-- THEN the path MAY be resolved as legacy data
+- THEN the path MAY be resolved as historical data
 - AND no runnable applicability executor or skill MUST be required.
 
 ### Requirement: Complete Category Decision Matrix
@@ -102,32 +102,3 @@ No-impact proof for new changes MUST be recorded as `not-applicable` matrix rows
 - WHEN `sdd-design` evaluates the matrix
 - THEN `design.md#secure-development-design` MUST NOT classify the change as no-impact
 - AND the missing proof MUST be recorded as a blocker or risk by severity.
-
-### Requirement: Supported Applicability Overrides
-
-`openspec/config.yaml` MAY define legacy `rules.security-applicability` overrides only for reading old artifacts. New-change embedded secure design overrides MUST NOT disable required categories, weaken formal source coverage, downgrade `blocking` obligations, bypass no-impact proof, or restore the applicability phase.
-
-#### Scenario: Safe override is applied
-
-- GIVEN config adds an extra design-changing unknown prompt
-- WHEN `sdd-design` evaluates embedded secure development design for a new change
-- THEN the prompt MUST be considered in the matrix
-- AND `design.md#secure-development-design` MUST record the override source.
-
-#### Scenario: Unsafe weakening is rejected
-
-- GIVEN config attempts to disable source coverage or remove a required category
-- WHEN `sdd-design` loads embedded secure design overrides
-- THEN the override MUST be rejected
-- AND the phase MUST continue with the stricter base contract or block if ambiguity remains.
-
-### Requirement: Static Applicability Validator
-
-Static validation for new changes MUST target `design.md#secure-development-design` through review-security/catalog evidence. Any applicability validator MAY remain only for legacy archive checks and MUST NOT be required for new phase success.
-
-#### Scenario: Legacy validator remains compatible
-
-- GIVEN an archive contains old applicability evidence
-- WHEN legacy validation is requested
-- THEN the validator MAY check old schema fields
-- AND it MUST NOT affect new-change routing.

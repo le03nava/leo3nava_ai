@@ -1,6 +1,6 @@
 # SDD Security Contract
 
-Shared schema and vocabulary for mandatory `design.md#secure-development-design`, `review-security-report.md`, downstream evidence, archive checks, and legacy read-only standalone `security-design.md` / `security-applicability.md` compatibility.
+Shared schema and vocabulary for mandatory `design.md#secure-development-design`, `review-security-report.md`, downstream evidence, archive checks, approved exceptions, lifecycle/status vocabulary, and safe-evidence rules.
 
 ## Shared Vocabulary
 
@@ -12,8 +12,8 @@ Shared schema and vocabulary for mandatory `design.md#secure-development-design`
 | `catalog.taxonomyVersion` | Supported taxonomy version from the catalog |
 | `taxonomyCategory` | `authentication`, `sessions`, `sensitive-data-pan`, `secrets`, `permissions-access-control`, `files`, `database-access`, `sensitive-logging` |
 | `matrixAnswer` / `applies` | `Yes`, `No`, `N/A` |
-| `categoryDecisionMatrix[].decision` | `applicable`, `not-applicable`, `unknown` |
-| `operationalSeverity` / `categoryDecisionMatrix[].severity` | `blocking`, `conditional`, `advisory` |
+| `taxonomyEvaluation[].decision` | `applicable`, `not-applicable`, `unknown` |
+| `operationalSeverity` | `blocking`, `conditional`, `advisory` |
 | `evidenceStatus` | `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked` |
 | `ownerPhase` | `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive` |
 | `mandatoryWhenApplicable` | `true`, `false` |
@@ -21,72 +21,11 @@ Shared schema and vocabulary for mandatory `design.md#secure-development-design`
 
 Operational severity is not review severity. Security artifacts MUST use only `blocking`, `conditional`, and `advisory`; labels such as `Menor`, `Media`, or `Mayor` are review findings and MUST NOT control security routing.
 
-Evidence fields MUST be review-safe. Use artifact paths, section anchors, changed-file references, command summaries, sanitized examples, or redacted placeholders. Do not copy raw secrets, credentials, PAN, PII, connection strings, private keys, tokens, or unnecessary confidential data into SDD artifacts, validators, review reports, verify reports, or archive reports.
-
-## `security-applicability.md` Schema (Legacy/Read-Only)
-
-The applicability artifact is legacy evidence for old or archived changes only. New changes MUST NOT create it, require it, or route through `sdd-security-applicability`; classification and no-impact proof now live in `design.md#secure-development-design`.
-
-```yaml
-schemaName: gentle-ai.sdd-security-applicability
-schemaVersion: 1
-changeName: <change-name>
-classification: security-impacting | no-impact
-securityImpact: true | false
-catalog:
-  snapshotId: <security-guideline-catalog snapshot id>
-  taxonomyVersion: 1
-  source: skills/_shared/security-guideline-catalog.md
-taxonomyCategories: []
-applicableGuidelines: []
-categoryDecisionMatrix:
-  - category: authentication | sessions | sensitive-data-pan | secrets | permissions-access-control | files | database-access | sensitive-logging
-    decision: applicable | not-applicable | unknown
-    severity: blocking | conditional | advisory
-    rationale: <why this category decision was made>
-    evidenceRefs: []
-    guidelineIds: []
-    sourceIds: []
-noImpactProof:
-  status: not-applicable | complete | incomplete
-  summary: <positive no-impact proof, or why no-impact does not apply>
-  evidenceRefs: []
-overridesApplied:
-  - source: openspec/config.yaml rules.security-applicability
-    key: extraPrompts | strictSourceCoverage | validatorMode | categorySeverity
-    effect: <what was added or made stricter>
-    safety: accepted-stricter | rejected-unsafe | ignored-unsafe
-validation:
-  validator: retired
-  status: legacy-read-only | manual-pending | fail
-  checkedAt: <iso-8601-or-manual>
-  notes: <historical validation notes, manual inspection notes, or failure summary>
-evidenceSummary:
-  - <proposal/spec evidence used for classification>
-designChangingUnknowns: []
-nonBlockingRisks: []
-nextRecommended: design
-```
-
-Rules:
-
-- `classification: security-impacting` MUST set `securityImpact: true`, include at least one taxonomy category, and identify guideline IDs from `security-guideline-catalog.md`.
-- `classification: no-impact` MUST set `securityImpact: false`, record explicit no-impact proof, and leave `applicableGuidelines` empty unless a guideline is intentionally marked `not-applicable` with rationale.
-- `catalog` fields are additive and MUST preserve artifact identity: `schemaName`, `schemaVersion: 1`, path/topic key, `classification`, `securityImpact`, existing `SEC-*` IDs, and no-impact routing remain compatible with archived artifacts.
-- `categoryDecisionMatrix` MUST contain every supported taxonomy category exactly once. Missing or duplicate category rows make the artifact invalid.
-- A `blocking` row with `decision: unknown` is design-changing and MUST block phase success with the missing category evidence named.
-- `security-impacting` artifacts SHOULD mark applicable categories as `applicable` and map the matching `guidelineIds` and `sourceIds` when known.
-- `no-impact` artifacts MUST mark every category `not-applicable`, provide rationale and evidence refs for each row, set `noImpactProof.status: complete`, have no design-changing unknowns, and pass validation.
-- Absence of mapped guidelines, empty evidence, or missing rationale MUST NOT be treated as no-impact proof.
-- Supported `rules.security-applicability` overrides are limited to extra prompts, stricter source coverage, validator mode, and stricter category severity. Overrides MUST NOT disable required categories, weaken source coverage, downgrade `blocking`, or bypass no-impact proof.
-- Unsafe overrides MUST be rejected or ignored in favor of the stricter base contract and recorded in `overridesApplied`.
-- `validation` metadata is historical for legacy artifacts. The executable `security-applicability` validator is retired; readers MAY preserve old validation notes but MUST NOT require or invoke a validator for new-change routing.
-- `designChangingUnknowns` blocks applicability only when missing information could change security design decisions.
-- `nonBlockingRisks` carries minor evidence gaps into `design.md#secure-development-design`.
+Evidence fields MUST be review-safe. Use artifact paths, section anchors, changed-file references, command summaries, sanitized examples, or redacted placeholders. Do not copy raw secrets, credentials, PAN, PII, connection strings, private keys, tokens, or unnecessary confidential data into SDD artifacts, review reports, verify reports, or archive reports.
 
 ## `design.md#secure-development-design` Schema
 
-The `## Secure Development Design` section is mandatory inside `design.md` for every new change and replaces the standalone active `security-design.md` phase. It owns classification, catalog identity, every guideline matrix row, controls, expected evidence, lifecycle status, N/A rationale, exceptions, validation metadata or manual/static validation notes, and archive gates. No-impact changes still record justified `N/A` / `not-applicable` rows.
+The `## Secure Development Design` section is mandatory inside `design.md` for every new change and is the active security design authority. It owns classification, catalog identity, every guideline matrix row, controls, expected evidence, lifecycle status, N/A rationale, exceptions, validation metadata or manual/static validation notes, and archive gates. No-impact changes still record justified `N/A` / `not-applicable` rows.
 
 ```yaml
 schemaName: gentle-ai.sdd-embedded-secure-design
@@ -135,7 +74,7 @@ notApplicableGuidelines:
 exceptions: null
 carriedRisks: []
 validation:
-  validator: design.md#secure-development-design static/manual review
+  method: design.md#secure-development-design static/manual review
   status: pass | fail | manual-pending
   checkedAt: <iso-8601-or-manual>
   notes: <static validation notes, unavailable-tooling note, or failure summary>
@@ -196,7 +135,3 @@ Exception rules:
 - `SEC-SECRET-001`: Evidence MUST NOT commit, echo, log, or reproduce secret values. Cite secret/config names, storage locations, owner notes, or redacted placeholders only.
 - `SEC-ACCESS-001`: Evidence MUST prove denial-by-default workflow gates and blocker routing using artifact refs and status/routing examples, not hidden policy data.
 - `SEC-LOG-001`: Review, verify, and archive evidence MUST remain useful audit records without raw secrets, PAN, credentials, tokens, or unnecessary sensitive operational context.
-
-## PR 1 Compatibility Notes
-
-This schema migration is additive for legacy archives but authoritative for new changes. Downstream phases MUST preserve legacy read compatibility for archived standalone `security-design.md` and `security-applicability.md` artifacts while treating `design.md#secure-development-design` and `review-security-report.md` as the new-change security authorities.

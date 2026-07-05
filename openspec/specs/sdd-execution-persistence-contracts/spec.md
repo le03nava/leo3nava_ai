@@ -48,14 +48,14 @@ Each phase skill MUST keep a compact artifact contract that states required inpu
 
 ### Requirement: Conflict and Ambiguity Resolution
 
-When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preserve current behavior unless an approved spec change explicitly redesigns DAG, artifact, routing, status, or persistence semantics. Explicit redesigns MUST define compatibility rules for old artifacts and MUST NOT silently invalidate archives. Status tokens, resolver rows, and persisted refs MAY preserve legacy `security-applicability` data, but MUST NOT normalize it into a runnable phase, launchable agent, or required new-change successor.
+When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preserve current behavior unless an approved spec change explicitly redesigns DAG, artifact, routing, status, or persistence semantics. Explicit redesigns MUST define compatibility rules for old artifacts and MUST NOT silently invalidate archives. Status tokens, resolver rows, and persisted refs MAY preserve historical `security-applicability` data for read/display behavior, but MUST NOT normalize it into a runnable phase, launchable agent, active security authority, or required new-change successor.
 
 #### Scenario: Explicit DAG redesign is applied
 
 - GIVEN an approved spec changes phase order
 - WHEN contracts are updated
 - THEN the new DAG MUST be authoritative for new changes
-- AND legacy artifacts MUST remain readable only under documented compatibility rules.
+- AND older artifacts MUST remain readable only under documented compatibility rules.
 
 #### Scenario: Compatibility is preserved
 
@@ -63,11 +63,11 @@ When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preser
 - WHEN the contracts are updated
 - THEN existing consumers MUST continue to resolve those artifacts and states without migration.
 
-#### Scenario: Legacy token is not launchable
+#### Scenario: Historical token is not launchable
 
 - GIVEN persisted state or status contains `security-applicability`
 - WHEN routing or agent resolution is computed
-- THEN the token MAY be interpreted as legacy data state
+- THEN the token MAY be interpreted as historical data state
 - AND it MUST NOT map to `sdd-security-applicability` or any runnable successor.
 
 ### Requirement: Review Phase Artifact Contract
@@ -147,7 +147,7 @@ Verify MUST consume both `review-report.md` and `review-security-report.md` as e
 
 ### Requirement: Mandatory Security Artifacts and Status
 
-For new changes, persistence and status contracts MUST include `design.md` with embedded secure development rows and `review-security-report.md` refs, paths, dependency states, native/status token `review-security`, and archive gates. `security-design.md` and `security-applicability.md` MAY appear only as legacy archived data refs and MUST NOT be active dependencies, produced artifacts, or phase-launch inputs.
+For new changes, persistence and status contracts MUST include `design.md` with embedded secure development rows and `review-security-report.md` refs, paths, dependency states, native/status token `review-security`, and archive gates. `security-design.md` and `security-applicability.md` MAY appear only as historical data refs needed for existing state or archive readability and MUST NOT be active dependencies, produced artifacts, phase-launch inputs, or active security authority.
 
 #### Scenario: New state exposes security refs
 

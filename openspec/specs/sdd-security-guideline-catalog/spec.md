@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Define the in-repo corporate security guideline snapshot, compact taxonomy, matrix vocabulary, and evidence model used by embedded secure development design, security review, verification, archive checks, and legacy standalone security-design compatibility.
+Define the in-repo corporate security guideline snapshot, compact taxonomy, matrix vocabulary, and evidence model used by embedded secure development design, security review, verification, and archive checks.
 
 ## Requirements
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the initial corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by embedded secure development design in `design.md` and `review-security-report.md` until an official external versioned source replaces it.
+The repository MUST maintain the corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by embedded secure development design in `design.md#secure-development-design` and `review-security-report.md` until an official external versioned source replaces it.
 
 #### Scenario: Catalog snapshot is available
 
@@ -84,7 +84,7 @@ The catalog SHOULD identify evidence types suitable for review rows, including i
 
 ### Requirement: Catalog Boundary Preservation
 
-The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, and matrix vocabulary. `sdd-review` MAY reference catalog entries but MUST NOT duplicate or redefine guideline text.
+The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, and matrix vocabulary. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active security authority MUST remain with `design.md#secure-development-design` plus `review-security-report.md`.
 
 #### Scenario: Catalog authority is preserved
 

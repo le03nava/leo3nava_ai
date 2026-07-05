@@ -1,6 +1,6 @@
 # Security Guideline Catalog
 
-Operational security checklist for embedded SDD secure development design in `design.md`, security review, verification evidence, archive gates, and legacy standalone security-design/applicability compatibility. Stable guideline IDs are preserved for audit continuity.
+Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `review-security-report.md`, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
 
 ## Snapshot Metadata
 
@@ -11,7 +11,7 @@ Operational security checklist for embedded SDD secure development design in `de
 | Taxonomy version | `1` |
 | Source | Initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
-| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, evidence planning, `review-security-report.md`, verification, archive gates, and legacy standalone security-design/applicability compatibility |
+| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, evidence planning, `review-security-report.md`, verification, and archive gates |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
 | Operational severity vocabulary | `blocking`, `conditional`, `advisory` |
 | Matrix vocabulary | `Yes`, `No`, `N/A` |
@@ -20,7 +20,7 @@ Operational security checklist for embedded SDD secure development design in `de
 
 ## Checklist Usage
 
-Use this catalog as a checklist for every new `design.md#secure-development-design` section and `review-security-report.md`. Legacy `security-design.md` and `security-applicability.md` artifacts may still cite it as historical/archive evidence, but new changes classify security through embedded secure development design and validate it through security review.
+Use this catalog as a checklist for every new `design.md#secure-development-design` section and `review-security-report.md`. New changes classify security through embedded secure development design and validate it through security review.
 
 | Column | Required value |
 | --- | --- |
@@ -40,7 +40,7 @@ Lifecycle status MUST be one of `not-started`, `planned`, `implemented`, `verifi
 
 ## Taxonomy
 
-Use these compact category IDs in `design.md#secure-development-design`, `review-security-report.md`, task/apply evidence, verification reports, archive blockers, and legacy `security-design.md` / `security-applicability.md` compatibility readers.
+Use these compact category IDs in `design.md#secure-development-design`, `review-security-report.md`, task/apply evidence, verification reports, and archive blockers.
 
 | Category ID | Category | Applies when a change touches |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ Use these compact category IDs in `design.md#secure-development-design`, `review
 
 Each guideline has a stable ID. Do not rename IDs after archive evidence exists; add a replacement guideline and mark the old one superseded in observations instead.
 
-| ID | Category | Mandatory when applicable | Operational severity | Conditional predicate | Source IDs | Requirement | Validator fields | Exception fields | Default Complies | Evidence Hint | Notes |
+| ID | Category | Mandatory when applicable | Operational severity | Conditional predicate | Source IDs | Requirement | Required fields | Exception fields | Default Complies | Evidence Hint | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `SEC-AUTH-001` | `authentication` | Yes | `blocking` | `N/A` | `1.1-1.10`, `2.1-2.23`, `6.3`, `14.8` | Authentication changes must preserve trustworthy identity verification and protect credential-handling boundaries. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Auth-flow design control; implementation refs; negative/abuse test or manual review evidence; verification note. | Map all login, recovery, MFA, impersonation, and credential validation changes. |
 | `SEC-SESS-001` | `sessions` | Yes | `blocking` | `N/A` | `7.1-7.13` | Session and token changes must define secure lifetime, revocation, renewal, storage, and fixation protections. | `guidelineId`, `category`, `mandatoryWhenApplicable`, `operationalSeverity`, `sourceIds`, `evidenceStatus` | `status`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, `evidenceGap` | Yes/No/N/A | Session lifecycle design control; cookie/token attribute evidence; test-design coverage or justified static/manual check. | Applies to browser cookies, bearer tokens, refresh tokens, and server-side sessions. |
@@ -78,11 +78,11 @@ Applicability severity controls phase routing and evidence obligations. It is in
 | `conditional` | Applies only when the recorded predicate is true; false predicates may be marked not applicable. | Record predicate, predicate result, rationale, evidence refs, and downstream owner when true. |
 | `advisory` | Does not block by itself, but must remain downstream-visible as risk, guidance, or archive-readable context. | Preserve guideline ID, source IDs, rationale, and risk/guidance note. |
 
-Do not use review finding labels for security applicability routing, catalog blocking behavior, or validator severity checks.
+Do not use review finding labels for security routing, catalog blocking behavior, or operational-severity checks.
 
-## Catalog Validator Contract
+## Catalog Consistency Contract
 
-Static validation of new security artifacts must target `design.md#secure-development-design` and `review-security-report.md` using the snapshot metadata and compact records above. Historical standalone `security-design.md` or `security-applicability.md` validation metadata is legacy/archive-only; no standalone validator may block new-change routing.
+Static/manual consistency checks for new security evidence must target `design.md#secure-development-design` and `review-security-report.md` using the snapshot metadata and compact records above. No separate validation artifact or script may block new-change routing.
 
 Required checks:
 
@@ -92,7 +92,7 @@ Required checks:
 - Matrix answers are limited to `Yes`, `No`, and `N/A`.
 - Lifecycle statuses are limited to `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, and `blocked`.
 - Every compact guideline has one or more Source IDs and every Source ID resolves in the preserved snapshot tables.
-- `operationalSeverity` and category decision `severity` values are limited to `blocking`, `conditional`, and `advisory`.
+- `operationalSeverity` values are limited to `blocking`, `conditional`, and `advisory`.
 - Conditional records include a predicate and predicate rationale when the predicate is evaluated false or true.
 - Exception records for missing mandatory evidence include `status: exception-approved`, `guidelineId`, `approver`, `approvedAt`, `acceptedRiskRationale`, `mitigationOrFollowUp`, and `evidenceGap`.
 - Evidence fields use review-safe locations, summaries, command outputs, or redacted placeholders rather than raw PAN, PII, credentials, tokens, private keys, or confidential values.
@@ -358,7 +358,7 @@ Mandatory applicable guidelines block archive unless evidence is complete or an 
 
 ## Review-Phase Cross-Reference Guidance
 
-`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Embedded `design.md#secure-development-design` and `review-security-report.md` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions. Legacy standalone `security-design.md` and `security-applicability.md` remain readable only for archived/old changes.
+`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Embedded `design.md#secure-development-design` and `review-security-report.md` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions.
 
 Review-safe evidence types for security-related review rows:
 

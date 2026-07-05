@@ -168,7 +168,7 @@ phaseInstructions:
   review: [<instruction strings>]
   verify: [<instruction strings>]
   archive: [<instruction strings>]
-nextRecommended: propose | spec | design | security-design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons: []
 ```
 
@@ -194,6 +194,7 @@ Native status JSON is authoritative when available. If native currently emits on
 - `proposal`, `specs`, `design`, `testDesign`, and `tasks` report whether prerequisite artifacts are blocked, ready, or all done. `securityDesign` and `securityApplicability` are legacy/read-only for old or archived changes and MUST NOT be active new-change dependencies.
 - `design` is `ready` only when proposal and specs are available. Missing `securityApplicability` or standalone `securityDesign` MUST NOT block technical design for new changes. A completed new-change design MUST contain `## Secure Development Design`.
 - `securityDesign` is legacy/read-only for new changes. If present in old or archived state, it may be displayed as historical evidence but MUST NOT be required or launched as an active dependency.
+- Historical `security-design` and `security-applicability` routing values MAY be recognized only when reading old or archived state. They MUST NOT be emitted for new-change status, normalized into runnable successors, mapped to launchable agents, active dependencies, or active security authority.
 - `testDesign` is `ready` only when proposal, specs, and design with embedded secure development rows are available; it is `all_done` when the `test-design` artifact exists and is readable.
 - `tasks` is `ready` only when specs, design with embedded secure development rows, and test design are available. Missing `testDesign` blocks task planning.
 - `apply` is `ready` only when specs, design with embedded secure development rows, test design, and tasks are available and task progress is not all done.

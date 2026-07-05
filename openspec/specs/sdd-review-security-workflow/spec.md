@@ -26,7 +26,7 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 ### Requirement: Security Review Artifact
 
-`sdd-review-security` MUST persist `review-security-report.md`. The report MUST validate the embedded `design.md` secure development rows, include verdict, row-level evidence locations, observations, blocking findings, exceptions, and next recommendation, and MUST NOT depend on the active validator `scripts/validate_security_design.ps1`.
+`sdd-review-security` MUST persist `review-security-report.md`. The report MUST validate embedded `design.md#secure-development-design` rows, include verdict, row-level evidence locations, observations, blocking findings, exceptions, and next recommendation, and MUST NOT depend on `scripts/validate_security_design.ps1` or standalone security artifacts for active new-change evidence.
 
 #### Scenario: Report is persisted
 
@@ -35,12 +35,12 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 - THEN `review-security-report.md` MUST be written and read back
 - AND it MUST state a blocking or non-blocking verdict.
 
-#### Scenario: Legacy standalone artifact is read-only
+#### Scenario: Embedded secure design is required
 
-- GIVEN a legacy archive has standalone `security-design.md`
-- WHEN security review needs historical evidence
-- THEN it MAY read that artifact as compatibility context
-- AND it MUST NOT require that artifact for new changes.
+- GIVEN a new change lacks `design.md#secure-development-design`
+- WHEN security review evaluates readiness
+- THEN it MUST block with missing embedded design evidence
+- AND verify/archive MUST remain unavailable.
 
 ### Requirement: Security Matrix Validation
 
@@ -73,7 +73,7 @@ Security review MUST NOT replace `sdd-review` or duplicate the 96-control matrix
 
 ### Requirement: Active Security Validator Retirement
 
-The active new-change workflow MUST remove `scripts/validate_security_design.ps1` as a required validator. Any remaining references MUST be legacy/archive-only and MUST NOT block new-change routing, review-security, verify, or archive.
+The active new-change workflow MUST remove `scripts/validate_security_design.ps1` as a required validator. Any remaining parser or archive references MUST NOT block new-change routing, review-security, verify, or archive.
 
 #### Scenario: New change does not invoke validator
 

@@ -91,9 +91,9 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Exploration | `sdd/{change-name}/explore` | `openspec/changes/{change-name}/explore.md` | Both | Inline phase result only |
 | Proposal | `sdd/{change-name}/proposal` | `openspec/changes/{change-name}/proposal.md` | Both | Inline phase result only |
 | Spec | `sdd/{change-name}/spec` | `openspec/changes/{change-name}/specs/{domain}/spec.md` | Both | Inline phase result only |
-| Security applicability (legacy/read-only) | `sdd/{change-name}/security-applicability` | `openspec/changes/{change-name}/security-applicability.md` | Both | Inline phase result only |
+| Security applicability (historical/read-only) | `sdd/{change-name}/security-applicability` | `openspec/changes/{change-name}/security-applicability.md` | Both | Historical data only when already present; no active phase output |
 | Design | `sdd/{change-name}/design` | `openspec/changes/{change-name}/design.md` | Both | Inline phase result only |
-| Security design (legacy/read-only) | `sdd/{change-name}/security-design` | `openspec/changes/{change-name}/security-design.md` | Both | Inline phase result only |
+| Security design (historical/read-only) | `sdd/{change-name}/security-design` | `openspec/changes/{change-name}/security-design.md` | Both | Historical data only when already present; no active phase output |
 | Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
@@ -149,15 +149,15 @@ schemaName: gentle-ai.sdd-state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | design | security-design | test-design | tasks | apply | review | review-security | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | blocked | complete
 completedPhases: []
 artifactRefs:
   explore: []
   proposal: []
   specs: []
-  securityApplicability: [] # legacy/read-only; not an active new-change dependency
+  securityApplicability: [] # historical/read-only; not an active new-change dependency or authority
   design: []
-  securityDesign: [] # legacy/read-only; active security authority is design.md#secure-development-design
+  securityDesign: [] # historical/read-only; active security authority is design.md#secure-development-design
   testDesign: []
   tasks: []
   applyProgress: []
@@ -175,7 +175,7 @@ delivery:
     approved: true | false
     approver: {name-or-null}
     rationale: {text-or-null}
-nextRecommended: propose | spec | design | security-design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
+nextRecommended: propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -200,6 +200,8 @@ Failure handling:
 - If one side of `hybrid` succeeds and the other fails, report partial persistence and require repair/reconciliation before continuing.
 - If existing state has a newer `stateRevision` or `updatedAt` than the state about to be written, stop and reconcile; do not overwrite newer state.
 - If Engram state and OpenSpec state materially disagree in `hybrid`, apply the Hybrid Conflict Policy and ask for reconciliation before launching dependent work.
+
+Historical `security-design` and `security-applicability` current-phase or next-recommended values may be read from old state only as compatibility data. They MUST NOT be emitted for new state, normalized into runnable successors, mapped to phase agents, or treated as active security authority.
 
 ## Artifact Persistence Verification
 
