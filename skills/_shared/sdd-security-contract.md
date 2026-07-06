@@ -18,6 +18,12 @@ Shared schema and vocabulary for mandatory `design.md#secure-development-design`
 | `ownerPhase` | `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive` |
 | `mandatoryWhenApplicable` | `true`, `false` |
 | `validation.status` | `pass`, `fail`, `manual-pending` |
+| `sourceRows[].sourceId` | Stable dotted numeric ID from `skills/_shared/security-guideline-catalog.md#full-corporate-guideline-snapshot`, for example `1.1` |
+| `sourceRows[].mappedCompactGuidelineIds[]` | Existing compact `SEC-*` IDs only |
+| `sourceRows[].complies` | `planned`, `Yes`, `No`, `N/A` |
+| `sourceRows[].lifecycleStatus` | `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked` |
+| `sourceRows[].finding` | `none`, `blocker`, `warning` |
+| `sourceRows[].route` | `test-design`, `apply`, `resolve-blockers`, `verify`, `archive` |
 
 Operational severity is not review severity. Security artifacts MUST use only `blocking`, `conditional`, and `advisory`; labels such as `Menor`, `Media`, or `Mayor` are review findings and MUST NOT control security routing.
 
@@ -93,6 +99,40 @@ Rules:
 - Applicable safe-evidence controls for `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, and `SEC-LOG-001` MUST avoid raw sensitive values and cite paths, sections, summaries, or redacted placeholders.
 - Carried risks MUST be resolved or carried forward with an owner phase and evidence expectation.
 
+### Source Row Operational Layer
+
+The compact controls above remain the architectural control layer. Source rows are an operational evidence layer derived from `skills/_shared/security-guideline-catalog.md#corporate-source-row-operational-inventory` and MUST NOT create replacement compact guidelines.
+
+`design.md#secure-development-design` MAY summarize source rows by corporate section when the full expanded inventory is already present in the shared catalog, but it MUST preserve the expected Source ID universe, compact mappings, lifecycle status, evidence owners, safe-evidence policy, N/A policy, and downstream traceability.
+
+```yaml
+sourceRows:
+  - sourceId: "1.1"
+    corporateSection: "1. Authentication"
+    guidelineTextRef: "skills/_shared/security-guideline-catalog.md#source-1.1"
+    pciAlignment: "PCI Req 6.5.8, 6.5.10" # or "N/A"
+    mappedCompactGuidelineIds: ["SEC-AUTH-001"]
+    applies: Yes # Yes | No | N/A
+    complies: planned # planned | Yes | No | N/A
+    lifecycleStatus: planned
+    evidenceLocation: "openspec/changes/<change>/design.md#secure-development-design"
+    observations: "Review-safe summary only."
+    finding: none # none | blocker | warning
+    route: test-design # test-design | apply | resolve-blockers | verify | archive
+    naJustification: null
+```
+
+Source row rules:
+
+- Every Source ID from the catalog's operational inventory MUST be expanded before validation and represented exactly once in security review matrices.
+- `mappedCompactGuidelineIds` MUST contain one or more known compact IDs. Missing, empty, or unknown mappings route to `resolve-blockers`.
+- `applies` MUST be `Yes`, `No`, or `N/A`. Design normally uses `Yes` or `N/A`; review-security may use `No` when a row applies but lacks valid evidence.
+- `complies` MUST be phase-appropriate: `planned` during design/test-design planning, `Yes` or `No` during review/verify evidence, and `N/A` only with complete irrelevance evidence.
+- `N/A` rows MUST include both evidence and `naJustification` proving irrelevance by category, platform, API, data class, or workflow. Unsupported `N/A` routes to `resolve-blockers`.
+- Applicable rows MUST cite review-safe evidence when the owning phase has produced evidence. Missing implementation evidence routes to `apply` when remediation is file, prompt, or contract work.
+- Evidence and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values.
+- Source row traceability MUST remain: Source ID -> mapped compact `SEC-*` -> design control -> test-design check -> apply evidence -> review-security row verdict -> verify prerequisite -> archive audit trail.
+
 ## `review-security-report.md` Contract
 
 `sdd-review-security` MUST validate `design.md#secure-development-design` after non-blocking general review and persist `review-security-report.md` before verify.
@@ -102,9 +142,35 @@ Required report content:
 - Verdict: blocking or non-blocking.
 - Source refs: `design.md#secure-development-design`, `review-report.md`, changed-file/task/apply evidence.
 - One validation row per compact guideline ID with answer `Yes`, `No`, or `N/A`, lifecycle status, evidence location, observations, and exception reference when applicable.
+- One source-row validation row per expanded corporate Source ID when the change requires source-row security review. Rows MUST cite compact mapping, applicability/compliance status, lifecycle status, evidence location, observations, finding, and route.
 - Blocking findings for applicable mandatory rows with missing evidence or incomplete exceptions.
 - Review-safe evidence only: paths, section refs, sanitized command summaries, and redacted placeholders.
 - `nextRecommended: verify` for non-blocking reports, or `apply` / `resolve-blockers` for blockers.
+
+Review-security MUST cite `review-report.md` findings when they support source-row evidence, but it MUST NOT duplicate the general 96-control review matrix. The source-row matrix is security-specific and bounded to the corporate Source ID inventory.
+
+## Source Row Routing and Persistence Semantics
+
+| Condition | Required route |
+| --- | --- |
+| Missing, duplicate, or unknown Source ID | `resolve-blockers` |
+| Malformed source-row schema or unsupported allowed value | `resolve-blockers` |
+| Missing or unknown compact `SEC-*` mapping | `resolve-blockers` |
+| Unsafe evidence or missing `N/A` evidence/justification | `resolve-blockers` |
+| Applicable row lacks implementation evidence and remediation is file, prompt, or contract work | `apply` |
+| Mandatory evidence is complete and only warning rows remain | `verify` |
+| Verify confirms non-blocking review-security evidence | `archive` |
+
+Persistence mode changes storage, not source-row semantics:
+
+| Mode | Source-row behavior |
+| --- | --- |
+| OpenSpec | Store rows in established change files and reports; downstream phases read those files. |
+| Engram | Store rows under established SDD artifact topic keys from `skills/_shared/persistence-contract.md`. |
+| hybrid | Store rows in both OpenSpec and Engram; reconcile material disagreements before continuing. |
+| none | Return rows inline only and report recovery limits; do not write files or Engram observations. |
+
+No active source-row validation path requires `scripts/validate_security_design.ps1`; static/manual validation uses catalog, embedded design, test-design, apply evidence, review reports, and persistence-contract read-back evidence.
 
 ## Approved Exception Fields
 

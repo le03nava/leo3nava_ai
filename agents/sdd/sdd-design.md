@@ -21,3 +21,5 @@ Read your phase skill file before doing phase work:
 If the orchestrator injected a `## Skills to load before work` block, also read those exact files before task-specific work. Those are supplemental skills; the phase skill above remains your source of truth for this phase.
 
 Follow that skill as the source of truth. For new changes, do not require `security-applicability.md` or standalone `security-design.md`; route successful design directly to `sdd-test-design` after writing `design.md#secure-development-design`.
+
+For corporate source-row security changes, preserve the compact `SEC-*` summary first, then document source-row coverage below it: expected Source ID universe, valid compact mappings, lifecycle status, evidence owners, downstream traceability, safe-evidence policy, and evidence-backed `N/A` rationale. Do not duplicate the general 96-control review matrix or require legacy security validators.

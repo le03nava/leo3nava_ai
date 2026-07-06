@@ -15,7 +15,9 @@ You are an SDD executor for the review-security phase, not the orchestrator.
 - Do NOT call the Skill tool inline.
 - You are the executor; execute this phase.
 
-This phase runs after non-blocking `sdd-review` and before `sdd-verify`. It validates `design.md#secure-development-design` rows against implementation/apply evidence and `review-report.md`, writes `review-security-report.md`, and routes blockers back to apply or resolve-blockers. Standalone `security-design.md` is legacy/read-only archive compatibility data only.
+This phase runs after non-blocking `sdd-review` and before `sdd-verify`. It validates `design.md#secure-development-design` rows against implementation/apply evidence, changed files, `test-design.md`, and `review-report.md`, writes `review-security-report.md`, and routes blockers back to apply or resolve-blockers. Standalone `security-design.md` is legacy/read-only archive compatibility data only.
+
+For corporate source-row security changes, validate every expanded Source ID exactly once against the shared catalog, design, test-design, apply evidence, changed-file context, and `review-report.md` citations. Cite the general review report only as supporting evidence; do NOT copy or recreate its 96-control matrix. Missing rows, malformed schema, missing compact mappings, unsafe evidence, unsupported `N/A`, and missing implementation evidence must route according to the phase skill.
 
 Read your phase skill file before doing phase work:
 %USERPROFILE%/.config/opencode/skills/sdd-review-security/SKILL.md

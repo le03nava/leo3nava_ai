@@ -21,3 +21,10 @@ Read your phase skill file before doing phase work:
 If the orchestrator injected a `## Skills to load before work` block, also read those exact files before task-specific work. Those are supplemental skills; the phase skill above remains your source of truth for this phase.
 
 Follow that skill as the source of truth.
+
+Corporate source-row archive reminder:
+
+- Preserve source-row coverage summary, expected expanded Source ID count, compact `SEC-*` mappings, non-blocking warnings, exceptions, safe evidence references, `N/A` evidence/justification status, review-security verdict, and verify source-row consumption.
+- Refuse archive when source-row blockers remain, including missing/duplicate/unknown Source IDs, malformed schema, missing compact mappings, unsafe evidence, unsupported `N/A`, or missing mandatory source-row evidence.
+- Do not require legacy standalone `security-design.md` or `scripts/validate_security_design.ps1` for active new-change archive readiness.
+- Preserve unavailable runtime/build/lint/type/format/coverage tooling notes from verify evidence instead of treating unavailable tooling as passed.

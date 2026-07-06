@@ -40,6 +40,8 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Mutates | None outside the produced test design artifact. |
 | Mandatory artifact behavior | Do not route directly from design to tasks without a complete `test-design` artifact. No-impact changes still produce a concise no-impact assessment rather than omitting the artifact. |
 | Planned evidence mapping | Preserve scenario, design-risk, security-control, validation metadata, check type, severity, expected evidence, no-impact assessment, and open-question mapping. Mandatory cases are verification-blocking when uncovered. |
+| Source-row planning | When `design.md#secure-development-design` declares corporate source-row coverage, plan static/manual/automated checks for every applicable source-row category, including Source ID or group, compact mapping, lifecycle status, evidence owner, mandatory/advisory status, warning preservation, and N/A evidence/justification checks. |
+| Unavailable tooling | If runtime, build, coverage, lint, typecheck, or format tooling is unavailable, record explicit unavailable-tooling notes and plan static/manual evidence instead. Missing tooling is never passing evidence. |
 | Downstream consumption | `sdd-tasks`, `sdd-apply`, `sdd-verify`, and archive readiness checks consume `test-design` as the test-planning source of truth. |
 | Success routing | `next_recommended: tasks`. |
 | Block routing | `next_recommended: resolve-blockers` for missing proposal/spec/design, missing embedded secure development design, testability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
@@ -64,6 +66,8 @@ Routing rules for `next_recommended`:
 | Specs/design have no behavior or testability impact | Write a no-impact assessment in `test-design.md`; do not treat the artifact as absent. |
 | A mandatory spec scenario or design risk has no planned check and no justified skip | Return `blocked` or fix the draft before persistence. |
 | A mandatory embedded secure-design control has no planned check, non-test evidence, or complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; uncovered mandatory security controls cannot proceed to tasks. |
+| A mandatory applicable source row or source-row group has no planned static/manual/automated check, no non-test evidence plan, or no complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; name the Source ID or group and missing evidence plan. |
+| A source row marked `N/A` lacks planned irrelevance evidence/justification validation | Return `blocked` with `next_recommended: resolve-blockers`; unsupported `N/A` cannot proceed to tasks. |
 | Test-design draft fails validation | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 
 ## What to Do
@@ -91,9 +95,12 @@ Collect planned checks from:
 - Spec scenarios and RFC 2119 requirements.
 - Design risks, compatibility decisions, routing/state/persistence contracts, migrations, and rollout notes.
 - Embedded secure-development controls, mandatory evidence expectations, carried risks, and archive-gate notes.
+- Corporate source-row coverage declared in `design.md#secure-development-design`: expected Source ID universe, compact `SEC-*` mappings, lifecycle status, owner-phase evidence expectations, safe-evidence policy, N/A policy, warning-only rows, and downstream traceability.
 - Testing capability constraints such as unavailable runners, missing coverage tooling, or static-only repositories.
 
 When runtime test runner, coverage, linter, type checker, or formatter commands are unavailable, plan static/manual evidence explicitly. Missing tooling is a reported constraint, not passing evidence.
+
+Mandatory source-row evidence blockers MUST stay visible: missing coverage, missing compact mapping, unsupported `N/A`, unsafe evidence, or missing evidence for an applicable mandatory row blocks test-design. Warning-only rows remain tracked as warnings and may route forward only when mandatory evidence is complete.
 
 If there is no behavior or testability impact, write a concise no-impact assessment instead of inventing checks.
 
@@ -128,6 +135,11 @@ openspec/changes/{change-name}/
 | Spec | {path-or-topic} | {requirements/scenarios summary} |
 | Design | {path-or-topic} | {architecture/risk summary} |
 | Secure Development Design | {design path-or-topic}#secure-development-design | {classification, controls, evidence obligations, lifecycle statuses, and N/A rationale} |
+| Testing Capabilities | {path-or-topic} | {available and unavailable runtime/build/coverage/lint/type/format tooling} |
+
+## Source ID Coverage Baseline
+
+{Required when corporate source-row coverage applies. State expected Source ID count, source sections or groups, compact `SEC-*` mappings, and whether validation uses static/manual/automated evidence.}
 
 ## Test Cases
 
@@ -149,9 +161,11 @@ openspec/changes/{change-name}/
 
 - Mandatory cases require implementation, execution, static/manual evidence, or a justified skip.
 - Non-mandatory cases should be reported as warnings when uncovered, but they do not block verification by themselves.
-- Security validation evidence should cite embedded `design.md` metadata, catalog snapshot/version, lifecycle status, and planned static/manual evidence.
+- Security validation evidence should cite embedded `design.md` metadata, catalog snapshot/version, compact mapping, lifecycle status, owner phase, and planned static/manual evidence.
+- Applicable source rows require planned safe evidence. `N/A` source rows require planned evidence plus irrelevance justification checks. Unsupported `N/A` remains blocking.
+- Warning-only source rows must be preserved with expected observation evidence and may proceed only when mandatory evidence is complete.
 - No-impact routing is valid only as justified `N/A` / `not-applicable` rows inside mandatory `design.md#secure-development-design`; absence of standalone `security-design.md` is not a blocker for new changes.
-- Runtime tests, linters, type checkers, formatters, and coverage commands that are unavailable must be reported as unavailable evidence, not treated as passed checks.
+- Runtime tests, build commands, linters, type checkers, formatters, and coverage commands that are unavailable must be reported as unavailable evidence, not treated as passed checks.
 
 ## Open Questions
 
@@ -166,13 +180,16 @@ Valid `Severity` values: `mandatory`, `non-mandatory`.
 Before persisting or returning, verify:
 - Every behavior-impacting spec scenario or design risk has a linked test case, or a justified omission.
 - `design.md#secure-development-design` is present and every mandatory embedded security control has a planned check, justified non-test evidence, or complete approved exception.
+- When source-row coverage applies, every mandatory source-row category has a planned static/manual/automated check or justified non-test evidence; missing Source IDs, mappings, safe evidence, or N/A justification remain blockers.
 - Uncovered mandatory security evidence is a blocker; do not persist a successful `test-design.md` that leaves mandatory controls uncovered.
+- Warning-only rows are preserved as warning evidence and are not silently dropped.
 - Each test case has `ID`, `Source`, `Check`, `Type`, `Severity`, `Expected Evidence`, and `Notes`.
 - `Type` is one of `automated`, `manual`, or `static`.
 - `Severity` is one of `mandatory` or `non-mandatory`.
 - Mandatory cases are verification-blocking when uncovered.
 - Non-mandatory cases are advisory and become verification warnings when uncovered.
 - Static/manual checks are allowed when no runtime test runner exists.
+- Unavailable runtime/build/coverage/lint/typecheck/format tooling is reported explicitly and never claimed as passing evidence.
 - No-impact changes include the no-impact assessment and still produce the artifact.
 - Blocking open questions set the return status to `blocked`.
 

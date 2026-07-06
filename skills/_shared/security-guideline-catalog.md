@@ -99,6 +99,60 @@ Required checks:
 - `N/A` rows include rationale and evidence proving out-of-scope status.
 - Advisory evidence is preserved in downstream risks, guidance, or archive evidence rather than dropped because it is non-blocking.
 
+## Corporate Source Row Operational Inventory
+
+The compact `SEC-*` checklist records remain the authoritative eight-control security taxonomy. The operational inventory below adds exhaustive corporate Source ID coverage for row-level validation without replacing those compact controls.
+
+Validation MUST expand source ranges before checking coverage. Compressed ranges MAY appear in human summaries, but validation matrices, review-security rows, and archive evidence MUST reason over concrete Source IDs.
+
+### Source row validation rules
+
+| Rule | Requirement |
+| --- | --- |
+| Exact source universe | The preserved snapshot contains 155 concrete Source IDs. Every validation matrix MUST include each expected Source ID exactly once. |
+| Range expansion | Expand dotted numeric ranges such as `1.1-1.10` into existing snapshot IDs before validation. Do not synthesize IDs that are absent from the snapshot. |
+| PCI alignment | Every expanded row inherits the PCI alignment from its corporate section heading; rows with no heading alignment MUST use `N/A`. |
+| Compact mapping | Every expanded Source ID MUST map to one or more existing compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. |
+| Blocking failures | Missing Source IDs, duplicate Source IDs, unknown Source IDs, missing compact mappings, malformed rows, missing evidence for applicable rows, unsupported `N/A`, or unsafe evidence MUST block with the route defined by `skills/_shared/sdd-security-contract.md`. |
+| Safe evidence | Evidence and observations cite paths, sections, changed-file references, command summaries, sanitized summaries, or redacted placeholders only. They MUST NOT contain secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. |
+
+### Expanded source inventory and compact mappings
+
+Each Source ID listed in the `Expanded Source IDs` column maps to the compact IDs in the same row unless a downstream artifact adds a narrower row-level mapping that still uses only the eight compact IDs.
+
+| Corporate section | PCI alignment | Expanded Source IDs | Count | Compact mapping |
+| --- | --- | --- | ---: | --- |
+| 1. Authentication | `PCI Req 6.5.8, 6.5.10` | `1.1`, `1.2`, `1.3`, `1.4`, `1.5`, `1.6`, `1.7`, `1.8`, `1.9`, `1.10` | 10 | `SEC-AUTH-001`, `SEC-ACCESS-001` |
+| 2. Passwords | `PCI Req 6.3.1` | `2.1`, `2.2`, `2.3`, `2.4`, `2.5`, `2.6`, `2.7`, `2.8`, `2.9`, `2.10`, `2.11`, `2.12`, `2.13`, `2.14`, `2.15`, `2.16`, `2.17`, `2.18`, `2.19`, `2.20`, `2.21`, `2.22`, `2.23` | 23 | `SEC-AUTH-001`, `SEC-SECRET-001` |
+| 3. Access and Activity Logging | `N/A` | `3.1`, `3.2`, `3.3`, `3.4`, `3.5`, `3.6`, `3.7`, `3.8`, `3.9`, `3.10`, `3.11` | 11 | `SEC-LOG-001` |
+| 4. Cryptography | `PCI Req 6 - 6.5.3` | `4.1`, `4.2`, `4.3`, `4.4`, `4.5`, `4.6`, `4.7`, `4.8` | 8 | `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-AUTH-001`, `SEC-SESS-001` |
+| 5. Databases | `N/A` | `5.1`, `5.2`, `5.3`, `5.4`, `5.5`, `5.6`, `5.7`, `5.8`, `5.9`, `5.10`, `5.11`, `5.12` | 12 | `SEC-DB-001`, `SEC-ACCESS-001`, `SEC-SECRET-001` |
+| 6. Coding | `PCI Req 6.5.8, 6.5.9` | `6.1`, `6.2`, `6.3`, `6.4`, `6.5`, `6.6`, `6.7`, `6.8`, `6.9`, `6.10`, `6.11`, `6.12`, `6.13`, `6.14` | 14 | `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-AUTH-001`, `SEC-DATA-001`, `SEC-DB-001`, `SEC-SESS-001`, `SEC-FILE-001`, `SEC-LOG-001` |
+| 7. Session Management | `PCI Req 6.5.9, 6.5.10` | `7.1`, `7.2`, `7.3`, `7.4`, `7.5`, `7.6`, `7.7`, `7.8`, `7.9`, `7.10`, `7.11`, `7.12`, `7.13` | 13 | `SEC-SESS-001` |
+| 8. Error Handling | `PCI Req 6.3.c, 6.5.5` | `8.1`, `8.2`, `8.3`, `8.4`, `8.5` | 5 | `SEC-LOG-001` |
+| 9. File Handling | `PCI Req 6.5.8` | `9.1`, `9.2`, `9.3`, `9.4`, `9.5`, `9.6`, `9.7`, `9.8`, `9.9`, `9.10`, `9.11`, `9.12` | 12 | `SEC-FILE-001` |
+| 10. Memory Management | `PCI Req 6.5.1` | `10.1`, `10.2`, `10.3`, `10.4`, `10.5`, `10.6` | 6 | `SEC-DATA-001`, `SEC-SECRET-001` |
+| 11. Input Validation | `PCI Req 6.5.1, 6.5.7, 6.5.8, 6.5.9` | `11.1`, `11.2`, `11.3`, `11.4`, `11.5`, `11.6`, `11.7`, `11.8`, `11.9`, `11.10`, `11.11`, `11.12`, `11.13`, `11.14`, `11.15`, `11.16` | 16 | `SEC-DB-001` |
+| 12. Output Encoding | `PCI Req 6.5.9` | `12.1`, `12.2`, `12.3`, `12.4`, `12.5` | 5 | `SEC-DATA-001`, `SEC-DB-001` |
+| 13. Data Protection | `PCI Req 6.3.c, 6.5.4` | `13.1`, `13.2`, `13.3`, `13.4`, `13.5`, `13.6`, `13.7`, `13.8`, `13.9` | 9 | `SEC-DATA-001`, `SEC-ACCESS-001`, `SEC-SECRET-001` |
+| 14. Access Control | `N/A` | `14.1`, `14.2`, `14.3`, `14.4`, `14.5`, `14.6`, `14.7`, `14.8`, `14.9` | 9 | `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-AUTH-001` |
+| 15. PAN — Primary Account Number | `PCI Req 6.4` | `15.1`, `15.2` | 2 | `SEC-DATA-001` |
+
+Inventory total: 155 expanded Source IDs.
+
+### Compact mapping coverage by guideline
+
+| Compact guideline | Source ID coverage |
+| --- | --- |
+| `SEC-AUTH-001` | `1.1`-`1.10`, `2.1`-`2.23`, `4.3`, `4.7`, `6.3`, `6.5`, `6.14`, `14.8` |
+| `SEC-SESS-001` | `4.7`, `6.5`, `6.14`, `7.1`-`7.13` |
+| `SEC-DATA-001` | `4.1`, `4.3`-`4.7`, `6.5`-`6.11`, `10.1`-`10.6`, `12.1`, `12.3`-`12.5`, `13.1`-`13.9`, `15.1`-`15.2` |
+| `SEC-SECRET-001` | `2.1`, `4.2`, `4.5`-`4.8`, `5.5`, `6.1`, `6.13`, `10.6`, `13.5` |
+| `SEC-ACCESS-001` | `1.4`, `5.1`, `6.2`-`6.5`, `6.12`-`6.14`, `13.1`, `14.1`-`14.9` |
+| `SEC-FILE-001` | `6.5`, `6.14`, `9.1`-`9.12`, `14.7` |
+| `SEC-DB-001` | `5.1`-`5.12`, `6.5`-`6.10`, `11.1`-`11.16`, `12.2` |
+| `SEC-LOG-001` | `3.1`-`3.11`, `6.5`, `6.14`, `8.1`-`8.5` |
+
 ## Source Snapshot Checklist Template
 
 When a review needs one-to-one corporate source coverage, copy only the applicable source rows from the snapshot into the SDD artifact and use this checklist shape. This mirrors `skills/sdd-review/references/control-catalog.md` by keeping stable item IDs while adding reviewer-facing compliance, evidence, and notes fields.
