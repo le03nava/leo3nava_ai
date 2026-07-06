@@ -160,7 +160,7 @@ The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecyc
 
 ### Requirement: Corporate Source Row Inventory
 
-The catalog MUST define an exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. Range notation such as `1.1-1.10` MUST be expanded before validation. Each row MUST include `sourceId`, corporate section, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, applies, complies, lifecycle status, evidence location, observations, and finding classification.
+The catalog MUST own the authoritative exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference this inventory rather than duplicate it.
 
 #### Scenario: Ranges expand before coverage
 
@@ -175,6 +175,13 @@ The catalog MUST define an exhaustive corporate source-row inventory derived fro
 - WHEN source rows are produced
 - THEN each row from that section MUST preserve the PCI requirement
 - AND rows without alignment MUST state `N/A`.
+
+#### Scenario: Slim artifacts reference catalog inventory
+
+- GIVEN design or test-design needs source-row coverage
+- WHEN it records coverage obligations
+- THEN it MUST cite the catalog snapshot and expected count instead of copying all 155 rows
+- AND review-security MUST use the catalog to expand the exhaustive matrix.
 
 ### Requirement: Compact SEC Mapping Coverage
 
@@ -214,13 +221,13 @@ Source-row evidence MUST be review-safe. Evidence locations and observations MUS
 
 ### Requirement: Shared Security Contract Source Row Schema
 
-`skills/_shared/sdd-security-contract.md` MUST define the source-row schema, allowed values, traceability, and routing semantics used by design, test-design, review-security, verify, and archive. The contract MUST remain compatible with OpenSpec, Engram, hybrid, and none modes by delegating persistence mechanics to the shared persistence contract.
+`skills/_shared/sdd-security-contract.md` MUST define the source-row schema, allowed values, traceability, artifact boundary, and routing semantics used by design, test-design, review-security, verify, and archive. The contract MUST state that the catalog owns inventory, design owns slim classification and references, test-design owns planned evidence, review-security owns exhaustive expansion and validation, and verify/archive preserve evidence without redefining source-row semantics.
 
 #### Scenario: Contract consumers share schema
 
 - GIVEN a phase writes or validates source rows
 - WHEN it reads the shared security contract
-- THEN it MUST use the same row fields and allowed values
+- THEN it MUST use the same row fields, allowed values, and artifact ownership boundary
 - AND backend-specific storage MUST follow the persistence contract.
 
 #### Scenario: Routing semantics are defined

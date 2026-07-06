@@ -201,7 +201,7 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 ### Requirement: Verify Source Row Consumption
 
-`sdd-verify` MUST consume non-blocking `review-security-report.md` source-row evidence and validate that no source-row blockers remain. Verify MUST cite the security review verdict without owning or duplicating the full source-row matrix.
+`sdd-verify` MUST consume non-blocking `review-security-report.md` source-row evidence and validate that no source-row blockers remain. Verify MUST cite the security review verdict, catalog snapshot/count, compact mappings, warnings, exceptions, and evidence references without owning or duplicating the full source-row matrix.
 
 #### Scenario: Security source blocker remains
 
@@ -217,9 +217,16 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 - THEN it MUST preserve the warnings
 - AND verification MAY proceed if all mandatory evidence is complete.
 
+#### Scenario: Verify preserves boundary evidence
+
+- GIVEN review-security is non-blocking and cites slim design coverage
+- WHEN verify records final evidence
+- THEN it MUST preserve catalog identity, expected count, compact mappings, and report links
+- AND it MUST NOT require standalone `security-design.md` or `security-applicability.md`.
+
 ### Requirement: Archive Source Row Preservation
 
-`sdd-archive` MUST require passing verification plus non-blocking source-row security review for new changes. Archive MUST preserve source-row coverage, mappings, warnings, exceptions, and evidence references without requiring legacy standalone security artifacts.
+`sdd-archive` MUST require passing verification plus non-blocking source-row security review for new changes. Archive MUST preserve source-row coverage summaries, catalog snapshot identity/path, expected count, compact `SEC-*` mappings, warnings, exceptions, and evidence references without requiring legacy standalone security artifacts or copying the full review-security matrix into design/archive summaries.
 
 #### Scenario: Archive checks no source blockers remain
 
@@ -232,5 +239,12 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 - GIVEN archive completes
 - WHEN future readers inspect the archived change
-- THEN source-row coverage and evidence references MUST remain understandable
+- THEN source-row coverage summaries and evidence references MUST remain understandable
 - AND compact `SEC-*` mappings MUST still be traceable.
+
+#### Scenario: Archive avoids matrix duplication
+
+- GIVEN `review-security-report.md` contains the exhaustive source-row matrix
+- WHEN archive writes final records
+- THEN it MUST link or summarize the matrix instead of duplicating it
+- AND archived evidence MUST remain readable without standalone legacy security artifacts.

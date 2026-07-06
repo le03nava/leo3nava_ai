@@ -1,6 +1,27 @@
 # SDD Security Contract
 
-Shared schema and vocabulary for mandatory `design.md#secure-development-design`, `review-security-report.md`, downstream evidence, archive checks, approved exceptions, lifecycle/status vocabulary, and safe-evidence rules.
+Shared schema and vocabulary for mandatory `design.md#secure-development-design`, `test-design.md`, `review-security-report.md`, downstream evidence, archive checks, approved exceptions, lifecycle/status vocabulary, and safe-evidence rules.
+
+## Artifact Ownership Boundary
+
+This contract keeps secure-design artifacts slim while preserving full corporate Source ID auditability.
+
+| Artifact / phase | Owns | Must not own |
+| --- | --- | --- |
+| `skills/_shared/security-guideline-catalog.md` | Authoritative corporate Source ID inventory, snapshot metadata, expanded Source ID ranges, compact `SEC-*` mappings, expected count, and shared evidence vocabulary. | Per-change evidence verdicts or phase routing decisions. |
+| `design.md#secure-development-design` | Security classification, compact eight-control `SEC-*` decisions, catalog snapshot/path, `expectedSourceIdCount`, grouped source-row coverage, lifecycle status, evidence owners, safe-evidence policy, N/A policy, exception policy, and downstream traceability. | The full 155-row Source ID matrix or the general 96-control review matrix. |
+| `test-design.md` | Static/manual/automated check plan derived from slim design coverage, including grouped coverage checks, unavailable tooling substitution, N/A evidence expectations, and warning preservation expectations. | Exhaustive Source ID verdict rows. |
+| `apply` evidence | Changed-file references and static/manual proof that implemented contracts preserve catalog authority, slim design references, blocker routing, safe evidence, N/A, warning, and exception semantics. | Review-security verdicts or exhaustive Source ID materialization. |
+| `review-security-report.md` | The only active new-change artifact that materializes the exhaustive Source ID matrix and validates every expected Source ID exactly once. | Re-defining compact taxonomy authority or duplicating the general 96-control review matrix. |
+| `verify` / `archive` | Consumption and preservation of non-blocking security review verdicts, catalog identity, expected count, compact mappings, warnings, exceptions, evidence refs, and report links. | Re-validating, redefining, or copying the full Source ID matrix when `review-security-report.md` already owns it. |
+
+Boundary rules:
+
+- New changes MUST use the catalog as the source of truth for the 155 concrete Source IDs and compact mappings.
+- Slim artifacts MAY cite grouped ranges and counts, but MUST NOT copy the exhaustive Source ID inventory when the catalog is available.
+- `review-security-report.md` is the exclusive active owner of exhaustive exact-once Source ID expansion and row-level verdicts.
+- Missing, duplicate, unknown, malformed, unmapped, unsafe, or unsupported `N/A` source-row evidence MUST route according to the source-row routing table in this contract.
+- Warning-only evidence MAY route forward only when mandatory evidence is complete and warnings remain visible to verify/archive.
 
 ## Shared Vocabulary
 
@@ -31,7 +52,7 @@ Evidence fields MUST be review-safe. Use artifact paths, section anchors, change
 
 ## `design.md#secure-development-design` Schema
 
-The `## Secure Development Design` section is mandatory inside `design.md` for every new change and is the active security design authority. It owns classification, catalog identity, every guideline matrix row, controls, expected evidence, lifecycle status, N/A rationale, exceptions, validation metadata or manual/static validation notes, and archive gates. No-impact changes still record justified `N/A` / `not-applicable` rows.
+The `## Secure Development Design` section is mandatory inside `design.md` for every new change and is the active security design authority. It owns classification, catalog identity, the compact eight-control guideline matrix, controls, expected evidence, lifecycle status, N/A rationale, exceptions, validation metadata or manual/static validation notes, grouped source-row coverage by reference, and archive gates. No-impact changes still record justified `N/A` / `not-applicable` rows. It MUST NOT materialize the exhaustive 155-row Source ID matrix when the shared catalog is available.
 
 ```yaml
 schemaName: gentle-ai.sdd-embedded-secure-design
@@ -71,6 +92,12 @@ controls:
         detail: <expected or observed evidence>
     residualRisk: <none-or-risk>
     exception: null
+sourceRowCoverage:
+  inventoryAuthority: skills/_shared/security-guideline-catalog.md#corporate-source-row-operational-inventory
+  expectedSourceIdCount: 155
+  coverageRule: Review-security expands every catalog Source ID exactly once.
+  validCompactGuidelineIds: []
+  groups: []
 notApplicableGuidelines:
   - guidelineId: SEC-...
     taxonomyCategory: <taxonomyCategory>
@@ -92,6 +119,8 @@ Rules:
 
 - Every compact catalog guideline ID MUST appear exactly once in the matrix/evaluation, either as applicable (`Yes`) or with explicit `N/A` rationale and evidence. `No` is reserved for security review/reporting when required evidence is missing or failing.
 - Embedded secure development design for new changes MUST preserve catalog identity, source refs, matrix evidence, operational severity, and validation/manual-review metadata.
+- Source-row coverage in design MUST include catalog authority, expected count, grouped coverage references, compact mappings, owner phases, lifecycle state, exact-once downstream rule, safe-evidence policy, N/A policy, and exception policy.
+- Design MUST use grouped references for Source IDs when the catalog inventory exists; copying all 155 Source IDs into design is a contract violation.
 - `blocking` and true `conditional` obligations MUST become controls, downstream evidence expectations, risks, or complete approved exceptions.
 - `advisory` obligations SHOULD remain downstream-visible as risk or guidance and archive-readable even when they do not block.
 - Mandatory controls MUST include expected evidence owned by `test-design`, `apply`, `review-security`, `verify`, or `archive`.
@@ -104,6 +133,8 @@ Rules:
 The compact controls above remain the architectural control layer. Source rows are an operational evidence layer derived from `skills/_shared/security-guideline-catalog.md#corporate-source-row-operational-inventory` and MUST NOT create replacement compact guidelines.
 
 `design.md#secure-development-design` MAY summarize source rows by corporate section when the full expanded inventory is already present in the shared catalog, but it MUST preserve the expected Source ID universe, compact mappings, lifecycle status, evidence owners, safe-evidence policy, N/A policy, and downstream traceability.
+
+`test-design.md`, apply evidence, verify reports, and archive reports MUST consume source-row obligations by catalog reference, grouped coverage, evidence owner, and review-security report links. They MUST NOT become additional owners of the full 155-row matrix.
 
 ```yaml
 sourceRows:

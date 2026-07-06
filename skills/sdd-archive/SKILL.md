@@ -44,7 +44,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
 | Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, general review verdict/blocking state, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. |
-| Source-row preservation | When corporate source-row validation applies, preserve source-row coverage summary, exact Source ID count, compact `SEC-*` mappings, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, and review-security/verify verdict links. Archive MUST NOT require legacy standalone `security-design.md` or `scripts/validate_security_design.ps1` for active new changes. |
+| Source-row preservation | When corporate source-row validation applies, preserve source-row coverage summary, catalog snapshot identity/path, exact Source ID count, compact `SEC-*` mappings, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, and review-security/verify verdict links. Archive MUST NOT require legacy standalone `security-design.md` or `scripts/validate_security_design.ps1` for active new changes, and MUST NOT copy the full review-security source-row matrix into archive summaries. |
 | Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
 | Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
 | Block routing | `next_recommended: review`, `review-security`, `verify`, `apply`, or `resolve-blockers` according to missing/blocking review evidence, missing verify evidence, unchecked tasks, missing embedded secure design, unsafe context, destructive merge, destination conflict, or persistence failure. |
@@ -224,7 +224,7 @@ Before persistence, validate the archive report includes:
 - Review verdict and confirmation that no blocking review findings were archived
 - Verification verdict and confirmation that no CRITICAL issues were archived
 - Runtime test runner/linter/typechecker/formatter/coverage availability from verify evidence; unavailable tools must be recorded explicitly rather than treated as passing evidence
-- Corporate source-row audit trail when applicable: expected expanded Source ID count, exact-once coverage status, compact `SEC-*` mappings, safe evidence refs, `N/A` evidence/justification status, warning-only findings, complete exceptions, review-security source-row verdict, verify source-row consumption, and confirmation that no source-row blockers remain
+- Corporate source-row audit trail when applicable: catalog snapshot identity/path, expected expanded Source ID count, exact-once coverage status, compact `SEC-*` mappings, safe evidence refs, `N/A` evidence/justification status, warning-only findings, complete exceptions, review-security source-row verdict, verify source-row consumption, report links, and confirmation that no source-row blockers remain
 - Confirmation that no legacy standalone `security-design.md` artifact or `scripts/validate_security_design.ps1` execution is required for active new-change archive readiness
 - Specs synced by domain with created/updated/removed/renamed counts
 - Archive destination or inline-only closure reason
@@ -275,7 +275,7 @@ Ready for the next change.
 - NEVER archive a change that has blocking review findings or CRITICAL issues in its verification report
 - NEVER archive missing mandatory security evidence unless every missing item has a complete approved exception in the audit trail
 - NEVER archive unresolved source-row blockers, missing compact source mappings, unsafe evidence, unsupported `N/A`, or missing mandatory source-row evidence.
-- ALWAYS preserve source-row coverage, compact mappings, warnings, exceptions, safe evidence references, and unavailable-tooling notes in the audit trail when corporate source-row validation applies.
+- ALWAYS preserve source-row coverage, catalog identity, compact mappings, warnings, exceptions, safe evidence references, report links, and unavailable-tooling notes in the audit trail when corporate source-row validation applies; summarize or link the full source-row matrix rather than copying it.
 - If the user explicitly approves a non-critical partial archive or stale-checkbox reconciliation, record the exact reason in the archive report and mark the archive as intentional-with-warnings
 - NEVER archive completed work while `tasks.md` / the tasks observation still shows stale unchecked implementation tasks
 - ALWAYS sync delta specs BEFORE moving to archive

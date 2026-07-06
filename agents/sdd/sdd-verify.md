@@ -25,6 +25,7 @@ Follow that skill as the source of truth.
 Corporate source-row verification reminder:
 
 - Consume non-blocking `review-security-report.md` source-row verdicts, warnings, exceptions, compact `SEC-*` mapping status, safe-evidence status, and `N/A` justification status.
+- Preserve catalog snapshot identity/path, expected Source ID count, compact mappings, warning/exception summaries, evidence refs, and report links without owning or copying the full source-row matrix.
 - Block unresolved source-row blockers and route them by cause: implementation/contract evidence gaps to apply, catalog/schema/mapping/unsafe-evidence/unsupported-`N/A` blockers to resolve-blockers.
 - Report unavailable runtime/build/lint/type/format/coverage tooling explicitly; never invent commands or treat unavailable tooling as passing evidence.
 - Cite review and security-review summaries only. Do not duplicate the full 96-control review matrix or the full corporate source-row matrix.

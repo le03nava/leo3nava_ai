@@ -1,6 +1,6 @@
 # Security Guideline Catalog
 
-Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `review-security-report.md`, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
+Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `test-design.md`, `review-security-report.md`, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
 
 ## Snapshot Metadata
 
@@ -11,7 +11,9 @@ Operational security checklist for embedded SDD secure development design in `de
 | Taxonomy version | `1` |
 | Source | Initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
-| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, evidence planning, `review-security-report.md`, verification, and archive gates |
+| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, grouped source-row coverage, evidence planning, `review-security-report.md`, verification, and archive gates |
+| Inventory authority | Authoritative inventory for the 155 concrete corporate Source IDs used by SDD source-row validation |
+| Expected Source ID count | `155` |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
 | Operational severity vocabulary | `blocking`, `conditional`, `advisory` |
 | Matrix vocabulary | `Yes`, `No`, `N/A` |
@@ -28,7 +30,7 @@ Use this catalog as a checklist for every new `design.md#secure-development-desi
 | Evidence Hint | Concrete artifact, file, function, test, command result, manual inspection note, or approved exception that proves the answer. Do not write generic values like "reviewed" without a location. |
 | Notes | Short reviewer note for context, risk, exception rationale, or follow-up. Use `None` when there is nothing material to add. |
 
-The compact records below are the authoritative checklist rows for SDD phases. The full corporate snapshot remains source fidelity and should not be rewritten as evidence.
+The compact records below are the authoritative eight-control checklist rows for SDD phases. The corporate source-row operational inventory below is the authoritative 155 Source ID inventory for row-level validation. The full corporate snapshot remains source fidelity and should not be rewritten as evidence.
 
 Matrix rows MUST use `Yes`, `No`, or `N/A`:
 
@@ -103,7 +105,20 @@ Required checks:
 
 The compact `SEC-*` checklist records remain the authoritative eight-control security taxonomy. The operational inventory below adds exhaustive corporate Source ID coverage for row-level validation without replacing those compact controls.
 
-Validation MUST expand source ranges before checking coverage. Compressed ranges MAY appear in human summaries, but validation matrices, review-security rows, and archive evidence MUST reason over concrete Source IDs.
+This section is the authoritative inventory for the 155 concrete Source IDs derived from the preserved `Full Corporate Guideline Snapshot`. Design and test-design artifacts MUST reference this inventory by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. `review-security-report.md` is the only active new-change artifact expected to materialize the exhaustive row matrix.
+
+Validation MUST expand source ranges before checking coverage. Compressed ranges MAY appear in human summaries, but validation matrices and review-security rows MUST reason over concrete Source IDs. Verify and archive preserve source-row summaries, warnings, exceptions, report links, catalog identity, and expected count without redefining this inventory.
+
+### Inventory ownership contract
+
+| Contract item | Requirement |
+| --- | --- |
+| Snapshot authority | Use `security-guidelines-initial-user-snapshot-2026-06-30`, catalog version `1`, taxonomy version `1`. |
+| Expected universe | Exactly 155 concrete Source IDs from sections 1-15 below. |
+| Expansion owner | The catalog owns expanded ranges; review-security consumes them for exact-once validation. |
+| Slim artifact boundary | Design/test-design/apply/verify/archive cite catalog refs, groups, counts, mappings, and links; they do not duplicate the exhaustive inventory. |
+| Full matrix owner | `review-security-report.md` materializes and validates every expected Source ID exactly once. |
+| Compact mapping vocabulary | Only `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, and `SEC-LOG-001` are valid compact mappings. |
 
 ### Source row validation rules
 
@@ -139,6 +154,8 @@ Each Source ID listed in the `Expanded Source IDs` column maps to the compact ID
 | 15. PAN — Primary Account Number | `PCI Req 6.4` | `15.1`, `15.2` | 2 | `SEC-DATA-001` |
 
 Inventory total: 155 expanded Source IDs.
+
+The section counts above are canonical for grouped coverage summaries: 10 + 23 + 11 + 8 + 12 + 14 + 13 + 5 + 12 + 6 + 16 + 5 + 9 + 9 + 2 = 155. Count mismatch, missing section coverage, duplicate IDs, unknown IDs, or unknown compact mappings MUST block source-row validation.
 
 ### Compact mapping coverage by guideline
 

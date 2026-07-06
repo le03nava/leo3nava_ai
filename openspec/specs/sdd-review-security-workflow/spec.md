@@ -84,7 +84,7 @@ The active new-change workflow MUST remove `scripts/validate_security_design.ps1
 
 ### Requirement: Exhaustive Source Row Security Review
 
-`sdd-review-security` MUST validate every corporate source row against catalog inventory, `design.md#secure-development-design`, `test-design.md`, apply evidence, changed files, and `review-report.md`. It MUST generate a full security source-row matrix without duplicating the 96-control general review matrix.
+`sdd-review-security` MUST be the only active phase that materializes the exhaustive corporate source-row validation matrix for a new change. It MUST expand the catalog inventory to every expected Source ID exactly once and validate each row against catalog inventory, slim `design.md#secure-development-design`, `test-design.md`, apply evidence, changed files, and `review-report.md`. It MUST generate the full security source-row matrix in `review-security-report.md` without duplicating the 96-control general review matrix.
 
 #### Scenario: Full matrix is generated
 
@@ -92,6 +92,13 @@ The active new-change workflow MUST remove `scripts/validate_security_design.ps1
 - WHEN security review succeeds
 - THEN `review-security-report.md` MUST include every expected Source ID exactly once
 - AND each row MUST show mapping, status, evidence, observations, and finding.
+
+#### Scenario: Design remains slim
+
+- GIVEN design cites the catalog snapshot, expected count, grouped coverage, and compact mappings
+- WHEN security review expands source rows
+- THEN the exhaustive row matrix MUST be written only in `review-security-report.md`
+- AND missing design references MUST block as contract evidence gaps.
 
 #### Scenario: General review is cited, not duplicated
 

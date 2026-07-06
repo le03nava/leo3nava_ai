@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Activation Contract
 
-Run after non-blocking `sdd-review` and before `sdd-verify`. Validate the mandatory `design.md#secure-development-design` matrix, consume `review-report.md`, apply/task evidence, changed-file context, test-design coverage, and the security catalog; persist `review-security-report.md` with row-level verdicts, evidence, observations, blockers, exceptions, and next routing.
+Run after non-blocking `sdd-review` and before `sdd-verify`. Validate the mandatory `design.md#secure-development-design` matrix, consume `review-report.md`, apply/task evidence, changed-file context, test-design coverage, and the security catalog; persist `review-security-report.md` with row-level verdicts, evidence, observations, blockers, exceptions, and next routing. For corporate source-row validation, `review-security-report.md` is the only active new-change artifact that materializes the exhaustive 155 Source ID matrix.
 
 ## Phase Artifact Contract
 
@@ -31,8 +31,8 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Produced artifact | `sdd/{change-name}/review-security` or `openspec/changes/{change-name}/review-security-report.md`. |
 | Mutates | None outside the produced security review report artifact. |
 | Matrix contract | Validate every compact security guideline ID from `skills/_shared/security-guideline-catalog.md` exactly once against the embedded secure-design evidence, with `Complies` / answer values `Yes`, `No`, or `N/A`, evidence location, observations, and lifecycle status from the catalog vocabulary. Missing, duplicate, or unknown guideline IDs are blocking. Missing applicable evidence or incomplete exceptions are `No` / `blocked`; `N/A` rows require evidence and justification. |
-| Source-row contract | When corporate source-row validation applies, validate every expanded Source ID from `skills/_shared/security-guideline-catalog.md#corporate-source-row-operational-inventory` exactly once against `design.md#secure-development-design`, `test-design.md`, completed tasks/apply evidence, changed-file context, and `review-report.md`. Rows MUST cite compact `SEC-*` mappings, applicability/compliance status, lifecycle status, evidence location, observations, finding, and route. A row MUST NOT pass merely because it is listed. |
-| Boundary | Do not replace `sdd-review` and do not duplicate the 96-control matrix. Cite `review-report.md` as supporting evidence only. |
+| Source-row contract | When corporate source-row validation applies, expand the authoritative catalog inventory and materialize all 155 expected Source IDs exactly once in `review-security-report.md`. Validate each row against `design.md#secure-development-design`, `test-design.md`, completed tasks/apply evidence, changed-file context, and `review-report.md`. Rows MUST cite compact `SEC-*` mappings, applicability/compliance status, lifecycle status, evidence location, observations, finding, and route. A row MUST NOT pass merely because it is listed. |
+| Boundary | Do not replace `sdd-review` and do not duplicate the 96-control matrix. Cite `review-report.md` as supporting evidence only. Do not require design, test-design, apply evidence, verify, archive, or general review artifacts to carry the exhaustive 155-row Source ID matrix; they may only cite catalog references, grouped coverage, summaries, evidence links, warnings, exceptions, or report rows. |
 | Active validation | New-change security review validates embedded design rows and artifact evidence directly; it does not require `scripts/validate_security_design.ps1` or separate standalone security artifacts. |
 | Safe evidence | Evidence and observations must use paths, section refs, summaries, or redacted placeholders; do not copy secrets, credentials, PAN, PII, or unnecessary confidential values. |
 | Success routing | Non-blocking verdict: `next_recommended: verify`. |
@@ -52,6 +52,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Source-row coverage has missing, duplicate, or unknown Source IDs | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` because the source-row inventory or report shape must be repaired. |
 | A source row has malformed schema, unsupported allowed values, or missing/unknown compact `SEC-*` mappings | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers`. |
 | Source-row evidence contains secrets, credentials, PAN, PII, tokens, connection strings, private keys, or confidential values | Reject the evidence, persist no passing report, and return `blocked` with `next_recommended: resolve-blockers` unless remediation is implementation work. |
+| Another active artifact is treated as the owner of the exhaustive 155-row Source ID matrix | Treat that ownership as a contract violation; keep the full matrix in `review-security-report.md` only and route upstream contract repair to `resolve-blockers` when the boundary is ambiguous. |
 | Applicable mandatory guideline lacks implementation evidence and lacks a complete approved exception | Persist a blocking report, mark the row `No` and `blocked`, and return `next_recommended: apply`. |
 | Applicable source row lacks corroborating implementation/apply/changed-file evidence | Persist a blocking report, mark the row `No` and `blocker`, and return `next_recommended: apply` when remediation is file, prompt, or contract work. |
 | N/A row lacks rationale/evidence proving irrelevance | Persist a blocking report and return `next_recommended: resolve-blockers` unless implementation remediation is required. |
@@ -64,9 +65,10 @@ Use the source-row layer as operational security evidence below the compact `SEC
 
 | Rule | Requirement |
 | --- | --- |
-| Exact-once coverage | Expand catalog ranges before validation and require every expected Source ID exactly once in `review-security-report.md`. Missing, duplicate, or unknown IDs are blockers routed to `resolve-blockers`. |
+| Exact-once coverage | Expand catalog ranges before validation and require all 155 expected Source IDs exactly once in `review-security-report.md`. Missing, duplicate, or unknown IDs are blockers routed to `resolve-blockers`. |
 | Evidence correlation | Compare each row to design expectations, test-design checks, completed tasks/apply evidence, changed files, and relevant `review-report.md` citations. A listed-only row fails. |
 | Compact mapping | Each row must map to one or more known compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. Missing or unknown mappings route to `resolve-blockers`. |
+| Matrix ownership | `review-security-report.md` is the only produced artifact that may contain the exhaustive 155-row Source ID matrix. Other phase artifacts may provide grouped coverage, catalog refs, summaries, and evidence links only. |
 | Safe evidence | Evidence and observations cite paths, section refs, changed-file refs, command summaries, sanitized summaries, or redacted placeholders only. Unsafe evidence routes to `resolve-blockers` unless implementation remediation is required. |
 | N/A evidence | `N/A` rows require evidence and `naJustification` proving irrelevance by category, platform, API, data class, or workflow. Unsupported `N/A` routes to `resolve-blockers`. |
 | Implementation gaps | Applicable rows that lack implementation evidence route to `apply` when the fix is code, skill, prompt, contract, or task evidence work. |
@@ -79,9 +81,9 @@ Use the source-row layer as operational security evidence below the compact `SEC
 3. Confirm `design.md#secure-development-design` exists before evaluating evidence. If it is missing, stop with a blocking result and route to `resolve-blockers`.
 4. Confirm `review-report.md` is non-blocking and cite its verdict, blocking summary, and relevant evidence without copying its full matrix.
 5. Parse each `design.md#secure-development-design` guideline/category row, controls, evidence expectations, lifecycle status, exceptions, carried risks, and archive gates; compare IDs and vocabulary against `skills/_shared/security-guideline-catalog.md`, requiring every compact guideline ID exactly once.
-6. When source-row validation applies, build the expected expanded Source ID universe from the catalog operational inventory, then validate that the security report rows cover that universe exactly once with known compact mappings and allowed schema values.
+6. When source-row validation applies, build the expected expanded Source ID universe from the catalog operational inventory, confirm the expected count is 155, then materialize and validate that exact universe in `review-security-report.md` with known compact mappings and allowed schema values.
 7. Compare compact and source rows against changed files, tasks/apply evidence, test-design coverage, and general review handoff evidence. Mark applicable mandatory rows with missing implementation evidence or incomplete exceptions as `No` and lifecycle `blocked`; mark source rows with missing corroboration as `blocker`; justify every `N/A` row with evidence proving irrelevance.
-8. Produce `review-security-report.md` with report metadata, verdict, compact row validation matrix, source-row validation matrix when applicable, implementation evidence, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and artifact metadata `nextRecommended: verify|apply|resolve-blockers`.
+8. Produce `review-security-report.md` with report metadata, verdict, compact row validation matrix, the only exhaustive source-row validation matrix when applicable, implementation evidence, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and artifact metadata `nextRecommended: verify|apply|resolve-blockers`.
 9. Validate report shape, source-row exact-once coverage, safe evidence, vocabulary, complete N/A rationale, complete exception fields, and routing consistency. Do not invoke or require `scripts/validate_security_design.ps1` for this validation.
 10. Persist and read back the report before returning.
 
@@ -97,6 +99,8 @@ changeName: {change-name}
 verdict: PASS | PASS WITH WARNINGS | FAIL
 sourceSecureDesign: {path-or-topic}#secure-development-design
 sourceReviewReport: {path-or-topic}
+sourceRowExpectedCount: 155
+sourceRowMatrixOwner: review-security-report.md
 nextRecommended: verify | apply | resolve-blockers
 ```
 
@@ -112,11 +116,13 @@ nextRecommended: verify | apply | resolve-blockers
 
 ## Corporate Source Row Validation
 
+Expected Source ID count: `155`. This section is the only active new-change artifact that materializes the exhaustive Source ID matrix; every expected Source ID from the catalog MUST appear exactly once.
+
 | Source ID | Corporate Section | Compact Mapping | Applies | Complies | Lifecycle Status | Evidence Location | Observations | Finding | Route |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `1.1` | `1. Authentication` | `SEC-AUTH-001` | Yes/No/N/A | Yes/No/N/A | `implemented`/... | `path#section` | Safe summary | none/blocker/warning | verify/apply/resolve-blockers |
 
-The source-row matrix is security-specific and bounded to the corporate Source ID inventory. It MUST NOT copy the general 96-control `sdd-review` matrix.
+The source-row matrix is security-specific and bounded to the corporate Source ID inventory. It MUST NOT copy the general 96-control `sdd-review` matrix, and other phase artifacts MUST NOT copy this exhaustive 155-row matrix.
 
 ## General Review Handoff
 
@@ -156,6 +162,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 - ALWAYS require `design.md#secure-development-design`; no-impact still has N/A rows to validate.
 - Validate new-change security evidence through embedded design rows, catalog vocabulary, and artifact evidence; do not require `scripts/validate_security_design.ps1` or standalone security artifacts.
 - For corporate source-row changes, validate every expanded Source ID exactly once against design, test-design, apply evidence, changed files, and `review-report.md` citations.
+- For corporate source-row changes, materialize all 155 expected Source IDs exactly once in `review-security-report.md` and nowhere else in the active new-change artifact set.
 - Source-row rows must be corroborated by safe evidence; row presence alone is not compliance evidence.
 - NEVER duplicate the full 96-control general review matrix.
 - NEVER print raw secrets, credentials, PAN, PII, or unnecessary confidential values in evidence.
