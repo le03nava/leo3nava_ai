@@ -17,9 +17,9 @@ metadata:
 
 Follow `skills/_shared/language-domain-contract.md`.
 
-## Purpose
+## Activation Contract
 
-Validate the mandatory `design.md#secure-development-design` matrix after general review and before verification. Consume `review-report.md`, apply/task evidence, changed-file context, test-design coverage, and the security catalog; persist `review-security-report.md` with row-level verdicts, evidence, observations, blockers, exceptions, and next routing.
+Run after non-blocking `sdd-review` and before `sdd-verify`. Validate the mandatory `design.md#secure-development-design` matrix, consume `review-report.md`, apply/task evidence, changed-file context, test-design coverage, and the security catalog; persist `review-security-report.md` with row-level verdicts, evidence, observations, blockers, exceptions, and next routing.
 
 ## Phase Artifact Contract
 
@@ -28,9 +28,9 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Concern | Contract |
 | --- | --- |
 | Required inputs | Structured status plus mandatory `design.md#secure-development-design`, non-blocking `review-report.md`, tasks/apply progress or completed task evidence, changed-file context, `test-design.md`, `skills/_shared/security-guideline-catalog.md`, and `skills/_shared/sdd-security-contract.md`. |
-| Produced artifact | `sdd/{change-name}/review-security-report` or `openspec/changes/{change-name}/review-security-report.md`. |
+| Produced artifact | `sdd/{change-name}/review-security` or `openspec/changes/{change-name}/review-security-report.md`. |
 | Mutates | None outside the produced security review report artifact. |
-| Matrix contract | Validate every embedded secure-design guideline/category row against `skills/_shared/security-guideline-catalog.md` with `Complies` / answer values `Yes`, `No`, or `N/A`, evidence location, observations, and lifecycle status from the catalog vocabulary. Missing applicable evidence or incomplete exceptions are `No` / `blocked`; `N/A` rows require evidence and justification. |
+| Matrix contract | Validate every compact security guideline ID from `skills/_shared/security-guideline-catalog.md` exactly once against the embedded secure-design evidence, with `Complies` / answer values `Yes`, `No`, or `N/A`, evidence location, observations, and lifecycle status from the catalog vocabulary. Missing, duplicate, or unknown guideline IDs are blocking. Missing applicable evidence or incomplete exceptions are `No` / `blocked`; `N/A` rows require evidence and justification. |
 | Boundary | Do not replace `sdd-review` and do not duplicate the 96-control matrix. Cite `review-report.md` as supporting evidence only. |
 | Active validation | New-change security review validates embedded design rows and artifact evidence directly; it does not require `scripts/validate_security_design.ps1` or separate standalone security artifacts. |
 | Safe evidence | Evidence and observations must use paths, section refs, summaries, or redacted placeholders; do not copy secrets, credentials, PAN, PII, or unnecessary confidential values. |
@@ -43,9 +43,11 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | --- | --- |
 | `design.md#secure-development-design` is missing or unreadable | Return `blocked` with `next_recommended: resolve-blockers`; persist no passing report and keep verify/archive unavailable until embedded design evidence exists. |
 | `review-report.md` is missing, unreadable, ambiguous, or blocking | Return `blocked` with `next_recommended: resolve-blockers` for missing/ambiguous evidence or `next_recommended: apply` for blocking review findings. |
+| `test-design.md` is missing, unreadable, or ambiguous | Return `blocked` with `next_recommended: resolve-blockers`; security review cannot judge planned evidence coverage safely. |
 | Changed-file/apply evidence is absent or ambiguous | Return `blocked` with `next_recommended: resolve-blockers`; row evidence cannot be scoped safely. |
 | A new-change review attempts to require `scripts/validate_security_design.ps1` or a standalone security artifact | Treat that requirement as invalid for the active flow; validate against the catalog, embedded rows, and persisted artifact evidence instead. |
-| An embedded secure-design row uses unsupported `Yes`/`No`/`N/A` or lifecycle status vocabulary | Fix the report draft if possible; otherwise return `blocked`. |
+| Embedded secure-design rows have missing, duplicate, or unknown compact guideline IDs | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` because upstream design evidence must be repaired. |
+| An embedded secure-design row uses a matrix value outside `Yes`, `No`, or `N/A`, or lifecycle status outside the catalog vocabulary | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` because upstream design evidence must be repaired. |
 | Applicable mandatory guideline lacks implementation evidence and lacks a complete approved exception | Persist a blocking report, mark the row `No` and `blocked`, and return `next_recommended: apply`. |
 | N/A row lacks rationale/evidence proving irrelevance | Persist a blocking report and return `next_recommended: resolve-blockers` unless implementation remediation is required. |
 | Approved exception is incomplete | Mark blocking and return `next_recommended: apply` or `resolve-blockers`. |
@@ -57,9 +59,9 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 2. Resolve and read mandatory inputs from the selected backend or `contextFiles`.
 3. Confirm `design.md#secure-development-design` exists before evaluating evidence. If it is missing, stop with a blocking result and route to `resolve-blockers`.
 4. Confirm `review-report.md` is non-blocking and cite its verdict, blocking summary, and relevant evidence without copying its full matrix.
-5. Parse each `design.md#secure-development-design` guideline/category row, controls, evidence expectations, lifecycle status, exceptions, carried risks, and archive gates; compare IDs and vocabulary against `skills/_shared/security-guideline-catalog.md`.
+5. Parse each `design.md#secure-development-design` guideline/category row, controls, evidence expectations, lifecycle status, exceptions, carried risks, and archive gates; compare IDs and vocabulary against `skills/_shared/security-guideline-catalog.md`, requiring every compact guideline ID exactly once.
 6. Compare rows against changed files, tasks/apply evidence, test-design coverage, and general review handoff evidence. Mark applicable mandatory rows with missing implementation evidence or incomplete exceptions as `No` and lifecycle `blocked`; justify every `N/A` row with evidence proving irrelevance.
-7. Produce `review-security-report.md` with report metadata, verdict, row validation matrix, implementation evidence, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and `nextRecommended: verify|apply|resolve-blockers`.
+7. Produce `review-security-report.md` with report metadata, verdict, row validation matrix, implementation evidence, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and artifact metadata `nextRecommended: verify|apply|resolve-blockers`.
 8. Validate report shape, safe evidence, vocabulary, complete N/A rationale, complete exception fields, and routing consistency. Do not invoke or require `scripts/validate_security_design.ps1` for this validation.
 9. Persist and read back the report before returning.
 
@@ -109,6 +111,14 @@ nextRecommended: verify | apply | resolve-blockers
 
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Security Review Report Summary` in `detailed_report` with change, inputs inspected, verdict, row count, blockers, non-blockers, safe-evidence notes, unavailable tooling, persisted path/topic, and next route.
 
+## Routing Contract
+
+- Non-blocking report verdict `PASS` or `PASS WITH WARNINGS` -> return phase envelope `next_recommended: verify`.
+- Persisted report verdict `FAIL` caused by implementation/security evidence gaps -> return phase envelope `next_recommended: apply`.
+- Missing, ambiguous, unreadable, duplicate, or malformed upstream artifacts -> return phase envelope `status: blocked` and `next_recommended: resolve-blockers`.
+- Persistence failure after producing a useful report -> return phase envelope `status: partial` with `next_recommended: resolve-blockers` and include the report in `detailed_report` when safe.
+- Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for artifact/status/state metadata only.
+
 ## Rules
 
 - ALWAYS run after non-blocking `sdd-review` and before `sdd-verify` for new changes.
@@ -118,3 +128,10 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 - NEVER print raw secrets, credentials, PAN, PII, or unnecessary confidential values in evidence.
 - Missing runtime tooling must be reported as unavailable, not passed.
 - Return `next_recommended: verify` only for non-blocking security review verdicts.
+
+## References
+
+- `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `../_shared/persistence-contract.md` — artifact keys, backend behavior, hybrid conflict policy, and read-back verification.
+- `../_shared/security-guideline-catalog.md` — compact SEC guideline IDs, taxonomy, vocabulary, and safe-evidence rules.
+- `../_shared/sdd-security-contract.md` — embedded secure-design and review-security report schema contracts.
