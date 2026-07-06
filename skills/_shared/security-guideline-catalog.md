@@ -130,6 +130,7 @@ Validation MUST expand source ranges before checking coverage. Compressed ranges
 | Compact mapping | Every expanded Source ID MUST map to one or more existing compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. |
 | Blocking failures | Missing Source IDs, duplicate Source IDs, unknown Source IDs, missing compact mappings, malformed rows, missing evidence for applicable rows, unsupported `N/A`, or unsafe evidence MUST block with the route defined by `skills/_shared/sdd-security-contract.md`. |
 | Safe evidence | Evidence and observations cite paths, sections, changed-file references, command summaries, sanitized summaries, or redacted placeholders only. They MUST NOT contain secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. |
+| Reviewable output shape | `review-security-report.md` should keep the exhaustive 155-row matrix compact by including row identity, PCI alignment, compact mappings, status, evidence type/location, finding, owner phase, and route in the table, then place detailed observations, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward in focused sections. |
 
 ### Expanded source inventory and compact mappings
 

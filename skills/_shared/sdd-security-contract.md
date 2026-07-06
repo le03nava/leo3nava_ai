@@ -41,10 +41,16 @@ Boundary rules:
 | `mandatoryWhenApplicable` | `true`, `false` |
 | `validation.status` | `pass`, `fail`, `manual-pending` |
 | `sourceRows[].sourceId` | Stable dotted numeric ID from `skills/_shared/security-guideline-catalog.md#full-corporate-guideline-snapshot`, for example `1.1` |
+| `sourceRows[].corporateSection` | Corporate section inherited from the source inventory, for example `1. Authentication` |
+| `sourceRows[].guidelineTextRef` | Review-safe reference to the catalog snapshot plus Source ID, for example `skills/_shared/security-guideline-catalog.md#full-corporate-guideline-snapshot (Source ID 1.1)` |
+| `sourceRows[].pciAlignment` | PCI alignment inherited from the catalog corporate section, or `N/A` when the section has no alignment |
 | `sourceRows[].mappedCompactGuidelineIds[]` | Existing compact `SEC-*` IDs only |
+| `sourceRows[].applies` | `Yes`, `No`, `N/A` |
 | `sourceRows[].complies` | `planned`, `Yes`, `No`, `N/A` |
 | `sourceRows[].lifecycleStatus` | `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked` |
+| `sourceRows[].evidenceType` | `implementation-reference`, `static-inspection`, `test-evidence`, `approved-exception`, `n/a-evidence` |
 | `sourceRows[].finding` | `none`, `blocker`, `warning` |
+| `sourceRows[].ownerPhase` | `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive` |
 | `sourceRows[].route` | `test-design`, `apply`, `resolve-blockers`, `verify`, `archive` |
 
 Operational severity is not review severity. Security artifacts MUST use only `blocking`, `conditional`, and `advisory`; labels such as `Menor`, `Media`, or `Mayor` are review findings and MUST NOT control security routing.
@@ -91,15 +97,17 @@ The row shape below is a review-security report schema example, not a design or 
 sourceRows:
   - sourceId: "1.1"
     corporateSection: "1. Authentication"
-    guidelineTextRef: "skills/_shared/security-guideline-catalog.md#source-1.1"
+    guidelineTextRef: "skills/_shared/security-guideline-catalog.md#full-corporate-guideline-snapshot (Source ID 1.1)"
     pciAlignment: "PCI Req 6.5.8, 6.5.10" # or "N/A"
     mappedCompactGuidelineIds: ["SEC-AUTH-001"]
     applies: Yes # Yes | No | N/A
     complies: planned # planned | Yes | No | N/A
     lifecycleStatus: planned
+    evidenceType: implementation-reference # implementation-reference | static-inspection | test-evidence | approved-exception | n/a-evidence
     evidenceLocation: "openspec/changes/<change>/review-security-report.md#corporate-source-row-validation"
     observations: "Review-safe summary only."
     finding: none # none | blocker | warning
+    ownerPhase: test-design # design | test-design | tasks | apply | review | review-security | verify | archive
     route: test-design # test-design | apply | resolve-blockers | verify | archive
     naJustification: null
 ```
@@ -107,10 +115,14 @@ sourceRows:
 Source row rules:
 
 - Every Source ID from the catalog's operational inventory MUST be expanded before validation and represented exactly once in security review matrices.
+- Each source row MUST preserve `corporateSection`, `guidelineTextRef`, and `pciAlignment` from the catalog so reviewers can audit the row without copying the full guideline text into the matrix.
 - `mappedCompactGuidelineIds` MUST contain one or more known compact IDs. Missing, empty, or unknown mappings route to `resolve-blockers`.
 - `applies` MUST be `Yes`, `No`, or `N/A`. Review-security records `Yes`, `No`, and `N/A` verdicts during exhaustive validation and may use `No` when a row applies but lacks valid evidence.
 - `complies` MUST be phase-appropriate: `planned` during design/test-design planning, `Yes` or `No` during review/verify evidence, and `N/A` only with complete irrelevance evidence.
+- `evidenceType` MUST classify evidence as `implementation-reference`, `static-inspection`, `test-evidence`, `approved-exception`, or `n/a-evidence`.
+- `ownerPhase` MUST name the phase responsible for remediation or carry-forward.
 - `N/A` rows MUST include both evidence and `naJustification` proving irrelevance by category, platform, API, data class, or workflow. Unsupported `N/A` routes to `resolve-blockers`.
+- `Applies`, `complies`, and `lifecycleStatus` MUST be internally consistent. For example, `Applies = N/A` requires `complies = N/A`, `lifecycleStatus = not-applicable`, `evidenceType = n/a-evidence`, evidence, and `naJustification`; `complies = Yes` requires implemented, verified, or exception-approved evidence; `finding = blocker` must route to `apply` or `resolve-blockers`.
 - Applicable rows MUST cite review-safe evidence when the owning phase has produced evidence. Missing implementation evidence routes to `apply` when remediation is file, prompt, or contract work.
 - Evidence and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values.
 - Source row traceability MUST remain: Source ID -> mapped compact `SEC-*` -> narrative design category context when applicable -> test-design evidence plan for applicable rules -> apply evidence -> review-security exhaustive row verdict/N/A decision -> verify prerequisite -> archive audit trail.
@@ -124,7 +136,8 @@ Required report content:
 - Verdict: blocking or non-blocking.
 - Source refs: `design.md#secure-development-design`, `review-report.md`, changed-file/task/apply evidence.
 - One validation row per compact guideline ID with answer `Yes`, `No`, or `N/A`, lifecycle status, evidence location, observations, N/A justification/evidence when reported, missed-applicable-control finding when applicable, and exception reference when applicable.
-- One source-row validation row per expanded corporate Source ID when the change requires source-row security review. Rows MUST cite compact mapping, applicability/compliance status, lifecycle status, evidence location, observations, finding, and route.
+- One source-row validation row per expanded corporate Source ID when the change requires source-row security review. Rows MUST cite corporate section, PCI alignment, guideline ref, compact mapping, applicability/compliance status, lifecycle status, evidence type, evidence location, finding, owner phase, and route.
+- Focused source-row finding sections for blockers, warnings, `N/A` justifications, missing evidence rows, unsafe evidence rejections, and warning carry-forward. These sections keep the 155-row matrix compact while preserving audit detail.
 - Blocking findings for applicable mandatory rows with missing evidence or incomplete exceptions.
 - Review-safe evidence only: paths, section refs, sanitized command summaries, and redacted placeholders.
 - `nextRecommended: verify` for non-blocking reports, or `apply` / `resolve-blockers` for blockers.
@@ -138,6 +151,7 @@ Review-security MUST cite `review-report.md` findings when they support source-r
 | Missing, duplicate, or unknown Source ID | `resolve-blockers` |
 | Malformed source-row schema or unsupported allowed value | `resolve-blockers` |
 | Missing or unknown compact `SEC-*` mapping | `resolve-blockers` |
+| Missing PCI alignment, invalid evidence type, invalid owner phase, invalid guideline ref, or inconsistent applies/complies/lifecycle values | `resolve-blockers` |
 | Unsafe evidence, missing `N/A` evidence/justification, or missed applicable control caused by narrative design omission | `resolve-blockers` |
 | Applicable row lacks implementation evidence and remediation is file, prompt, or contract work | `apply` |
 | Mandatory evidence is complete and only warning rows remain | `verify` |
