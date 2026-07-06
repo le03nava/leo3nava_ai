@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the mandatory `sdd-test-design` phase that produces `test-design.md` after technical design with embedded secure development design and before task planning in the SDD workflow.
+Define the mandatory `sdd-test-design` phase that produces `test-design.md` after technical design with narrative secure development design and before task planning in the SDD workflow.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ The SDD workflow MUST run `sdd-test-design` after `sdd-design` succeeds for ever
 
 ### Requirement: test-design.md Artifact Contract
 
-The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and embedded `design.md` secure development rows to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document justified no-impact assessments. The phase artifact contract MUST preserve mandatory artifact creation and downstream consumption while delegating common artifact-store mode semantics, artifact resolution, and persistence verification to the shared persistence authority. Common persistence behavior MUST remain delegated to the shared persistence authority.
+The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and applicable narrative category rules from `design.md#secure-development-design` to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document justified no-impact assessments from design classification. It MUST NOT require design to include YAML, schema fields, compact controls, Source IDs, matrices, or all-row `N/A` evidence. Common persistence behavior MUST remain delegated to the shared persistence authority.
 
 #### Scenario: Behavior-impacting change
 
@@ -42,19 +42,19 @@ The `sdd-test-design` phase MUST create `test-design.md` for every change. The a
 - THEN `test-design.md` MUST list planned checks linked to those inputs
 - AND each check MUST include type, severity, and expected evidence.
 
-#### Scenario: Security matrix is consumed
+#### Scenario: Applicable security controls are consumed
 
-- GIVEN `design.md` lists secure development rows and lifecycle statuses
+- GIVEN `design.md` lists applicable secure development category rules
 - WHEN `sdd-test-design` runs
-- THEN `test-design.md` MUST include checks or justified non-test evidence for applicable mandatory rows
-- AND blocked security rows MUST remain blockers.
+- THEN `test-design.md` MUST include checks or justified non-test evidence for mandatory rules
+- AND blocked security obligations MUST remain blockers.
 
-#### Scenario: No-impact matrix rows are handled
+#### Scenario: No-impact assessment is handled
 
-- GIVEN all security rows are `not-applicable` with evidence
+- GIVEN design classifies the change as no security impact with changed-surface rationale
 - WHEN `sdd-test-design` runs
 - THEN it MUST cite that assessment
-- AND it MUST still produce `test-design.md`.
+- AND it MUST still produce `test-design.md` without requiring YAML, schema, matrix, or all-row `N/A` content.
 
 #### Scenario: No-impact change
 
@@ -156,14 +156,14 @@ The workflow MUST remain compatible with native dispatcher and status-token hand
 
 ### Requirement: Source Row Test Planning
 
-`sdd-test-design` MUST plan static, manual, or automated checks from the slim `design.md#secure-development-design` coverage contract. It MUST consume catalog snapshot identity/path, `expectedSourceIdCount: 155`, section/group coverage, compact `SEC-*` mappings, applicability, evidence owners, lifecycle states, and N/A/exception policy. It MUST NOT require design to carry the full 155-row matrix, but MUST preserve enough planned evidence for review-security to expand every Source ID exactly once.
+`sdd-test-design` MUST plan static, manual, or automated checks from applicable narrative category rules and changed-surface context in `design.md#secure-development-design`. It MUST consume catalog snapshot/context only as needed to understand categories, evidence owners, residual risks, exceptions, and safe-evidence policy. It MUST NOT require design to carry YAML, schema fields, compact controls, Source IDs, matrices, or `N/A` rows for omitted controls, and MUST preserve `sdd-review-security` as the exhaustive machine-readable validation owner.
 
-#### Scenario: Applicable source group receives checks
+#### Scenario: Applicable category receives checks
 
-- GIVEN design marks a source group or compact mapping applicable
+- GIVEN design defines Sensitive Data/PAN development rules
 - WHEN test design is produced
 - THEN `test-design.md` MUST include planned checks or justified non-test evidence
-- AND each check MUST cite the catalog reference and compact `SEC-*` mapping.
+- AND each check MUST cite the narrative rule or category context.
 
 #### Scenario: No runtime runner exists
 
@@ -174,21 +174,21 @@ The workflow MUST remain compatible with native dispatcher and status-token hand
 
 #### Scenario: Mandatory coverage lacks planned evidence
 
-- GIVEN applicable mandatory source coverage has no check or evidence plan
+- GIVEN an applicable mandatory category rule has no check or evidence plan
 - WHEN `sdd-test-design` validates readiness
 - THEN the phase MUST block
-- AND the blocker MUST name the affected Source ID, group, or compact mapping and missing evidence plan.
+- AND the blocker MUST name the affected category rule and missing evidence plan.
 
 ### Requirement: Source Row N/A and Warning Evidence
 
-`sdd-test-design` MUST preserve evidence expectations for `N/A` source coverage and warning-only coverage from the slim design contract. `N/A` requires proof of irrelevance; warnings require planned observation evidence but MUST NOT block solely when mandatory evidence is complete.
+`sdd-test-design` MUST preserve evidence expectations for applicable narrative rules, warning-only coverage, residual risks, and exceptions from design. It MUST NOT create or require exhaustive `N/A` evidence for every non-applicable compact control or Source ID. Exhaustive `N/A` decisions, compact/Source ID matrices, and missed-applicable validation MUST remain owned by `review-security-report.md`.
 
-#### Scenario: N/A coverage is planned for review
+#### Scenario: Omitted coverage remains reviewable
 
-- GIVEN design marks a source group or compact mapping `N/A`
+- GIVEN design omits a category as non-applicable
 - WHEN test design maps security evidence
-- THEN it MUST include the irrelevance evidence to be checked
-- AND missing justification MUST remain blocking.
+- THEN it MUST rely on design classification context only
+- AND review-security MUST later validate whether the omission was safe.
 
 #### Scenario: Warning-only coverage is tracked
 

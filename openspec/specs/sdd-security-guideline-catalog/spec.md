@@ -2,20 +2,20 @@
 
 ## Purpose
 
-Define the in-repo corporate security guideline snapshot, compact taxonomy, matrix vocabulary, and evidence model used by embedded secure development design, security review, verification, and archive checks.
+Define the in-repo corporate security guideline snapshot, compact taxonomy, matrix vocabulary, and evidence model used by narrative secure development design, security review, verification, and archive checks.
 
 ## Requirements
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by embedded secure development design in `design.md#secure-development-design` and `review-security-report.md` until an official external versioned source replaces it.
+The repository MUST maintain the corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by narrative secure development design in `design.md#secure-development-design` and exhaustive `review-security-report.md` validation until an official external versioned source replaces it.
 
 #### Scenario: Catalog snapshot is available
 
 - GIVEN an SDD design or security review phase needs guideline context
 - WHEN it reads the catalog
 - THEN it MUST find guideline identifiers, source snapshot metadata, and applicable summaries
-- AND it MUST support embedded secure design and security-review matrices.
+- AND it MUST support narrative secure design and security-review matrices.
 
 #### Scenario: Catalog source changes later
 
@@ -26,7 +26,7 @@ The repository MUST maintain the corporate security guideline catalog as an in-r
 
 ### Requirement: Compact Security Taxonomy
 
-The catalog MUST expose a compact taxonomy for phase prompts. The taxonomy MUST include authentication, sessions, sensitive data or PAN, secrets, permissions or access control, files, database access, and sensitive logging categories.
+The catalog MUST expose a compact taxonomy for phase prompts. The taxonomy MUST include authentication, sessions, sensitive data or PAN, secrets, permissions or access control, files, database access, and sensitive logging categories. `sdd-design` MUST use the taxonomy selectively for changed-surface planning; `sdd-review-security` MUST use it exhaustively for applicability validation.
 
 #### Scenario: Security design uses taxonomy
 
@@ -84,14 +84,14 @@ The catalog SHOULD identify evidence types suitable for review rows, including i
 
 ### Requirement: Catalog Boundary Preservation
 
-The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, and matrix vocabulary. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active security authority MUST remain with `design.md#secure-development-design` plus `review-security-report.md`.
+The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, compact-control inventory, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive `review-security-report.md` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions.
 
 #### Scenario: Catalog authority is preserved
 
 - GIVEN embedded design and security review reference a guideline
 - WHEN downstream verification compares evidence
 - THEN catalog identifiers and statuses MUST remain consistent
-- AND conflicts MUST be resolved in favor of `design.md#secure-development-design` plus `review-security-report.md`.
+- AND conflicts MUST resolve through narrative design context plus exhaustive review-security results.
 
 ### Requirement: Formal Source Coverage Mapping
 
@@ -100,9 +100,9 @@ Each compact `SEC-*` guideline MUST declare formal corporate source coverage thr
 #### Scenario: Guideline maps to corporate sources
 
 - GIVEN a compact `SEC-*` guideline is listed in the catalog
-- WHEN embedded secure development design references it
+- WHEN review-security validates source coverage
 - THEN the guideline MUST expose one or more valid Source IDs
-- AND the artifact MUST be able to cite those IDs as evidence refs.
+- AND the report MUST be able to cite those IDs as evidence refs.
 
 #### Scenario: Source mapping is missing
 
@@ -126,12 +126,12 @@ The catalog MUST define operational applicability severity with only `blocking`,
 
 - GIVEN a guideline is `conditional` and its predicate is not met
 - WHEN embedded design evaluates the guideline
-- THEN the artifact MAY mark it not applicable
+- THEN review-security MAY mark it not applicable
 - AND it MUST record the predicate rationale.
 
 ### Requirement: Catalog Validator Contract
 
-The catalog MUST support static validation of guideline IDs, taxonomy categories, Source IDs, severity values, lifecycle statuses, matrix values, mandatory evidence fields, and exception fields used by embedded `design.md` secure development rows and `review-security-report.md`. Validation MUST compare artifact references against the same catalog snapshot identity recorded in the artifact.
+The catalog MUST support static validation of guideline IDs, taxonomy categories, Source IDs, severity values, lifecycle statuses, matrix values, mandatory evidence fields, and exception fields used by narrative `design.md` secure development rules and `review-security-report.md`. Validation MUST compare artifact references against the same catalog snapshot identity recorded in the artifact.
 
 #### Scenario: Artifact references current catalog snapshot
 
@@ -149,18 +149,18 @@ The catalog MUST support static validation of guideline IDs, taxonomy categories
 
 ### Requirement: Security Matrix Vocabulary
 
-The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecycle statuses `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, and `blocked` for embedded design rows and review-security rows.
+The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecycle statuses `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, and `blocked` for review-security rows.
 
 #### Scenario: Matrix row uses valid vocabulary
 
-- GIVEN design or security review writes a matrix row
+- GIVEN security review writes a matrix row
 - WHEN validation runs
 - THEN its answer and lifecycle status MUST use catalog vocabulary
 - AND unsupported values MUST fail validation.
 
 ### Requirement: Corporate Source Row Inventory
 
-The catalog MUST own the authoritative exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference this inventory rather than duplicate it.
+The catalog MUST own the authoritative exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference applicable category guidance; review-security MUST expand the inventory exhaustively.
 
 #### Scenario: Ranges expand before coverage
 
@@ -176,11 +176,11 @@ The catalog MUST own the authoritative exhaustive corporate source-row inventory
 - THEN each row from that section MUST preserve the PCI requirement
 - AND rows without alignment MUST state `N/A`.
 
-#### Scenario: Slim artifacts reference catalog inventory
+#### Scenario: Selective artifacts reference catalog inventory
 
-- GIVEN design or test-design needs source-row coverage
+- GIVEN design or test-design needs source-row context
 - WHEN it records coverage obligations
-- THEN it MUST cite the catalog snapshot and expected count instead of copying all 155 rows
+- THEN it MUST cite catalog snapshot/context and applicable category guidance instead of copying all 155 rows
 - AND review-security MUST use the catalog to expand the exhaustive matrix.
 
 ### Requirement: Compact SEC Mapping Coverage
@@ -203,7 +203,7 @@ Every corporate source row MUST map to one or more existing compact `SEC-*` guid
 
 ### Requirement: Safe Source Row Evidence
 
-Source-row evidence MUST be review-safe. Evidence locations and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. `N/A` rows MUST include evidence and justification proving irrelevance.
+Source-row evidence MUST be review-safe. Evidence locations and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. Design MUST state safe-evidence policy for applicable category rules. `review-security-report.md` MUST justify every `N/A` row.
 
 #### Scenario: Applicable row lacks safe evidence
 
@@ -214,14 +214,14 @@ Source-row evidence MUST be review-safe. Evidence locations and observations MUS
 
 #### Scenario: N/A row is justified
 
-- GIVEN a source row is marked `N/A`
+- GIVEN review-security marks a source row `N/A`
 - WHEN validation reviews the row
 - THEN evidence MUST prove irrelevance
 - AND missing justification MUST block.
 
 ### Requirement: Shared Security Contract Source Row Schema
 
-`skills/_shared/sdd-security-contract.md` MUST define the source-row schema, allowed values, traceability, artifact boundary, and routing semantics used by design, test-design, review-security, verify, and archive. The contract MUST state that the catalog owns inventory, design owns slim classification and references, test-design owns planned evidence, review-security owns exhaustive expansion and validation, and verify/archive preserve evidence without redefining source-row semantics.
+`skills/_shared/sdd-security-contract.md` MUST define the review-security report schema, allowed values, traceability, artifact boundary, narrative design obligations, exhaustive review-security obligations, safe-evidence policy, and routing. It MUST state that catalog owns inventory, design owns narrative category rules, test-design owns planned checks, review-security owns schema/matrix validation, and verify/archive preserve evidence without design YAML.
 
 #### Scenario: Contract consumers share schema
 

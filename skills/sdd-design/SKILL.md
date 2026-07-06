@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Purpose
 
-You are a sub-agent responsible for TECHNICAL DESIGN and embedded secure development design. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, security guideline classification, controls, expected evidence, and technical rationale.
+You are a sub-agent responsible for TECHNICAL DESIGN and narrative secure development design. You take the proposal and specs, then produce a `design.md` that captures HOW the change will be implemented — architecture decisions, data flow, file changes, changed-surface security classification, applicable security category rules, expected evidence, and technical rationale.
 
 ## What You Receive
 
@@ -36,9 +36,9 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 | Required inputs | Proposal and specs: `sdd/{change-name}/{proposal|spec}` or OpenSpec change-folder equivalents, plus `skills/_shared/security-guideline-catalog.md` and `skills/_shared/sdd-security-contract.md`. |
 | Produced artifact | `sdd/{change-name}/design` or `openspec/changes/{change-name}/design.md`. |
 | Mutates | None outside the produced design artifact. |
-| Secure design authority | For every new change, `design.md#secure-development-design` is the active classification, compact control, Source ID coverage, lifecycle, evidence-owner, residual-risk, N/A rationale, and exception authority. It includes all eight compact SEC IDs from the catalog exactly once. |
-| Source-row coverage | When the catalog declares corporate source rows, the embedded section MUST declare slim expected Source ID coverage below the compact controls: catalog snapshot identity/path, `expectedSourceIdCount: 155`, source section/group references, compact mappings, lifecycle status, evidence owners, N/A evidence/justification policy, safe-evidence policy, downstream traceability, and `review-security` as the full-expansion owner. It MUST NOT copy the exhaustive 155-row Source ID inventory when the catalog is available. |
-| Secure design schema | The embedded section MUST include the minimum YAML fields from `skills/_shared/sdd-security-contract.md` (`schemaName`, `schemaVersion`, `changeName`, `classification`, `securityImpact`, `sourceInputs`, `catalog`, `taxonomyEvaluation`, `controls`, optional/required source-row coverage metadata when applicable, `notApplicableGuidelines`, `exceptions`, `carriedRisks`, `validation`, `archiveGateNotes`, `nextRecommended`). A compact human table MUST precede or immediately summarize source-row coverage for reviewability, but the YAML contract is authoritative. |
+| Secure design authority | For every new active change, `design.md#secure-development-design` is the active design-time classification and planning authority. It MUST classify the changed surface, cite catalog context in prose, and include only human-readable rules for applicable security categories, evidence owners, residual risks, exceptions, and safe-evidence policy. Omitted catalog rows are reviewable omissions; exhaustive applicability and `N/A` decisions belong to `sdd-review-security`. |
+| Source-row coverage | When the catalog declares corporate source rows, the embedded section MAY mention catalog context and applicable categories in prose. It MUST NOT copy the exhaustive 155-row Source ID inventory, create Source ID matrices, encode machine-readable applicability fields, or require per-row `N/A` evidence for omitted rows. |
+| Secure design shape | The embedded section MUST be narrative Markdown only: headings, paragraphs, and bullet lists are allowed. It MUST NOT contain security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, or all-row `N/A` bookkeeping. Historical schema-based exhaustive artifacts remain readable compatibility data only. |
 | Success routing | `next_recommended: test-design`; the next active phase is `sdd-test-design`. |
 | Block routing | `next_recommended: resolve-blockers` for missing proposal/specs, missing code context, testing capability ambiguity, or unresolved architecture decisions. |
 
@@ -62,9 +62,9 @@ Routing rules for `next_recommended`:
 | Open questions block implementation decisions | Return `blocked` with `next_recommended: resolve-blockers` and list the blocking questions. |
 | Security classification cannot be proven from proposal/specs/code context | Return `blocked` with `next_recommended: resolve-blockers`; do not guess `security-impacting` or `no-impact`. |
 | Data sensitivity is unknown for touched inputs, outputs, storage, logs, exports, or external interfaces | Treat as a design-changing unknown for `SEC-DATA-001`; return `blocked` unless the design can prove safe classification with review-safe evidence. |
-| Any `N/A` / `not-applicable` security row lacks evidence proving category/platform/API/data/workflow irrelevance | Fix before persistence, or return `blocked` with `next_recommended: resolve-blockers`. |
+| Changed-surface classification lacks enough proposal/spec/code-context evidence to justify selected applicable controls and omitted categories | Return `blocked` with `next_recommended: resolve-blockers`; do not guess. |
 | Any applicable mandatory guideline lacks control, downstream evidence owner, expected evidence, residual-risk statement, or archive expectation | Fix before persistence, or return `blocked` with `next_recommended: resolve-blockers`. |
-| Required corporate Source ID coverage is missing, unmapped, lacks lifecycle/evidence owners, or omits N/A evidence/justification | Fix before persistence, or return `blocked` with `next_recommended: resolve-blockers`. |
+| Applicable security category narrative lacks evidence owners or safe-evidence expectations | Fix before persistence, or return `blocked` with `next_recommended: resolve-blockers`. |
 | Any exception lacks approver, approvedAt, accepted-risk rationale, mitigation/follow-up, or evidence gap | Return `blocked`; incomplete exceptions cannot satisfy design or archive readiness. |
 | `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/design`. |
 | `openspec` mode | Write only `openspec/changes/{change-name}/design.md`; do not call `mem_save`. |
@@ -90,11 +90,11 @@ Build a compact design-time security inventory before writing the secure section
 - Data classes touched: public, internal, confidential, PII, PAN, credentials, tokens, keys, or unknown.
 - Authentication, session, authorization, file, database, logging, error-reporting, export, and configuration/secrets touchpoints.
 - Existing controls that are preserved, changed, removed, or newly required.
-- Evidence locations that prove `N/A` rows without exposing secrets, PAN, PII, tokens, private keys, connection strings, or confidential values.
+- Review-safe catalog/context references that justify the changed-surface classification without exposing secrets, PAN, PII, tokens, private keys, connection strings, or confidential values.
 
 Also read before writing:
-- `skills/_shared/sdd-security-contract.md` and `skills/_shared/security-guideline-catalog.md` for the mandatory embedded secure development design row contract.
-- For new changes, classify security impact and plan evidence only in `design.md#secure-development-design`; the design phase does not create a separate security-design artifact.
+- `skills/_shared/sdd-security-contract.md` and `skills/_shared/security-guideline-catalog.md` for the mandatory narrative secure development design contract and category vocabulary.
+- For new changes, classify security impact and plan evidence only in `design.md#secure-development-design`; the design phase does not create a separate security-design artifact and does not emit security schemas or matrices.
 
 Also read testing capabilities when available:
 - Engram: `sdd/{project}/testing-capabilities`
@@ -181,133 +181,59 @@ If not applicable, state "No migration required."}
 
 ## Secure Development Design
 
-```yaml
-schemaName: gentle-ai.sdd-embedded-secure-design
-schemaVersion: 1
-changeName: {change-name}
-classification: security-impacting | no-impact
-securityImpact: true | false
-securityImpactRationale: {why this classification is proven from proposal/specs/code context}
-sourceInputs:
-  proposal: {path-or-topic-key}
-  specs:
-    - {path-or-topic-key}
-  design: {path-or-topic-key}#secure-development-design
-catalog:
-  snapshotId: security-guidelines-initial-user-snapshot-2026-06-30
-  catalogVersion: 1
-  taxonomyVersion: 1
-  source: skills/_shared/security-guideline-catalog.md
-taxonomyEvaluation:
-  - category: authentication
-    guidelineId: SEC-AUTH-001
-    applies: Yes | N/A
-    decision: applicable | not-applicable
-    lifecycleStatus: planned | not-applicable | exception-approved | blocked
-    rationale: {why it applies or review-safe evidence proving out-of-scope}
-    evidenceRefs: [{path-or-section-or-topic}]
-controls:
-  - guidelineId: SEC-AUTH-001
-    taxonomyCategory: authentication
-    mandatoryWhenApplicable: true
-    operationalSeverity: blocking
-    sourceRefs: [{catalog source IDs}]
-    requiredControl: {control description or N/A preservation statement}
-    expectedEvidence:
-      - type: design-control | implementation-reference | test-design-check | verification-evidence | approved-exception
-        ownerPhase: test-design | tasks | apply | review-security | verify | archive
-        status: planned | not-applicable | exception-approved | blocked
-        detail: {review-safe expected evidence}
-    residualRisk: none | {risk carried forward}
-    exception: null | {complete approved exception fields}
-sourceRowCoverage:
-  schema: corporate-source-row-operational-layer
-  inventoryAuthority: skills/_shared/security-guideline-catalog.md#corporate-source-row-operational-inventory
-  expectedSourceIdCount: {number from catalog when applicable}
-  expectedSourceUniverse: {catalog-owned universe summary; do not duplicate the full inventory}
-  coverageRule: {exact-once coverage and compact mapping rule; full expansion belongs to review-security}
-  validCompactGuidelineIds: [SEC-AUTH-001, SEC-SESS-001, SEC-DATA-001, SEC-SECRET-001, SEC-ACCESS-001, SEC-FILE-001, SEC-DB-001, SEC-LOG-001]
-  lifecycleStatus: planned | not-applicable | exception-approved | blocked
-  evidenceOwners: [design | test-design | apply | review-security | verify | archive]
-  downstreamTraceability: {Source ID -> compact SEC-* -> design -> test-design -> apply -> review-security -> verify -> archive}
-  safeEvidencePolicy: {review-safe evidence policy}
-  notApplicablePolicy: {N/A evidence and justification policy}
-  exceptionPolicy: {complete approved exception policy}
-  fullExpansionOwner: review-security
-  groups:
-    - corporateSection: {section name}
-      pciAlignment: {PCI requirement or N/A}
-      sourceIdRef: {range or grouped reference backed by catalog inventory}
-      count: {group count from catalog}
-      mappedCompactGuidelineIds: [SEC-...]
-      lifecycleStatus: planned | not-applicable | exception-approved | blocked
-      evidenceOwners: [design | test-design | apply | review-security | verify | archive]
-notApplicableGuidelines:
-  - guidelineId: SEC-...
-    taxonomyCategory: {taxonomyCategory}
-    applies: N/A
-    lifecycleStatus: not-applicable
-    rationale: {positive out-of-scope rationale with evidence}
-exceptions: null | [{complete approved exception fields}]
-carriedRisks: []
-validation:
-  method: design.md#secure-development-design static/manual review
-  status: pass | fail | manual-pending
-  checkedAt: {iso-8601-or-manual}
-  notes: {validation notes, unavailable-tooling note, or blocker summary}
-archiveGateNotes: []
-nextRecommended: test-design
-```
+### Classification and Changed Surface
 
-Compact matrix summary:
+{Narrative security-impacting or no-impact classification with changed artifacts, touched behaviors, untouched runtime surfaces, catalog context considered, and why omitted categories are left for review-security validation.}
 
-| Guideline | Applies / lifecycle | Rationale | Secure design decision / control | Evidence owner / expected evidence | Residual risk / exception |
-| --- | --- | --- | --- | --- | --- |
-| `SEC-AUTH-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-SESS-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-DATA-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-SECRET-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-ACCESS-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-FILE-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-DB-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
-| `SEC-LOG-001` | `Yes`/`N/A` / `<lifecycle>` | <rationale> | <control or N/A preservation> | <owner phase and evidence> | <risk or none / exception details> |
+### {Applicable Security Category} Rules
+
+{Human-readable development rules for the applicable category. Include prohibited unsafe patterns, evidence owners, expected review-safe evidence, residual risks, exception handling, and safe-evidence policy. Repeat only for applicable categories.}
+
+### Exception and Evidence Policy
+
+{State complete exception requirements when needed and safe evidence rules. If no exceptions are planned, say so.}
 ````
 
-Secure development design rules:
+Secure development design content rules:
 
-- Include all eight guideline IDs exactly once: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, and `SEC-LOG-001`.
-- Treat `## Secure Development Design` as the active security authority for the change: classification, category applicability, controls, evidence owners, lifecycle statuses, residual risks, and exceptions all live in this section.
-- The YAML block is the authoritative machine-readable contract. The compact matrix is reviewer-facing summary and MUST NOT contradict the YAML block.
-- Keep the compact eight-control summary visible before source-row coverage references. Source rows are evidence detail below compact controls, not replacement controls.
-- When corporate source-row validation applies, declare expected Source ID coverage from the catalog snapshot/path, `expectedSourceIdCount: 155`, grouped section references, compact `SEC-*` mapping, lifecycle status, evidence owners, downstream traceability, and safe-evidence/N/A policies in `design.md#secure-development-design`.
-- Source-row coverage SHOULD be grouped by corporate section when the full expanded inventory is already present in the shared catalog. The design MUST preserve expected count, exact-once rule, valid compact mappings, evidence ownership, lifecycle/N/A status, and `review-security` full-expansion ownership without materializing every concrete Source ID.
-- Do NOT duplicate the general 96-control `sdd-review` matrix or the exhaustive 155-row Source ID matrix in design. Cite compact `SEC-*` controls, catalog snapshot/path, grouped source references, and expected count for secure-design planning.
-- Use only matrix values `Yes` or `N/A` during design. `No` is reserved for review-security when required evidence is missing or failing.
-- Use only lifecycle statuses from the catalog: `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, or `blocked`.
-- Each guideline row MUST preserve `taxonomyCategory`, `mandatoryWhenApplicable`, `operationalSeverity`, source refs/source IDs, evidence refs, lifecycle status, and downstream owner-phase evidence expectations.
-- Every `N/A` / `not-applicable` row MUST include rationale and evidence proving why the category, platform, API, data class, or workflow is out of scope.
-- Applicable rows MUST identify secure design decisions/controls, downstream evidence owners, expected evidence, residual risks, and archive expectations.
-- Exception rows MUST include approver, approvedAt, accepted-risk rationale, mitigation/follow-up, and evidence gap. Incomplete exceptions do not satisfy archive readiness.
+- Include only applicable narrative security category rules for new active designs. Do not require all catalog controls, all Source IDs, or per-row `N/A` rationale for omitted rows.
+- Treat `## Secure Development Design` as the active design-time security planning authority for changed-surface classification, applicable category rules, evidence owners, residual risks, exceptions, and safe-evidence policy.
+- Do NOT emit security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, all-row `N/A` bookkeeping, the general 96-control `sdd-review` matrix, or the exhaustive 155-row Source ID matrix in design.
+- Omitted categories are reviewable omissions. `review-security-report.md` owns compact and Source ID matrices, `Yes`/`No`/`N/A` decisions, non-applicable evidence, missed-applicable blockers, and exact-once Source ID expansion.
+- Applicable category rules MUST identify secure design decisions/controls, downstream evidence owners, expected evidence, residual risks, and archive expectations in prose.
+- No-impact designs MUST still record changed-surface rationale, touched/untouched runtime surfaces, and why no security category applies. They MUST NOT use all-row `N/A` bookkeeping to prove no-impact status.
+- Exceptions MUST include approver, approvedAt, accepted-risk rationale, mitigation/follow-up, and evidence gap. Incomplete exceptions do not satisfy archive readiness.
 - Evidence MUST be review-safe: cite paths, sections, summaries, command outputs, or redacted placeholders; never include raw secrets, credentials, PAN, PII, tokens, private keys, connection strings, or confidential values.
 
 ### Step 4: Validate Design
 
-Before persisting or returning, verify:
+Before persisting or returning, verify the design as a gate, not as another source of exhaustive security matrices:
+
+General design checks:
 
 - Every architecture decision has a rationale.
 - File changes use concrete paths, or explicitly mark paths as new/proposed.
 - Testing strategy matches detected testing capabilities or explains unavailable layers.
-- `## Secure Development Design` is present, records catalog snapshot/version metadata, includes all eight SEC rows exactly once, preserves N/A rationale/evidence, and uses valid lifecycle vocabulary.
-- When the catalog requires corporate source-row coverage, the secure design declares the expected Source ID universe by catalog reference, valid compact mappings, lifecycle status, evidence owners, safe-evidence policy, N/A evidence/justification policy, and downstream traceability from Source ID -> compact SEC-* -> test-design/apply/review-security/verify/archive evidence.
-- Compact `SEC-*` summary remains readable before grouped source-row coverage, and the design does not copy the general 96-control review matrix or the exhaustive 155-row Source ID matrix.
-- The embedded YAML follows `skills/_shared/sdd-security-contract.md` minimum fields and the compact table does not contradict it.
-- Security classification is evidence-backed; unknown data sensitivity, auth/session/access boundaries, secret/config handling, file/database behavior, or sensitive logging implications block success rather than being guessed.
-- Applicable rows include controls, evidence owners, expected evidence, residual risk, and archive expectations; exception rows include complete exception fields.
-- Every applicable mandatory guideline has a downstream evidence owner in `test-design`, `tasks`, `apply`, `review-security`, `verify`, or `archive`.
-- Safe-evidence rules are followed for `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, and `SEC-LOG-001`.
 - Migration / Rollout states `No migration required.` when not applicable.
 - Blocking open questions set the return status to `blocked`.
-- Keep narrative design content compact. The 800-word budget applies to narrative sections and does not justify omitting mandatory secure-design YAML fields, all eight SEC rows, exception data, or evidence obligations.
+
+Secure design shape checks:
+
+- `## Secure Development Design` is present.
+- The section records changed-surface classification and applicable category rules in narrative form.
+- The section does not include security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, all-row `N/A` bookkeeping, the general 96-control review matrix, or the exhaustive 155-row Source ID matrix.
+- When the catalog requires corporate source-row review, the secure design cites catalog context only in prose and leaves exact-once compact/Source ID expansion plus `N/A` decisions to `review-security-report.md`.
+- Omitted categories are clearly treated as reviewable omissions for `review-security-report.md`, not as passing design-time `N/A` rows.
+
+Classification and evidence checks:
+
+- Security classification is evidence-backed; unknown data sensitivity, auth/session/access boundaries, secret/config handling, file/database behavior, or sensitive logging implications block success rather than being guessed.
+- No-impact classification includes changed-surface rationale, touched/untouched runtime surfaces, and evidence explaining why no security category applies.
+- Applicable category rules include controls, evidence owners, expected evidence, residual risk, and archive expectations.
+- Every applicable category rule and compact guideline referenced in prose has a downstream evidence owner in `test-design`, `tasks`, `apply`, `review-security`, `verify`, or `archive`.
+- Exceptions include complete exception fields: approver, approvedAt, accepted-risk rationale, mitigation/follow-up, and evidence gap.
+- Safe-evidence rules are followed for `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, and `SEC-LOG-001`.
+- Keep narrative design content compact. The 800-word budget is a preference, not permission to omit required classification rationale, applicable category rules, exception data, or evidence obligations.
 
 ### Step 5: Persist Artifact
 
@@ -356,5 +282,5 @@ Ready for test design (`sdd-test-design`).
 - Apply any `rules.design` from `openspec/config.yaml`
 - On successful design only, return `next_recommended: test-design`; blocked or partial results MUST route to `resolve-blockers` unless the same design artifact can be safely retried without new user input.
 - If you have open questions that BLOCK the design, say so clearly — don't guess
-- **Size budget**: Keep narrative sections around 800 words when practical. Architecture decisions as tables (option | tradeoff | decision). Code snippets only for non-obvious patterns. Do not omit mandatory secure-design schema fields, SEC rows, evidence obligations, or exception data to satisfy the narrative budget.
+- **Size budget**: Keep narrative sections around 800 words when practical. Architecture decisions as tables (option | tradeoff | decision). Code snippets only for non-obvious patterns. Do not omit applicable category rules, evidence obligations, or exception data to satisfy the narrative budget.
 - Return the Section D envelope per `skills/_shared/sdd-phase-common.md`; the design summary belongs in `detailed_report`.

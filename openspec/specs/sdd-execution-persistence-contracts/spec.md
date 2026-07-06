@@ -48,7 +48,7 @@ Each phase skill MUST keep a compact artifact contract that states required inpu
 
 ### Requirement: Conflict and Ambiguity Resolution
 
-When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preserve current behavior unless an approved spec change explicitly redesigns DAG, artifact, routing, status, or persistence semantics. Explicit redesigns MUST define compatibility rules for old artifacts and MUST NOT silently invalidate archives. Status tokens, resolver rows, and persisted refs MAY preserve historical `security-applicability` data for read/display behavior, but MUST NOT normalize it into a runnable phase, launchable agent, active security authority, or required new-change successor.
+When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preserve current behavior unless an approved spec change explicitly redesigns DAG, artifact, routing, status, or persistence semantics. Explicit redesigns MUST define compatibility rules for old artifacts and MUST NOT silently invalidate archives. Historical exhaustive secure-design matrices MAY remain readable as archives, but new changes MUST treat narrative `design.md#secure-development-design` plus machine-readable `review-security-report.md` as the active boundary. Status tokens, resolver rows, and persisted refs MAY preserve historical `security-applicability` data for read/display behavior, but MUST NOT normalize it into a runnable phase, launchable agent, active security authority, or required new-change successor.
 
 #### Scenario: Explicit DAG redesign is applied
 
@@ -59,7 +59,7 @@ When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preser
 
 #### Scenario: Compatibility is preserved
 
-- GIVEN existing persisted SDD state or artifacts use established keys, paths, routing tokens, or status fields
+- GIVEN existing persisted SDD state or artifacts use established keys, paths, routing tokens, exhaustive design rows, or status fields
 - WHEN the contracts are updated
 - THEN existing consumers MUST continue to resolve those artifacts and states without migration.
 
@@ -147,7 +147,7 @@ Verify MUST consume both `review-report.md` and `review-security-report.md` as e
 
 ### Requirement: Mandatory Security Artifacts and Status
 
-For new changes, persistence and status contracts MUST include `design.md` with embedded secure development rows and `review-security-report.md` refs, paths, dependency states, native/status token `review-security`, and archive gates. `security-design.md` and `security-applicability.md` MAY appear only as historical data refs needed for existing state or archive readability and MUST NOT be active dependencies, produced artifacts, phase-launch inputs, or active security authority.
+For new changes, persistence and status contracts MUST include `design.md` with narrative secure development rules and `review-security-report.md` refs, dependency states, `review-security` token, and archive gates. Design MUST persist classification rationale, changed-surface inventory, applicable category rules, evidence owners, residual risks, exceptions, and safe-evidence policy. It MUST NOT require YAML, schemas, compact matrices, Source ID matrices, exhaustive applicability, or `N/A` rows. Those machine-readable artifacts MUST persist in `review-security-report.md`. `security-design.md` and `security-applicability.md` MAY appear only as historical refs.
 
 #### Scenario: New state exposes security refs
 
@@ -158,10 +158,10 @@ For new changes, persistence and status contracts MUST include `design.md` with 
 
 #### Scenario: Legacy refs are preserved as data
 
-- GIVEN an archived change contains `artifactRefs.securityDesign` or `artifactRefs.securityApplicability`
+- GIVEN an archived change contains `artifactRefs.securityDesign`, `artifactRefs.securityApplicability`, or exhaustive design rows
 - WHEN status or continuation displays historical evidence
 - THEN the ref MAY remain visible as read-only data
-- AND continuation MUST route active work through `design` instead of security-design or applicability.
+- AND continuation MUST route active work through narrative design and review-security.
 
 ### Requirement: Active Security Validator Removal
 
@@ -176,14 +176,14 @@ New-change contracts MUST NOT require `scripts/validate_security_design.ps1`. If
 
 ### Requirement: Source Row Persistence Compatibility
 
-The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, Engram, hybrid, and none modes according to the shared persistence contract. Backend behavior MUST NOT redefine source-row semantics, and source-row artifacts MUST remain recoverable through the established artifact keys or paths for design, test-design, review-security, verify, and archive.
+The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, Engram, hybrid, and none modes according to the shared persistence contract. Backend behavior MUST NOT redefine source-row semantics. Source-row artifacts MUST remain recoverable through established review-security, verify, and archive keys/paths. Persistence MUST allow narrative designs and archived exhaustive designs to coexist without migration; verify/archive MUST require narrative design evidence plus the review-security report schema, not design YAML.
 
 #### Scenario: OpenSpec mode preserves rows
 
 - GIVEN a change runs in OpenSpec mode
 - WHEN source-row artifacts are persisted
-- THEN rows MUST be stored in the established change files
-- AND downstream phases MUST read those files as source-row evidence.
+- THEN rows MUST be stored in `review-security-report.md`
+- AND downstream phases MUST read that report as source-row evidence.
 
 #### Scenario: Engram or hybrid mode preserves rows
 
@@ -219,7 +219,7 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 #### Scenario: Verify preserves boundary evidence
 
-- GIVEN review-security is non-blocking and cites slim design coverage
+- GIVEN review-security is non-blocking and cites narrative design coverage
 - WHEN verify records final evidence
 - THEN it MUST preserve catalog identity, expected count, compact mappings, and report links
 - AND it MUST NOT require standalone `security-design.md` or `security-applicability.md`.

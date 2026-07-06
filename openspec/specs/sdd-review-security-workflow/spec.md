@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the mandatory post-review security evidence gate that validates embedded `design.md#secure-development-design` rows and produces `review-security-report.md` before verification.
+Define the mandatory post-review security evidence gate that parses narrative secure design and exhaustively validates compact controls and corporate Source IDs in `review-security-report.md` before verification.
 
 ## Requirements
 
@@ -26,14 +26,14 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 ### Requirement: Security Review Artifact
 
-`sdd-review-security` MUST persist `review-security-report.md`. The report MUST validate embedded `design.md#secure-development-design` rows, include verdict, row-level evidence locations, observations, blocking findings, exceptions, and next recommendation, and MUST NOT depend on `scripts/validate_security_design.ps1` or standalone security artifacts for active new-change evidence.
+`sdd-review-security` MUST persist `review-security-report.md`. The report MUST own the machine-readable schema, exhaustive compact and Source ID matrices, `Yes`/`No`/`N/A` decisions, evidence, blockers, exceptions, missed-category validation, and next recommendation. It MAY parse narrative category rules from design, but MUST NOT require design YAML, schema, matrices, or machine-readable fields.
 
 #### Scenario: Report is persisted
 
 - GIVEN `design.md` and `review-report.md` are readable
 - WHEN security review completes
 - THEN `review-security-report.md` MUST be written and read back
-- AND it MUST state a blocking or non-blocking verdict.
+- AND it MUST state a verdict using its own report schema.
 
 #### Scenario: Embedded secure design is required
 
@@ -44,7 +44,7 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 ### Requirement: Security Matrix Validation
 
-Security review MUST validate every embedded `design.md` secure development row using `Yes`, `No`, or `N/A`, evidence location, observations, and lifecycle status: `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, or `blocked`.
+Security review MUST expand the full compact security catalog and validate every compact control and Source ID using `Yes`, `No`, or `N/A`, evidence, observations, and lifecycle status. It MUST decide/report non-applicable rows, compare the matrix against narrative design rules, validate missed categories, and block applicable omissions.
 
 #### Scenario: Mandatory evidence is missing
 
@@ -55,10 +55,17 @@ Security review MUST validate every embedded `design.md` secure development row 
 
 #### Scenario: Not applicable row is justified
 
-- GIVEN a guideline is marked `N/A`
-- WHEN security review validates it
+- GIVEN security review marks a guideline or Source ID `N/A`
+- WHEN it validates the row
 - THEN evidence MUST prove irrelevance
 - AND observations MUST explain the scope decision.
+
+#### Scenario: Design omitted an applicable control
+
+- GIVEN proposal, specs, changed files, or evidence show a category applies
+- WHEN design did not include that category/control
+- THEN security review MUST report a missed applicable control
+- AND the verdict MUST be blocking.
 
 ### Requirement: Boundary with General Review
 
@@ -84,7 +91,7 @@ The active new-change workflow MUST remove `scripts/validate_security_design.ps1
 
 ### Requirement: Exhaustive Source Row Security Review
 
-`sdd-review-security` MUST be the only active phase that materializes the exhaustive corporate source-row validation matrix for a new change. It MUST expand the catalog inventory to every expected Source ID exactly once and validate each row against catalog inventory, slim `design.md#secure-development-design`, `test-design.md`, apply evidence, changed files, and `review-report.md`. It MUST generate the full security source-row matrix in `review-security-report.md` without duplicating the 96-control general review matrix.
+`sdd-review-security` MUST be the only active phase that materializes the exhaustive corporate source-row matrix for a new change. It MUST expand every expected Source ID exactly once and validate rows against catalog inventory, narrative design rules, `test-design.md`, apply evidence, changed files, and `review-report.md`. It MUST write the full matrix in `review-security-report.md` without duplicating the 96-control matrix.
 
 #### Scenario: Full matrix is generated
 
@@ -93,12 +100,12 @@ The active new-change workflow MUST remove `scripts/validate_security_design.ps1
 - THEN `review-security-report.md` MUST include every expected Source ID exactly once
 - AND each row MUST show mapping, status, evidence, observations, and finding.
 
-#### Scenario: Design remains slim
+#### Scenario: Design remains selective
 
-- GIVEN design cites the catalog snapshot, expected count, grouped coverage, and compact mappings
+- GIVEN design contains narrative changed-surface rationale and applicable category rules
 - WHEN security review expands source rows
 - THEN the exhaustive row matrix MUST be written only in `review-security-report.md`
-- AND missing design references MUST block as contract evidence gaps.
+- AND missed applicable design categories MUST block as contract evidence gaps.
 
 #### Scenario: General review is cited, not duplicated
 
@@ -109,7 +116,7 @@ The active new-change workflow MUST remove `scripts/validate_security_design.ps1
 
 ### Requirement: Source Row Blocking Rules
 
-Security review MUST block missing, duplicate, or unknown Source IDs; missing compact mappings; malformed source-row schema; missing design, test-design, apply, changed-file, or review artifacts; unsafe evidence; and missing `N/A` evidence or justification.
+Security review MUST block missing, duplicate, or unknown Source IDs; missing compact mappings; malformed report schema; missing artifacts; unsafe evidence; missing `N/A` justification in the report matrix; and missed applicable design categories/controls. Design MUST NOT be blocked for lacking YAML, schema, or matrix fields.
 
 #### Scenario: Coverage or schema blocker exists
 
@@ -134,7 +141,7 @@ Security review MUST block missing, duplicate, or unknown Source IDs; missing co
 
 ### Requirement: Source Row Evidence Correlation
 
-Security review MUST correlate source rows with design expectations, test-design checks, apply evidence, changed files, and review findings. A row MUST NOT pass solely because it is listed; evidence must support applicability, compliance, or justified `N/A`.
+Security review MUST correlate source rows with narrative design rules, test-design checks, apply evidence, changed files, and review findings. A row MUST NOT pass solely because it is listed or omitted from design; evidence MUST support applicability, compliance, justified `N/A`, or approved exception.
 
 #### Scenario: Listed row has no corroboration
 
