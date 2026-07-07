@@ -311,11 +311,11 @@ Status-token routing:
 | `design` | proposal + spec exist and are readable | launch `sdd-design` |
 | `security-design` | legacy/archive state only | do not launch for new changes; route active continuation through `design` / `test-design` |
 | `test-design` | proposal + spec + design with `## Secure Development Design` exist and are readable | launch `sdd-test-design` |
-| `tasks` | spec + design with embedded secure development rows + test-design exist and are readable | launch `sdd-tasks` |
-| `apply` | spec + design with embedded secure development rows + test-design + tasks exist; review workload and edit-context guards pass | launch `sdd-apply` |
-| `review` | design with embedded secure development rows + test-design + tasks exist, and apply evidence exists or task state proves intended work is complete | launch `sdd-review` |
-| `review-security` | non-blocking review-report exists plus design with embedded secure development rows, test-design, tasks, and apply evidence are readable | launch `sdd-review-security` |
-| `verify` | design with embedded secure development rows + test-design + tasks exist, apply evidence exists or task state proves intended work is complete, and both non-blocking review reports exist | launch `sdd-verify`; if blockers exist, verification may only refresh/remediate evidence |
+| `tasks` | spec + design with `## Secure Development Design` narrative rules + test-design exist and are readable | launch `sdd-tasks` |
+| `apply` | spec + design with `## Secure Development Design` narrative rules + test-design + tasks exist; review workload and edit-context guards pass | launch `sdd-apply` |
+| `review` | design with `## Secure Development Design` narrative rules + test-design + tasks exist, and apply evidence exists or task state proves intended work is complete | launch `sdd-review` |
+| `review-security` | non-blocking review-report exists plus design with `## Secure Development Design` narrative rules, test-design, tasks, and apply evidence are readable | launch `sdd-review-security` |
+| `verify` | design with `## Secure Development Design` narrative rules + test-design + tasks exist, apply evidence exists or task state proves intended work is complete, and both non-blocking review reports exist | launch `sdd-verify`; if blockers exist, verification may only refresh/remediate evidence |
 | `archive` | non-blocking review-report and review-security-report exist, verify-report exists, verification is passing, tasks are complete, and required artifacts including design embedded security evidence and test-design are available | launch `sdd-archive` |
 | `sdd-new` | no active change is ready to continue | start the new-change workflow |
 | `select-change` | multiple/ambiguous active changes | ask the user to choose and STOP |
@@ -324,11 +324,11 @@ Status-token routing:
 
 Phase-specific routing gates:
 
-- `sdd-apply`: require preflight, satisfied init, resolved active change, existing spec/design with embedded secure development rows/test-design/tasks, passed review workload guard, and `actionContext` allowing edits.
-- `sdd-review`: require completed apply evidence or completed task state, readable proposal/spec/design with embedded secure development rows/test-design/tasks, changed-file context, and safe workspace context; blocking review findings route back to `sdd-apply`.
-- `sdd-review-security`: require a readable non-blocking `review-report`, design with embedded secure development rows, changed-file/apply evidence, and safe workspace context; blocking security review findings route back to `sdd-apply` or `resolve-blockers`.
+- `sdd-apply`: require preflight, satisfied init, resolved active change, existing spec/design with `## Secure Development Design` narrative rules/test-design/tasks, passed review workload guard, and `actionContext` allowing edits.
+- `sdd-review`: require completed apply evidence or completed task state, readable proposal/spec/design with `## Secure Development Design` narrative rules/test-design/tasks, changed-file context, and safe workspace context; blocking review findings route back to `sdd-apply`.
+- `sdd-review-security`: require a readable non-blocking `review-report`, design with `## Secure Development Design` narrative rules, changed-file/apply evidence, and safe workspace context; blocking security review findings route back to `sdd-apply` or `resolve-blockers`.
 - `sdd-verify`: require design embedded security evidence plus test-design plus tasks plus apply evidence/completed task state plus non-blocking `review-report` and `review-security-report`, except when verification is explicitly allowed to refresh/remediate blockers.
-- `sdd-archive`: require readable non-blocking `review-report` and `review-security-report`, readable passing `verify-report`, proposal/spec/design with embedded secure development rows/test-design/tasks/apply-progress/review-report/review-security-report/verify-report, and mandatory security evidence or complete approved exceptions unless an approved partial archive exception exists.
+- `sdd-archive`: require readable non-blocking `review-report` and `review-security-report`, readable passing `verify-report`, proposal/spec/design with `## Secure Development Design` narrative rules/test-design/tasks/apply-progress/review-report/review-security-report/verify-report, and mandatory security evidence or complete approved exceptions unless an approved partial archive exception exists.
 - If any phase returns `next_recommended: sdd-archive` before `review-report`, `review-security-report`, or `verify-report` exists, override that routing and run the missing phase in DAG order (`sdd-review` before `sdd-review-security` before `sdd-verify`). Archive is never a direct successor of apply, review, or review-security.
 
 If archive-time stale-checkbox reconciliation is intentionally approved, include this explicit signal when launching `sdd-archive`:
@@ -638,11 +638,11 @@ Phase readiness:
 | `design` | readable proposal + readable spec artifacts; spec gatekeeper passed |
 | `security-design` | legacy/archive state only; not an active new-change phase |
 | `test-design` | readable proposal + specs + design artifact with `## Secure Development Design`; design gatekeeper passed |
-| `tasks` | readable spec + readable design with embedded secure development rows + readable test-design artifacts; test-design gatekeeper passed |
-| `apply` | readable spec + design with embedded secure development rows + test-design + tasks, resolved active change, safe `actionContext`, Review Workload Guard passed, chain/exception decisions resolved |
-| `review` | design with embedded secure development rows, test-design, and tasks exist, and apply evidence exists or task state proves intended implementation work is complete |
-| `review-security` | non-blocking review-report plus design embedded secure development rows, test-design, tasks, and apply evidence exist |
-| `verify` | design embedded secure development rows, test-design, tasks, apply evidence/completed task state, non-blocking review-report, and non-blocking review-security-report exist |
+| `tasks` | readable spec + readable design with `## Secure Development Design` narrative rules + readable test-design artifacts; test-design gatekeeper passed |
+| `apply` | readable spec + design with `## Secure Development Design` narrative rules + test-design + tasks, resolved active change, safe `actionContext`, Review Workload Guard passed, chain/exception decisions resolved |
+| `review` | design with `## Secure Development Design` narrative rules, test-design, and tasks exist, and apply evidence exists or task state proves intended implementation work is complete |
+| `review-security` | non-blocking review-report plus design `## Secure Development Design` narrative rules, test-design, tasks, and apply evidence exist |
+| `verify` | design `## Secure Development Design` narrative rules, test-design, tasks, apply evidence/completed task state, non-blocking review-report, and non-blocking review-security-report exist |
 | `archive` | readable non-blocking review-report and review-security-report, readable passing verify-report, tasks complete, required artifacts including test-design and required security evidence available, no CRITICAL/blocking review/security-review/verification result |
 
 No-skip rules:
@@ -663,8 +663,8 @@ No-parallel dependent planning:
 - `sdd-spec` MUST run and pass the gatekeeper before `sdd-design` starts.
 - `sdd-design` MUST treat a missing or unreadable spec artifact as a dependency failure and return `blocked`.
 - `sdd-design` MUST NOT start until proposal and spec artifacts exist and pass the gatekeeper.
-- `sdd-test-design` MUST NOT start until proposal, spec, and design with embedded secure development rows exist and pass the gatekeeper.
-- `sdd-tasks` MUST NOT start until spec, design with embedded secure development rows, and test-design artifacts exist and pass the gatekeeper.
+- `sdd-test-design` MUST NOT start until proposal, spec, and design with `## Secure Development Design` narrative rules exist and pass the gatekeeper.
+- `sdd-tasks` MUST NOT start until spec, design with `## Secure Development Design` narrative rules, and test-design artifacts exist and pass the gatekeeper.
 - Do not run `sdd-spec`, `sdd-design`, `sdd-test-design`, and `sdd-tasks` in parallel. Their outputs are dependent artifacts, not independent workstreams.
 
 Remediation loops:
@@ -685,9 +685,9 @@ Token, phase, and artifact naming:
 | Engram artifact key | `sdd/{change-name}/spec` |
 | OpenSpec collection path | `openspec/changes/{change-name}/specs/{domain}/spec.md` |
 
-Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. `security-design` may appear only for legacy/archive compatibility; do not launch or emit it as a new-change successor. `sdd-review-security` is an active phase/agent name; `review-security` is the native/status token; `review-security-report` is the Engram artifact key suffix; `securityDesign` and `securityReviewReport` are camelCase persisted state/status fields, with `securityDesign` legacy/read-only for new changes. `sdd-security-applicability` is a retired phase name that may appear only in old or archived data; do not launch it, map it to an agent/skill, or emit it as a new-change successor. `securityApplicability` may appear only as a compatibility field. For the mandatory test-design phase, `sdd-test-design` is the phase/agent name, `test-design` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/test-design`), and `testDesign` is the camelCase persisted state/status field. Do not invent `sdd-specs`, `sdd-proposal`, `sdd-review-security` artifact keys, or `sdd-test-design` artifact keys.
+Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. `security-design` may appear only for legacy/archive compatibility; do not launch or emit it as a new-change successor. `sdd-review-security` is an active phase/agent name; `review-security` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/review-security`); `securityDesign` and `securityReviewReport` are camelCase persisted state/status fields, with `securityDesign` legacy/read-only for new changes. `sdd-security-applicability` is a retired phase name that may appear only in old or archived data; do not launch it, map it to an agent/skill, or emit it as a new-change successor. `securityApplicability` may appear only as a compatibility field. For the mandatory test-design phase, `sdd-test-design` is the phase/agent name, `test-design` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/test-design`), and `testDesign` is the camelCase persisted state/status field. Do not invent `sdd-specs`, `sdd-proposal`, `sdd-review-security-report` artifact keys, or `sdd-test-design` artifact keys.
 
-Use `sdd/{change-name}/spec` for Engram mode, `openspec/changes/{change-name}/specs/{domain}/spec.md` for OpenSpec mode, and both references for hybrid mode. Use `sdd/{change-name}/design` / `openspec/changes/{change-name}/design.md#secure-development-design` for embedded security obligations, `sdd/{change-name}/test-design` / `openspec/changes/{change-name}/test-design.md`, and `sdd/{change-name}/review-security-report` / `openspec/changes/{change-name}/review-security-report.md` for downstream artifact refs. Use legacy `security-design` and `security-applicability` refs only when reading old or archived changes.
+Use `sdd/{change-name}/spec` for Engram mode, `openspec/changes/{change-name}/specs/{domain}/spec.md` for OpenSpec mode, and both references for hybrid mode. Use `sdd/{change-name}/design` / `openspec/changes/{change-name}/design.md#secure-development-design` for embedded security obligations, `sdd/{change-name}/test-design` / `openspec/changes/{change-name}/test-design.md`, and `sdd/{change-name}/review-security` / `openspec/changes/{change-name}/review-security-report.md` for downstream artifact refs. Use legacy `security-design` and `security-applicability` refs only when reading old or archived changes.
 
 ### Result Contract
 
@@ -760,6 +760,7 @@ Phase-specific minimums:
 | `sdd-tasks` | Task list refs plus Review Workload Forecast, estimated changed lines, chain/exception recommendation, and test-design traceability. |
 | `sdd-apply` | Apply-progress ref, completed/pending task summary, files changed, verification run or reason not run, next slice boundary if chained. |
 | `sdd-review` | Final review verdict, blocking/non-blocking summary, matrix validation summary, review-report ref, and next remediation or verification route. |
+| `sdd-review-security` | Final security review verdict, blocking/non-blocking summary, compact/source-row validation summary, review-security-report ref, and next remediation or verification route. |
 | `sdd-verify` | Final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`; evidence table; CRITICAL/WARNING/SUGGESTION issues; verify-report ref. |
 | `sdd-archive` | Archive destination/ref, included artifacts, final status, recovery path if partial. |
 
@@ -1176,12 +1177,12 @@ Required context by phase:
 | `sdd-spec` | proposal | explore, product assumptions | `spec` | proposal missing/unreadable |
 | `sdd-design` | proposal + spec | architecture conventions, related files summary, baseline security considerations | `design` | proposal/spec missing/unreadable |
 | `sdd-test-design` | proposal + spec + design with `## Secure Development Design` | testing capabilities, design risks, embedded security controls | `test-design` | proposal/spec/design or embedded secure design section missing/unreadable |
-| `sdd-tasks` | spec + design with embedded secure development rows + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/test-design missing/unreadable |
-| `sdd-apply` | tasks + spec + design with embedded secure development rows + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
-| `sdd-review` | proposal + spec + design with embedded secure development rows + test-design + tasks + apply-progress/evidence + changed-file context + actionContext | review catalog, changed files summary | `review-report` | review inputs, changed-file context, safe workspace context, or persistence capability is missing |
-| `sdd-review-security` | design with embedded secure development rows + non-blocking review-report + apply-progress/evidence + changed-file context | tasks, test-design, catalog | `review-security-report` | embedded security design, review evidence, changed-file context, or persistence capability is missing |
-| `sdd-verify` | spec + design with embedded secure development rows + test-design + tasks + apply-progress/evidence + non-blocking review-report + non-blocking review-security-report + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | review/security-review evidence, verification evidence, or required artifacts are missing |
-| `sdd-archive` | proposal + spec + design with embedded secure development rows + test-design + tasks + apply-progress + non-blocking review-report + non-blocking review-security-report + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | review-report/review-security-report missing/blocking, verify-report missing/non-passing, mandatory security evidence missing, or required artifacts unavailable |
+| `sdd-tasks` | spec + design with `## Secure Development Design` narrative rules + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/test-design missing/unreadable |
+| `sdd-apply` | tasks + spec + design with `## Secure Development Design` narrative rules + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
+| `sdd-review` | proposal + spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress/evidence + changed-file context + actionContext | review catalog, changed files summary | `review-report` | review inputs, changed-file context, safe workspace context, or persistence capability is missing |
+| `sdd-review-security` | design with `## Secure Development Design` narrative rules + non-blocking review-report + apply-progress/evidence + changed-file context | tasks, test-design, catalog | `review-security-report` | embedded security design, review evidence, changed-file context, or persistence capability is missing |
+| `sdd-verify` | spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress/evidence + non-blocking review-report + non-blocking review-security-report + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | review/security-review evidence, verification evidence, or required artifacts are missing |
+| `sdd-archive` | proposal + spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress + non-blocking review-report + non-blocking review-security-report + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | review-report/review-security-report missing/blocking, verify-report missing/non-passing, mandatory security evidence missing, or required artifacts unavailable |
 
 Context integrity checks:
 
@@ -1268,7 +1269,7 @@ If the orchestrator lost track mid-session (no compaction, just context drift):
     | `proposal` only | Planning started, spec pending | Run `sdd-spec` |
      | `spec`/`specs` only | Specs done, technical design pending | Run `sdd-design` |
      | `spec`/`specs` + `design` with `## Secure Development Design`, no `test-design` | Design done, test planning missing | Run `sdd-test-design` |
-      | `spec`/`specs` + `design` with embedded secure development rows + `test-design`, no `tasks` | Test design done, breakdown missing | Run `sdd-tasks` |
+     | `spec`/`specs` + `design` with `## Secure Development Design` narrative rules + `test-design`, no `tasks` | Test design done, breakdown missing | Run `sdd-tasks` |
    | `tasks`, no `apply-progress` | Ready to implement | Run `sdd-apply` (after Review Workload Guard) |
     | `apply-progress` present, no `review-report` | Apply done, unreviewed | Run `sdd-review` |
      | `apply-progress` + non-blocking review-report, no `review-security-report` | Apply generally reviewed, security review pending | Run `sdd-review-security` |

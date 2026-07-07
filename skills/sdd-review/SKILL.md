@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Activation Contract
 
-Run after `sdd-apply` completes implementation work and before `sdd-review-security` / `sdd-verify`. Produce durable review evidence; do not fix issues and do not replace verification, embedded secure-design authority, or security review ownership.
+Run after `sdd-apply` completes implementation work and before `sdd-review-security`. Produce durable review evidence; do not fix issues and do not replace verification, embedded secure-design authority, or security review ownership. Verification consumes both review reports after security review completes.
 
 ## Phase Artifact Contract
 
@@ -34,7 +34,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Matrix contract | The matrix header must be exactly: `Item`, `Artifact/Deliverable`, `Requirement`, `Reviewer`, `Standard`, `Severity`, `Complies`, `Affected Requirement`, `Evidence Location`, `Observations/Comments`. Do not add a Category column. |
 | Complies values | `Complies` is limited to `Yes`, `No`, or `N/A`. Every `N/A` row must include Evidence Location proving irrelevance and Observations/Comments explaining scope. |
 | Security boundary | Review rows may cite security guideline IDs or source IDs in `Standard`, but `design.md#secure-development-design`, `review-security-report.md`, and `skills/_shared/security-guideline-catalog.md` remain authoritative for classification, mandatory controls, row evidence, and exceptions. |
-| Security handoff | `review-report.md` must include changed-file context, implementation evidence summaries, finding context, and `design.md#secure-development-design` references sufficient for `sdd-review-security` to validate embedded rows without duplicating the 96-control matrix. |
+| Security handoff | `review-report.md` must include changed-file context, implementation evidence summaries, finding context, and `design.md#secure-development-design` references sufficient for `sdd-review-security` to validate security handoff evidence without duplicating the 96-control matrix. |
 | Success routing | No blocking failures: `next_recommended: review-security`. Non-blocking findings must remain in the report as warnings. |
 | Failure routing | Critical, blocking, or explicitly blocking failed controls: `next_recommended: apply`; list failed controls and affected requirements. |
 | Block routing | Missing required artifacts, unknown changed files, unsafe workspace context, invalid catalog shape, or persistence failure: `next_recommended: resolve-blockers`. |
@@ -57,7 +57,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 1. Load supplemental skills via shared SDD Section A.
 2. Read the selected change status and all required inputs from the active artifact store.
 3. Read `references/control-catalog.md` and confirm 96 unique Item IDs mapped one-to-one to corporate checklist source items 1 through 96.
-4. Inspect applied changes, task evidence, specs, design including embedded secure development rows, and test-design cases. Treat standalone `security-design.md` as optional legacy/archive context only.
+4. Inspect applied changes, task evidence, specs, design including `design.md#secure-development-design` narrative rules, and test-design cases. Treat standalone `security-design.md` as optional legacy/archive context only.
 5. Fill `review-report.md` using `references/report-template.md` and one matrix row per catalog Item ID, including changed-file/security handoff evidence for `sdd-review-security`.
 6. Classify findings as blocking or non-blocking. Blocking/critical findings prevent verify; non-blocking findings proceed as warnings.
 7. Validate the report before persistence: required sections present, exact matrix header, 96 unique rows, valid `Complies`, complete `N/A` evidence, failed controls tied to affected requirements, and next recommendation matching verdict.

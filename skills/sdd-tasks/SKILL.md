@@ -41,7 +41,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Produced artifact | `sdd/{change-name}/tasks` or `openspec/changes/{change-name}/tasks.md`. |
 | Mutates | None outside the produced tasks artifact. |
 | Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
-| Security consumption | Mandatory security controls, N/A rationale, review-security expectations, and evidence expectations from `design.md#secure-development-design` and `test-design.md` must be represented as tasks or complete approved exceptions. |
+| Security consumption | Applicable narrative security rules, review-security expectations, and evidence expectations from `design.md#secure-development-design` and `test-design.md` must be represented as tasks or complete approved exceptions. Exhaustive `N/A` rationale and lifecycle row status belong to `review-security-report.md`. |
 | Review workload behavior | Preserve the Review Workload Forecast guard lines, resolved delivery strategy, chain strategy, size-exception field, and reviewable work-unit split. |
 | Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
 | Block routing | `next_recommended: resolve-blockers` for missing required inputs, missing embedded secure development design, test-design gaps, testing capability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
@@ -88,8 +88,8 @@ From `test-design.md`, identify:
 - Expected evidence that `sdd-apply` and `sdd-verify` will later consume
 
 From mandatory `design.md#secure-development-design`, identify:
-- Classification, static/manual validation notes, catalog snapshot identity, category/guideline matrix completeness, lifecycle statuses, and N/A rationale.
-- Mandatory guideline controls, expected evidence owners, residual risks, review-security expectations, and complete approved exceptions.
+- Changed-surface classification, applicable narrative category rules, static/manual validation notes, catalog context, safe-evidence policy, residual risks, and complete approved exceptions.
+- Expected evidence owners, review-security expectations, and implementation, verification, or archive evidence obligations for applicable rules.
 - Implementation, apply-evidence, review-security, verification, or archive-evidence tasks needed to satisfy mandatory controls.
 
 Also read testing capabilities when available:

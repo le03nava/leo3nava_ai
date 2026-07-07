@@ -37,7 +37,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, tasks, non-blocking `review-report.md` / `sdd/{change-name}/review`, non-blocking `review-security-report.md` / `sdd/{change-name}/review-security-report`, and passing `verify-report` from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, tasks, non-blocking `review-report.md` / `sdd/{change-name}/review`, non-blocking `review-security-report.md` / `sdd/{change-name}/review-security`, and passing `verify-report` from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | Archive report as `sdd/{change-name}/archive-report`; in OpenSpec, the archive audit-trail reference is `openspec/changes/archive/YYYY-MM-DD-{change-name}/`. |
 | Mutates | OpenSpec/hybrid source specs under `openspec/specs/{domain}/spec.md`; OpenSpec/hybrid change folder location from active change to dated archive; Engram/hybrid archive report lineage. |
 | Spec sync semantics | Merge delta specs before moving the change folder. Preserve unrelated requirements; create missing main specs from full new specs; require explicit reason/migration for removals and explicit old/new names for renames. |
@@ -216,7 +216,7 @@ Before persistence, validate the archive report includes:
 - `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
 - `review-report` artifact ref/path and confirmation that review verdict is non-blocking
 - `review-security-report` artifact ref/path and confirmation that security review verdict is non-blocking
-- Mandatory `design.md#secure-development-design` ref/path, including no-impact N/A rows when applicable
+- Mandatory `design.md#secure-development-design` ref/path, including no-impact changed-surface rationale when applicable; exhaustive `N/A` rows belong to `review-security-report.md`
 - Embedded secure-design validation metadata or static/manual notes: source section, status, catalog snapshot identity, lifecycle vocabulary, and validation notes
 - Mandatory security evidence status and complete approved exception details for any accepted gaps
 - Archive evidence fields for applicable controls: guideline IDs, taxonomy categories, source refs, operational severity, expected evidence status, residual risks, and exception state

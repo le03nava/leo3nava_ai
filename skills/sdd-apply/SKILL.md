@@ -94,7 +94,7 @@ Before writing ANY code:
 2. Read every applicable artifact path/topic from `contextFiles`, falling back to `artifactPaths` and `artifactRefs` according to `artifact_store.mode`
 3. Read the specs — understand WHAT the code must do
 4. Read the design — understand HOW to structure the code
-5. Read mandatory `design.md#secure-development-design` — understand classification, matrix rows, controls, mandatory evidence, N/A rationale, lifecycle statuses, residual risks, and approved exceptions. Do not block new changes on missing standalone `security-design.md`.
+5. Read mandatory `design.md#secure-development-design` — understand changed-surface classification, applicable narrative category rules, mandatory evidence expectations, residual risks, safe-evidence policy, and approved exceptions. Exhaustive matrix rows, `N/A` rationale, and lifecycle statuses belong to `review-security-report.md`; do not block new changes on missing standalone `security-design.md`.
 6. Read `test-design.md` — understand planned automated, manual, static, and security-control checks and expected evidence
 7. Read existing code in affected files — understand current patterns
 8. Check the project's coding conventions from `config.yaml`

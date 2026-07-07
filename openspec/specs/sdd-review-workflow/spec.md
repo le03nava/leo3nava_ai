@@ -26,7 +26,7 @@ The SDD workflow MUST route completed implementation through `sdd-review` before
 
 #### Scenario: Legacy applicability is optional evidence
 
-- GIVEN a new change has proposal, specs, design with embedded secure development rows, test design, tasks, and apply evidence
+- GIVEN a new change has proposal, specs, design with `## Secure Development Design` narrative rules, test design, tasks, and apply evidence
 - WHEN review resolves required inputs
 - THEN missing `security-applicability.md` or standalone `security-design.md` MUST NOT block review
 - AND any such artifact present MUST be treated only as legacy or archive evidence.

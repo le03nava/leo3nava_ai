@@ -165,10 +165,36 @@ If Strict TDD mode is active, apply the TDD cycle and explain it:
  We write the failing test FIRST, then write the minimum code to pass it."
 ```
 
-### Phase 9: Verify (narrated)
+### Phase 9: Review (narrated)
 
 ```
-"Step 8: Verify — We check that what we built matches the specs and test design."
+"Step 8: Review — Before verification, we inspect the implementation and produce durable review evidence."
+```
+
+Delegate `sdd-review`. Explain the returned review verdict and handoff:
+
+```
+"The review report records blocking and non-blocking findings.
+ Non-blocking review evidence is required before security review can run."
+```
+
+### Phase 10: Security Review (narrated)
+
+```
+"Step 9: Security Review — We validate the secure-design handoff and any security evidence before verification."
+```
+
+Delegate `sdd-review-security`. Explain the returned security review verdict:
+
+```
+"Security review owns the exhaustive security matrices when they apply.
+ Design stays narrative; review-security proves the detailed row-level evidence."
+```
+
+### Phase 11: Verify (narrated)
+
+```
+"Step 10: Verify — We check that what we built matches the specs, test design, and non-blocking review evidence."
 ```
 
 Delegate `sdd-verify`. Explain the returned compliance matrix:
@@ -178,10 +204,10 @@ Delegate `sdd-verify`. Explain the returned compliance matrix:
  This is the moment where specs pay off — they tell us exactly what to check."
 ```
 
-### Phase 10: Archive (narrated)
+### Phase 12: Archive (narrated)
 
 ```
-"Step 9: Archive — We merge our delta specs into the main specs and close the change.
+"Step 11: Archive — We merge our delta specs into the main specs and close the change.
  The specs now describe the new behavior. The change becomes the audit trail."
 ```
 
@@ -192,7 +218,7 @@ Delegate `sdd-archive`. Show the result:
  And openspec/specs/ now reflects the new behavior."
 ```
 
-### Phase 11: Summary
+### Phase 13: Summary
 
 Close the session with a recap:
 
@@ -208,12 +234,14 @@ Here's what we built together:
 - design.md — the HOW
 - test-design.md — the EVIDENCE PLAN
 - tasks.md — the STEPS
+- review-report.md — the GENERAL REVIEW EVIDENCE
+- review-security-report.md — the SECURITY REVIEW EVIDENCE
 
 **Code changed**:
 - {list of files}
 
 **The SDD cycle in one line**:
-explore → propose → spec → design → test-design → tasks → apply → verify → archive
+explore → propose → spec → design → test-design → tasks → apply → review → review-security → verify → archive
 
 **When to use SDD**: Any change where you want to agree on WHAT before writing code.
 Small tweaks? Just code. Features, APIs, architecture decisions? SDD first.
@@ -236,5 +264,5 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - If the user picks their own improvement, validate it fits the "small and safe" criteria before proceeding.
 - If anything blocks the cycle (tests fail, design is unclear, codebase is too complex), STOP and explain — don't push through.
 - Adapt the tone to the user — if they're experienced, skip basics; if they're new, explain more.
-- Do not execute phase work inline. Delegate real phase work to sdd-explore, sdd-propose, sdd-spec, sdd-design, sdd-test-design, sdd-tasks, sdd-apply, sdd-verify, and sdd-archive.
+- Do not execute phase work inline. Delegate real phase work to sdd-explore, sdd-propose, sdd-spec, sdd-design, sdd-test-design, sdd-tasks, sdd-apply, sdd-review, sdd-review-security, sdd-verify, and sdd-archive.
 - Follow all format rules from the individual skills by passing their artifact refs and returned envelopes through the orchestrator gatekeeper.

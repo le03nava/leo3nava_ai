@@ -67,38 +67,40 @@ New changes MUST NOT produce `security-applicability.md`. The canonical classifi
 - THEN the path MAY be resolved as historical data
 - AND no runnable applicability executor or skill MUST be required.
 
-### Requirement: Complete Category Decision Matrix
+### Requirement: Narrative Design Classification and Review-Security Matrix Ownership
 
-For new changes, the complete category/guideline matrix MUST be recorded in `design.md#secure-development-design`. Legacy applicability matrices MAY be parsed for archive readability only.
+For new changes, `design.md#secure-development-design` MUST record changed-surface classification and applicable category rules as narrative Markdown. The exhaustive category/guideline matrix, Source ID expansion, lifecycle row status, and `N/A` decisions MUST be produced only by `review-security-report.md`. Legacy applicability matrices MAY be parsed for archive readability only.
 
-#### Scenario: Every category is evaluated
+#### Scenario: Applicable categories are narrated
 
 - GIVEN the catalog exposes supported taxonomy categories
 - WHEN `sdd-design` writes its artifact
-- THEN every category/guideline MUST be represented there
+- THEN applicable categories MUST be represented as narrative rules with evidence expectations
+- AND omitted categories MUST remain reviewable by `sdd-review-security`
 - AND applicability artifacts MUST NOT be authoritative.
 
 #### Scenario: Unknown decision is design-changing
 
 - GIVEN a category is marked `unknown` with `blocking` severity
-- WHEN `sdd-design` evaluates the matrix
+- WHEN `sdd-design` evaluates changed-surface classification
 - THEN it MUST return blocked
 - AND it MUST identify the missing evidence or decision.
 
-### Requirement: Explicit No-Impact Proof
+### Requirement: Explicit No-Impact Rationale
 
-No-impact proof for new changes MUST be recorded as `not-applicable` matrix rows in `design.md#secure-development-design`; absence of standalone `security-design.md` MUST NOT prove or disprove impact. Legacy no-impact proof remains readable only for old artifacts.
+No-impact proof for new changes MUST be recorded as narrative changed-surface rationale in `design.md#secure-development-design`; absence of standalone `security-design.md` MUST NOT prove or disprove impact. Exhaustive `not-applicable` / `N/A` matrix rows belong to `review-security-report.md`. Legacy no-impact proof remains readable only for old artifacts.
 
 #### Scenario: Valid no-impact artifact
 
-- GIVEN every category is `not-applicable` with evidence and rationale
+- GIVEN the changed surface does not touch security-relevant behavior, data, or operational evidence
 - WHEN the new workflow runs
 - THEN `design.md#secure-development-design` MUST still be created
-- AND `sdd-design` MUST NOT skip the embedded section.
+- AND `sdd-design` MUST NOT skip the embedded section
+- AND exhaustive `N/A` rows MUST NOT be copied into design.
 
 #### Scenario: Absence of evidence is insufficient
 
-- GIVEN a change has no mapped guidelines but lacks no-impact rationale for one category
-- WHEN `sdd-design` evaluates the matrix
+- GIVEN a change has no mapped guidelines but lacks changed-surface rationale for one relevant category
+- WHEN `sdd-design` evaluates classification
 - THEN `design.md#secure-development-design` MUST NOT classify the change as no-impact
 - AND the missing proof MUST be recorded as a blocker or risk by severity.

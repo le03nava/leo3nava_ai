@@ -60,6 +60,8 @@ Do not invent additional status values such as `hold`. If a phase needs user inp
 
 Routing token convention:
 
+`skills/_shared/sdd-status-contract.md` is the routing-token source of truth. The table below is a convenience mirror for phase envelopes; if it ever differs from `sdd-status-contract.md`, use the status contract.
+
 | Native/status token | Phase agent token |
 | --- | --- |
 | `propose` | `sdd-propose` |
@@ -68,8 +70,12 @@ Routing token convention:
 | `test-design` | `sdd-test-design` |
 | `tasks` | `sdd-tasks` |
 | `apply` | `sdd-apply` |
+| `review` | `sdd-review` |
+| `review-security` | `sdd-review-security` |
 | `verify` | `sdd-verify` |
 | `archive` | `sdd-archive` |
+| `sdd-new` | orchestrator workflow |
+| `select-change` | ask user to choose |
 | `resolve-blockers` | `resolve-blockers` |
 | `none` | `none` |
 

@@ -27,8 +27,11 @@ Set `capture_prompt: false` when the Engram tool schema supports it; if an older
 | `proposal` | sdd-propose | Change proposal |
 | `spec` | sdd-spec | Delta specifications (all domains concatenated) |
 | `design` | sdd-design | Technical design |
+| `test-design` | sdd-test-design | Test design and evidence plan |
 | `tasks` | sdd-tasks | Task breakdown |
 | `apply-progress` | sdd-apply | Implementation progress (one per batch) |
+| `review` | sdd-review | General review report |
+| `review-security` | sdd-review-security | Security review report |
 | `verify-report` | sdd-verify | Verification report |
 | `archive-report` | sdd-archive | Archive closure with lineage |
 | `state` | orchestrator | DAG state for recovery after compaction |
