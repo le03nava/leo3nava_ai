@@ -25,15 +25,15 @@ The orchestrator should provide structured status from `skills/_shared/sdd-statu
 
 ## Hard Rules
 
+- Follow `skills/_shared/sdd-post-apply-gates.md` for common post-apply dependency gates, review-evidence consumption, safe evidence, unavailable tooling, matrix ownership boundaries, routing defaults, and persistence/read-back expectations.
 - Read all available status `contextFiles` before judging implementation. Full spec-driven verification reads proposal, specs, design with mandatory `## Secure Development Design`, test design, tasks, general review, and security review; partial artifact sets degrade as described below.
 - Execute relevant tests; static analysis alone is never verification.
 - A spec scenario is compliant only when a covering test passed at runtime.
-- When repository testing capabilities explicitly report no runtime/build/lint/type/format/coverage runner, verification MUST report those tools as unavailable evidence rather than inventing commands or marking missing tools as passing.
+- When repository testing capabilities explicitly report no runtime/build/lint/type/format/coverage runner, report those tools as unavailable evidence per `skills/_shared/sdd-post-apply-gates.md`.
 - Compare specs first, design second, task completion third.
 - Compare embedded secure-design controls and mandatory evidence before archive readiness can be claimed.
 - Compare `test-design.md` planned cases against apply/verification evidence. Uncovered mandatory cases fail verification; uncovered non-mandatory cases are warnings only.
-- Consume and cite the non-blocking `review-report.md` / `sdd/{change-name}/review` and `review-security-report.md` / `sdd/{change-name}/review-security` as prerequisite evidence; verification MUST NOT own, reproduce, or re-score either review matrix.
-- For corporate source-row changes, consume the non-blocking review-security source-row verdict, warnings, and evidence summary as prerequisite evidence. Verify MUST block unresolved source-row blockers, unsafe evidence findings, unsupported `N/A` rows, missing compact mappings, malformed schema, or missing/duplicate/unknown Source IDs without duplicating the full source-row matrix.
+- Consume review reports and source-row summaries according to `skills/_shared/sdd-post-apply-gates.md`; verification MUST NOT own, reproduce, or re-score either review matrix.
 - Do not fix issues; report them for the orchestrator/user.
 - Persist `verify-report` according to `skills/_shared/persistence-contract.md` and the phase artifact contract below.
 - If Strict TDD is active, load `strict-tdd-verify.md` from this skill directory; if inactive, never load it.
@@ -43,6 +43,7 @@ The orchestrator should provide structured status from `skills/_shared/sdd-statu
 ## Phase Artifact Contract
 
 Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
+Common post-apply gates and review-evidence consumption rules are defined in `skills/_shared/sdd-post-apply-gates.md`.
 
 | Concern | Contract |
 | --- | --- |
@@ -51,9 +52,9 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Mutates | None outside the produced verification report artifact. |
 | Test-design consumption | Compare every planned `test-design.md` case against implementation, execution, apply-progress, security evidence, or justified skip evidence; uncovered mandatory cases fail verification, while uncovered non-mandatory cases are warnings. |
 | Security consumption | Compare `design.md#secure-development-design` narrative rules, changed-surface rationale, residual risks, static/manual validation notes, `review-security-report.md` row evidence, source-row verdict/warnings/evidence summary, and mandatory evidence before archive readiness; complete approved exceptions are the only valid substitute for missing mandatory evidence. |
-| Review consumption | Resolve exactly one general review artifact and one security review artifact from the selected backend, cite their verdict/blocking summary/evidence summary, and fail or block when review evidence is missing, unreadable, blocking, or ambiguous. Do not duplicate either review matrix in `verify-report`. |
-| Source-row prerequisite | When corporate source-row validation applies, require a readable non-blocking security review verdict that states exact source-row coverage, catalog snapshot identity/path, expected Source ID count, compact mapping validity, safe-evidence status, `N/A` justification status, warnings, exceptions, evidence references, and blocker absence. Verification cites the verdict, boundary evidence, warnings, exceptions, and report links only; it does not own or reproduce the full source-row matrix. |
-| Runtime/static evidence | Execute configured commands when available; when no runner exists, report unavailable runtime/build/lint/type/format/coverage evidence explicitly and do not invent commands or mark unavailable tools as passed. |
+| Review consumption | Follow `skills/_shared/sdd-post-apply-gates.md`: resolve exactly one non-blocking general review artifact and one non-blocking security review artifact, cite summaries only, and never duplicate either matrix. |
+| Source-row prerequisite | Follow `skills/_shared/sdd-post-apply-gates.md` source-row consumption boundary and `skills/_shared/sdd-security-contract.md` routing semantics. |
+| Runtime/static evidence | Execute configured commands when available; otherwise report unavailable tooling per `skills/_shared/sdd-post-apply-gates.md`. |
 | Success routing | `next_recommended: archive` only for `PASS` or eligible `PASS WITH WARNINGS`. |
 | Block/fail routing | `next_recommended: apply` for failed verification or unchecked tasks; `next_recommended: resolve-blockers` for unsafe workspace, missing selected change/artifacts, unresolved configuration, or persistence failure. |
 
@@ -67,6 +68,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | No runner and specs exist | Do not claim full spec compliance; missing runtime evidence is CRITICAL unless config explicitly allows manual verification. |
 | No runner and only tasks exist | Verify task completion only; verdict may be `PASS WITH WARNINGS`. |
 | Strict TDD active but `apply-progress` or TDD evidence is missing | FAIL; report CRITICAL missing TDD evidence. |
+| Common post-apply dependency, review-evidence, context, safe-evidence, or persistence gate fails | Follow `skills/_shared/sdd-post-apply-gates.md`; do not claim archive readiness. |
 | `actionContext.mode: workspace-planning` | Return `blocked` with `next_recommended: resolve-blockers`; full workspace implementation verification is not supported in this slice. |
 | Changed files cannot be identified | Mark static correctness/design coherence as PARTIAL, record the skipped evidence, and return `next_recommended: resolve-blockers` unless runtime evidence still proves the required behavior. |
 | Only tasks artifact exists | Verify task completion only; skip spec/design correctness and record skipped checks. |
@@ -74,19 +76,17 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Proposal/specs/design/test-design/tasks exist | Verify all dimensions, including planned case coverage. |
 | `design.md#secure-development-design` is missing for a new active change | CRITICAL blocker; return `next_recommended: resolve-blockers`. |
 | Standalone `security-design.md` is missing for a new active change | Continue; do not require it. It is legacy/read-only compatibility data only. |
-| Review report is missing, unreadable, ambiguous, or lacks a non-blocking verdict | CRITICAL blocker; return `next_recommended: resolve-blockers` for missing/ambiguous/unreadable evidence or `next_recommended: apply` for blocking review findings. |
-| Security review report is missing, unreadable, ambiguous, or lacks a non-blocking verdict | CRITICAL blocker; return `next_recommended: resolve-blockers` for missing/ambiguous/unreadable evidence or `next_recommended: apply` for blocking security review findings. |
+| Review report or security review report is missing, unreadable, ambiguous, malformed, or blocking | Follow `skills/_shared/sdd-post-apply-gates.md` review-evidence consumption and routing rules. |
 | Security review source-row evidence has unresolved source blockers: missing/duplicate/unknown Source IDs, malformed schema, missing compact mapping, unsafe evidence, unsupported `N/A`, or missing mandatory source-row evidence | CRITICAL blocker. Route to `resolve-blockers` for schema/catalog/artifact/unsafe-evidence/unsupported-`N/A` causes and to `apply` when remediation is implementation, prompt, contract, or apply-evidence work. |
 | Security review is non-blocking with source-row warnings only | Preserve the warning summary in `verify-report`; verification MAY proceed only if all mandatory evidence is complete and no CRITICAL issue exists. |
-| Verification report duplicates the full 96-control review matrix or security review matrix instead of citing review summary evidence | Fix before persistence; verification owns spec/test/security evidence, not review matrix ownership. |
-| Verification report duplicates the full corporate source-row matrix instead of citing review-security source-row verdict/warnings/evidence summary | Fix before persistence; verification consumes source-row evidence but does not own the row matrix. |
+| Verification report duplicates the full 96-control review matrix, security review matrix, or corporate source-row matrix | Fix before persistence; matrix ownership is defined by `skills/_shared/sdd-post-apply-gates.md`. |
 | Mandatory embedded secure-design control has no implementation, verification evidence, or complete approved exception | CRITICAL `SECURITY_EVIDENCE_MISSING` and verdict `FAIL`. |
 | Mandatory security exception is incomplete | CRITICAL `SECURITY_EXCEPTION_INCOMPLETE` and verdict `FAIL`. |
 | Task incomplete | CRITICAL for core task, WARNING for cleanup task. |
 | Test command exits non-zero | CRITICAL. |
 | Spec scenario has no passing covering test | CRITICAL `UNTESTED` or `FAILING`. |
 | Mandatory test-design case has no matching implementation, execution, or justified skip evidence | CRITICAL `UNTESTED` and verdict `FAIL`. |
-| Runtime test, linter, type-checker, formatter, or coverage command is unavailable | Report the unavailable tool explicitly in runtime/static evidence; do not mark the missing command as passed. |
+| Runtime test, linter, type-checker, formatter, or coverage command is unavailable | Report unavailable tooling according to `skills/_shared/sdd-post-apply-gates.md`. |
 | Non-mandatory test-design case has no matching evidence | WARNING; do not fail solely because of this uncovered non-mandatory case. |
 | Design deviation exists | WARNING unless it breaks a spec. |
 | Verification failure discovered | Report only; do not patch implementation. |
@@ -95,7 +95,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 ## Execution Steps
 
 1. Load relevant skills via shared SDD Section A.
-2. Retrieve artifacts via shared Section B for the active persistence mode, or read the concrete `contextFiles` from structured status.
+2. Apply `skills/_shared/sdd-post-apply-gates.md`, then retrieve artifacts via shared Section B for the active persistence mode or read the concrete `contextFiles` from structured status.
 3. Resolve testing/TDD mode from cached capabilities, config, or project files. Prefer `sdd/{project}/testing-capabilities`, then `openspec/config.yaml`, then project files.
 4. Count completed and incomplete tasks. Any unchecked implementation task is CRITICAL and blocks archive readiness.
 5. Resolve the general review artifact and security review artifact; cite each verdict, blocking summary, evidence summary, and next recommendation. If either report is missing, ambiguous, unreadable, or blocking, classify it according to Decision Gates before continuing.
@@ -135,3 +135,4 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 - [references/report-format.md](references/report-format.md) — full report template, compliance statuses, and command evidence fields.
 - [strict-tdd-verify.md](strict-tdd-verify.md) — load only when Strict TDD is active.
 - `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `../_shared/sdd-post-apply-gates.md` — common post-apply gates, review evidence consumption, source-row consumption, safe evidence, and matrix ownership boundaries.

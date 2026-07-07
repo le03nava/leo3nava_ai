@@ -24,6 +24,7 @@ Run after `sdd-apply` completes implementation work and before `sdd-review-secur
 ## Phase Artifact Contract
 
 Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
+Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routing defaults, and persistence/read-back expectations are defined in `skills/_shared/sdd-post-apply-gates.md`.
 
 | Concern | Contract |
 | --- | --- |
@@ -37,15 +38,13 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Security handoff | `review-report.md` must include changed-file context, implementation evidence summaries, finding context, and `design.md#secure-development-design` references sufficient for `sdd-review-security` to validate security handoff evidence without duplicating the 96-control matrix. |
 | Success routing | No blocking failures: `next_recommended: review-security`. Non-blocking findings must remain in the report as warnings. |
 | Failure routing | Critical, blocking, or explicitly blocking failed controls: `next_recommended: apply`; list failed controls and affected requirements. |
-| Block routing | Missing required artifacts, unknown changed files, unsafe workspace context, invalid catalog shape, or persistence failure: `next_recommended: resolve-blockers`. |
+| Block routing | Follow `skills/_shared/sdd-post-apply-gates.md`; invalid catalog shape also routes to `resolve-blockers`. |
 
 ## Decision Gates
 
 | Situation | Action |
 | --- | --- |
-| Required artifact cannot be resolved | Return `blocked` with `next_recommended: resolve-blockers`; name the missing artifact. |
-| Changed-file context is absent or ambiguous | Return `blocked` with `next_recommended: resolve-blockers`; review cannot safely scope evidence. |
-| Workspace context is unsafe or outside allowed roots | Return `blocked` with `next_recommended: resolve-blockers`. |
+| Common post-apply dependency, context, safe-evidence, or persistence gate fails | Follow `skills/_shared/sdd-post-apply-gates.md`; name the concrete missing/unsafe artifact or context. |
 | Catalog does not contain exactly 96 unique Item IDs | Return `blocked`; do not write a passing report. |
 | Any matrix row uses a `Complies` value outside `Yes`, `No`, `N/A` | Fix before persistence, or return `blocked`. |
 | Any `N/A` lacks Evidence Location or comment | Fix before persistence, or return `blocked`. |
@@ -55,7 +54,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 ## Execution Steps
 
 1. Load supplemental skills via shared SDD Section A.
-2. Read the selected change status and all required inputs from the active artifact store.
+2. Apply `skills/_shared/sdd-post-apply-gates.md` and read the selected change status plus all required inputs from the active artifact store.
 3. Read `references/control-catalog.md` and confirm 96 unique Item IDs mapped one-to-one to corporate checklist source items 1 through 96.
 4. Inspect applied changes, task evidence, specs, design including `design.md#secure-development-design` narrative rules, and test-design cases. Treat standalone `security-design.md` as optional legacy/archive context only.
 5. Fill `review-report.md` using `references/report-template.md` and one matrix row per catalog Item ID, including changed-file/security handoff evidence for `sdd-review-security`.
@@ -73,3 +72,4 @@ Return the Section D envelope. Put `## Review Report Summary` in `detailed_repor
 - [references/report-template.md](references/report-template.md) — required `review-report.md` contract/template.
 - `../_shared/security-guideline-catalog.md` — security guideline IDs, taxonomy, evidence model, and authority boundary.
 - `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `../_shared/sdd-post-apply-gates.md` — common post-apply gates, routing defaults, safe evidence, and matrix ownership boundaries.
