@@ -27,7 +27,7 @@
 
 - Inputs inspected: {proposal/specs/design with secure-development-design/test-design/tasks/apply-progress/changed files; optional legacy security-design/security-applicability only for old/archive compatibility context}.
 - Catalog coverage: 96 unique review controls from `skills/sdd-review/references/control-catalog.md`.
-- Security boundary: review cites security guideline/source IDs where applicable; `design.md#secure-development-design` and `review-security-report.md` remain authoritative for new changes. Legacy `security-design.md` or `security-applicability.md` may be cited only as optional old/archive compatibility evidence and must not replace embedded secure design or security review evidence.
+- Security boundary: review cites security guideline/source IDs where applicable; `design.md#secure-development-design`, `skills/sdd-review-security/references/security-guideline-catalog.md`, and `review-security-report.md` remain authoritative for new changes. Legacy `security-design.md` or `security-applicability.md` may be cited only as optional old/archive compatibility evidence and must not replace embedded secure design or security review evidence.
 - Runtime checks: {commands executed or explicit unavailable-runner statement from config}.
 
 ## Review Matrix

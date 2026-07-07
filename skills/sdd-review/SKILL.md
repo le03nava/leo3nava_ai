@@ -34,7 +34,7 @@ Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routi
 | Review catalog | Use the stable 96-control corporate checklist catalog in `references/control-catalog.md`; every `REV-CORP-001..REV-CORP-096` Item ID must appear exactly once in the matrix. |
 | Matrix contract | The matrix header must be exactly: `Item`, `Artifact/Deliverable`, `Requirement`, `Reviewer`, `Standard`, `Severity`, `Complies`, `Affected Requirement`, `Evidence Location`, `Observations/Comments`. Do not add a Category column. |
 | Complies values | `Complies` is limited to `Yes`, `No`, or `N/A`. Every `N/A` row must include Evidence Location proving irrelevance and Observations/Comments explaining scope. |
-| Security boundary | Review rows may cite security guideline IDs or source IDs in `Standard`, but `design.md#secure-development-design`, `review-security-report.md`, and `skills/_shared/security-guideline-catalog.md` remain authoritative for classification, mandatory controls, row evidence, and exceptions. |
+| Security boundary | Review rows may cite security guideline IDs or source IDs in `Standard`, but `design.md#secure-development-design`, `review-security-report.md`, and `skills/sdd-review-security/references/security-guideline-catalog.md` remain authoritative for classification, mandatory controls, row evidence, and exceptions. |
 | Security handoff | `review-report.md` must include changed-file context, implementation evidence summaries, finding context, and `design.md#secure-development-design` references sufficient for `sdd-review-security` to validate security handoff evidence without duplicating the 96-control matrix. |
 | Success routing | No blocking failures: `next_recommended: review-security`. Non-blocking findings must remain in the report as warnings. |
 | Failure routing | Critical, blocking, or explicitly blocking failed controls: `next_recommended: apply`; list failed controls and affected requirements. |
@@ -70,6 +70,6 @@ Return the Section D envelope. Put `## Review Report Summary` in `detailed_repor
 
 - [references/control-catalog.md](references/control-catalog.md) — stable 96-control review catalog and manual count evidence.
 - [references/report-template.md](references/report-template.md) — required `review-report.md` contract/template.
-- `../_shared/security-guideline-catalog.md` — security guideline IDs, taxonomy, evidence model, and authority boundary.
+- `../sdd-review-security/references/security-guideline-catalog.md` — security guideline IDs, taxonomy, evidence model, and authority boundary.
 - `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
 - `../_shared/sdd-post-apply-gates.md` — common post-apply gates, routing defaults, safe evidence, and matrix ownership boundaries.

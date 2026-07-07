@@ -85,7 +85,7 @@ For corporate source-row changes:
 - `sdd-review-security` expands, materializes, and validates every expected Source ID exactly once.
 - `sdd-verify` consumes the security-review source-row verdict, warning summary, catalog snapshot identity/path, expected Source ID count, compact mapping status, safe-evidence status, `N/A` justification status, exceptions, evidence references, blocker absence, and report links.
 - `sdd-verify` blocks unresolved source-row blockers but does not duplicate the full Source ID matrix.
-- Source-row routing follows `skills/_shared/sdd-security-contract.md#source-row-routing-and-persistence-semantics`.
+- Source-row routing follows `skills/_shared/sdd-security-contract.md#routing-semantics`.
 
 ## Safe Evidence and Unavailable Tooling
 

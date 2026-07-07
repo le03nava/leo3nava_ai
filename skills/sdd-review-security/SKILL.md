@@ -28,10 +28,11 @@ Common post-apply gates, review-evidence consumption rules, safe-evidence rules,
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Structured status plus mandatory narrative `design.md#secure-development-design`, non-blocking `review-report.md`, tasks/apply progress or completed task evidence, changed-file context, `test-design.md`, `skills/_shared/security-guideline-catalog.md`, and `skills/_shared/sdd-security-contract.md`. |
+| Required inputs | Structured status plus mandatory narrative `design.md#secure-development-design`, non-blocking `review-report.md`, tasks/apply progress or completed task evidence, changed-file context, `test-design.md`, `references/security-guideline-catalog.md`, and `skills/_shared/sdd-security-contract.md`. |
 | Produced artifact | `sdd/{change-name}/review-security` or `openspec/changes/{change-name}/review-security-report.md`. |
 | Mutates | None outside the produced security review report artifact. |
-| Matrix contract | Expand every compact security guideline ID from `skills/_shared/security-guideline-catalog.md` and materialize each compact row exactly once in `review-security-report.md`, with `Complies` / answer values `Yes`, `No`, or `N/A`, evidence location, observations, and lifecycle status from the catalog vocabulary. Narrative design may omit non-applicable rows; review-security validates those omissions instead of requiring design to list them. Missing, duplicate, or unknown compact rows in the produced report are blocking. Missing applicable evidence, missed applicable design controls, or incomplete exceptions are `No` / `blocked`; `N/A` rows require evidence and justification in the report. |
+| Security catalog | Use the phase-local authoritative catalog in `references/security-guideline-catalog.md`; every compact `SEC-*` guideline must be expanded exactly once, and corporate source-row validation must expand the catalog's 155 expected Source IDs exactly once. |
+| Matrix contract | Materialize compact rows and source rows in `review-security-report.md` using `references/report-template.md`, with `Complies` / answer values `Yes`, `No`, or `N/A`, evidence location, observations, lifecycle status, owner phase, and route from the catalog/security-contract vocabulary. Narrative design may omit non-applicable rows; review-security validates those omissions instead of requiring design to list them. Missing, duplicate, or unknown compact/source rows in the produced report are blocking. Missing applicable evidence, missed applicable design controls, or incomplete exceptions are `No` / `blocked`; `N/A` rows require evidence and justification in the report. |
 | Source-row contract | When corporate source-row validation applies, expand the authoritative catalog inventory and materialize all 155 expected Source IDs exactly once in `review-security-report.md`. Validate each row against narrative `design.md#secure-development-design`, omitted-category analysis, `test-design.md`, completed tasks/apply evidence, changed-file context, and `review-report.md`. Rows MUST cite corporate section, PCI alignment, compact `SEC-*` mappings, applicability/compliance status, lifecycle status, evidence type, evidence location, finding, owner phase, and route. Detailed observations and `N/A` justification belong in focused follow-up sections so the 155-row matrix stays reviewable. A row MUST NOT pass merely because it is listed or because design omitted it. |
 | Boundary | Follow `skills/_shared/sdd-post-apply-gates.md` and `skills/_shared/sdd-security-contract.md`: do not replace `sdd-review`, do not duplicate the 96-control matrix, and keep exhaustive compact/source matrices owned only by `review-security-report.md`. |
 | Active validation | New-change security review parses narrative design rules and validates report rows against artifact evidence directly; it does not require design YAML/schema/matrices, `scripts/validate_security_design.ps1`, or separate standalone security artifacts. |
@@ -89,93 +90,9 @@ Use the source-row layer as operational security evidence below the compact `SEC
 6. Expand the complete compact guideline catalog, compare it with narrative design and changed-file evidence, and materialize every compact guideline exactly once in `review-security-report.md`; report omitted rows as `N/A`, `No`, or missed-applicable blockers based on corroborated evidence.
 7. When source-row validation applies, build the expected expanded Source ID universe from the catalog operational inventory, confirm the expected count is 155, then materialize and validate that exact universe in `review-security-report.md` with known compact mappings and allowed schema values.
 8. Compare compact and source rows against changed files, tasks/apply evidence, test-design coverage, and general review handoff evidence. Mark applicable mandatory rows with missing implementation evidence or incomplete exceptions as `No` and lifecycle `blocked`; mark missed applicable omitted controls as blockers; mark source rows with missing corroboration as `blocker`; justify every `N/A` row with evidence proving irrelevance.
-9. Produce `review-security-report.md` with report metadata, verdict, compact row validation matrix, the only exhaustive source-row validation matrix when applicable, implementation evidence, focused findings sections, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and artifact metadata `nextRecommended: verify|apply|resolve-blockers`.
+9. Produce `review-security-report.md` using `references/report-template.md`, with report metadata, verdict, compact row validation matrix, the only exhaustive source-row validation matrix when applicable, implementation evidence, focused findings sections, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and artifact metadata `nextRecommended: verify|apply|resolve-blockers`.
 10. Validate report shape, compact exact-once coverage, source-row exact-once coverage, PCI alignment preservation, guideline refs, evidence types, owner phases, applies/complies/lifecycle consistency, omission decisions, safe evidence, vocabulary, complete N/A rationale, complete exception fields, and routing consistency. Do not invoke or require `scripts/validate_security_design.ps1` for this validation.
 11. Persist and read back the report before returning.
-
-## Report Format
-
-````markdown
-# Review Security Report: {Change Title}
-
-```yaml
-schemaName: gentle-ai.sdd-review-security-report
-schemaVersion: 1
-changeName: {change-name}
-verdict: PASS | PASS WITH WARNINGS | FAIL
-sourceSecureDesign: {path-or-topic}#secure-development-design
-sourceReviewReport: {path-or-topic}
-sourceRowExpectedCount: 155
-sourceRowMatrixOwner: review-security-report.md
-nextRecommended: verify | apply | resolve-blockers
-```
-
-## Summary
-
-{Verdict, narrative secure-design rules parsed, blockers/non-blockers, and evidence constraints.}
-
-## Security Row Validation
-
-This section is report-only exhaustive compact materialization. It validates all catalog compact controls exactly once; design/test-design remain narrative inputs and MUST NOT be expanded to match this table.
-
-| Guideline ID | Category | Design Applies | Lifecycle Status | Complies | Evidence Location | Observations | Finding |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `SEC-...` | `category` | Yes/No/N/A | `implemented`/... | Yes/No/N/A | `path#section` | Safe summary | None/blocking/warning |
-
-## Corporate Source Row Validation
-
-Expected Source ID count: `155`. This section is the only active new-change artifact that materializes the exhaustive Source ID matrix; every expected Source ID from the catalog MUST appear exactly once.
-
-| Source ID | Corporate Section | PCI Alignment | Guideline Ref | Compact Mapping | Applies | Complies | Lifecycle Status | Evidence Type | Evidence Location | Finding | Owner Phase | Route |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `1.1` | `1. Authentication` | `PCI Req 6.5.8, 6.5.10` | `skills/_shared/security-guideline-catalog.md#full-corporate-guideline-snapshot (Source ID 1.1)` | `SEC-AUTH-001` | Yes/No/N/A | Yes/No/N/A | `implemented`/... | `implementation-reference`/... | `path#section` | none/blocker/warning | apply/review-security/verify | verify/apply/resolve-blockers |
-
-The source-row matrix is security-specific and bounded to the corporate Source ID inventory. It MUST NOT copy the general 96-control `sdd-review` matrix, and other phase artifacts MUST NOT copy this exhaustive 155-row matrix.
-
-## Source Row Findings
-
-Group actionable source-row findings instead of burying them inside the 155-row matrix.
-
-### Blockers
-
-{Rows with `Finding = blocker`, grouped by route and owner phase. Include safe evidence and required action. Use "None" when empty.}
-
-### Warnings
-
-{Rows with `Finding = warning`, grouped by risk and carry-forward owner. Use "None" when empty.}
-
-### N/A Justifications
-
-{Every row with `Applies = N/A` or `Complies = N/A` must appear here with Source ID, evidence location, and `naJustification` proving irrelevance by category, platform, API, data class, or workflow. Use "None" only when there are no `N/A` rows.}
-
-### Missing Evidence Rows
-
-{Applicable rows missing required implementation, test, review, exception, or verification evidence. Include owner phase and route. Use "None" when empty.}
-
-### Unsafe Evidence Rejections
-
-{Rows where evidence was rejected because it exposed or attempted to expose secrets, credentials, PAN, PII, tokens, connection strings, private keys, or confidential values. Use "None" when empty.}
-
-### Warning Carry-Forward
-
-{Non-blocking source-row warnings that must remain visible to `sdd-verify` and archive, with report links and owner phase. Use "None" when empty.}
-
-## General Review Handoff
-
-{Cite `review-report.md` verdict and relevant row/evidence summaries only. Do not duplicate the 96-control matrix.}
-
-## Exceptions
-
-{Complete approved exceptions or "None".}
-
-## Blockers and Non-Blocking Findings
-
-{Grouped findings with guideline IDs, owner, route, and safe evidence.}
-
-## Unavailable Tooling
-
-{Runtime test/lint/type/format/coverage unavailable evidence when applicable; missing tools are not passing evidence.}
-````
 
 ## Output Contract
 
@@ -211,6 +128,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 - `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
 - `../_shared/persistence-contract.md` — artifact keys, backend behavior, hybrid conflict policy, and read-back verification.
-- `../_shared/security-guideline-catalog.md` — compact SEC guideline IDs, taxonomy, vocabulary, and safe-evidence rules.
+- `references/security-guideline-catalog.md` — authoritative compact SEC guideline IDs, taxonomy, corporate Source ID inventory, compact mappings, PCI alignment, and catalog snapshot.
+- `references/report-template.md` — required `review-security-report.md` contract/template.
 - `../_shared/sdd-security-contract.md` — narrative secure-design and review-security report schema contracts.
 - `../_shared/sdd-post-apply-gates.md` — common post-apply gates, review evidence consumption, routing defaults, safe evidence, and matrix ownership boundaries.
