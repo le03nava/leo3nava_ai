@@ -463,7 +463,7 @@ The gatekeeper runs in addition to the Review Workload Guard and the Mandatory D
 
 Run this Phase Gate after EVERY delegated phase in Automatic mode, before state persistence and before launching the next phase:
 
-- [ ] **Status**: phase returned `status: success` (not `partial`, `failed`, or `blocked`)?
+- [ ] **Status**: phase returned `status: success` (not `partial` or `blocked`)?
 - [ ] **Report present**: phase returned `detailed_report`, or the phase output is intentionally small enough to omit it?
 - [ ] **Artifact readable**: declared artifact exists and is retrievable — engram: `mem_get_observation(id)` returns content; openspec: file path resolves and is non-empty.
 - [ ] **No hallucination**: spot-check 1–2 claimed file paths or symbol names — do they actually exist in the repo or backend?
@@ -484,39 +484,17 @@ In automatic mode, do not guess missing material product facts. If `sdd-propose`
 
 ### Artifact Store Mode
 
-This is collected by `SDD Session Preflight`. If missing on a mutating route, enforce the hard gate before any phase work. Ask which artifact store they want for this change:
+This is collected by `SDD Session Preflight`. If missing on a mutating route, enforce the hard gate before any phase work.
 
-- **`engram`**: Fast local recovery and compaction survival. Artifacts live in Engram only; no project files are created. Not team-shareable, and topic-key upserts overwrite previous versions instead of preserving full iteration history.
-- **`openspec`**: File-based source of truth. Creates/updates `openspec/` files that can be reviewed, committed, shared, and audited through git history.
-- **`hybrid`**: Writes both Engram and OpenSpec. Use when the change needs both cross-session recovery and team-shareable files. Higher token cost; BOTH backend writes must succeed for a phase to report `status: success`.
-- **`none`**: Ephemeral inline mode. No Engram writes, OpenSpec files, SDD artifacts, or local support files. Planning artifacts are available only in the current conversation context and cannot be recovered after compaction or session loss. Implementation code edits are allowed only during explicit `sdd-apply` work when `actionContext` and `allowedEditRoots` prove they are safe.
+Operational summary:
 
-If the user doesn't specify, detect: if engram is available -> default to `engram`. Otherwise -> `none`.
+- Supported modes are `engram`, `openspec`, `hybrid`, and `none`; map user-facing labels through `skills/_shared/persistence-contract.md#mode-resolution`.
+- Cache the selected mode for the session and pass it as `artifact_store.mode` to every SDD sub-agent launch.
+- Never create `openspec/` files unless the cached mode is `openspec` or `hybrid`.
+- In `none`, do not write Engram observations, OpenSpec files, SDD artifacts, or local support files; implementation code edits are allowed only during authorized `sdd-apply` work with safe edit roots.
+- Treat mode changes as persistence migrations. If existing artifacts or hybrid backends conflict, follow the Hybrid Conflict Policy in `skills/_shared/persistence-contract.md` and STOP for reconciliation when required.
 
-Mode boundaries:
-
-- `engram` MUST NOT create or modify `openspec/` files.
-- `openspec` MUST write only the paths defined by `skills/_shared/openspec-convention.md`.
-- `hybrid` MUST persist every artifact to both Engram and OpenSpec, following both shared conventions.
-- `none` MUST NOT write Engram observations, OpenSpec files, SDD artifacts, or local support files. It may edit implementation code only through `sdd-apply` when the launch context explicitly authorizes safe edit roots.
-- Never force `openspec/` creation unless the cached mode is `openspec` or `hybrid`.
-
-Hybrid conflict handling:
-
-- Use the Hybrid Conflict Policy in `skills/_shared/persistence-contract.md` whenever both backends contain the same artifact.
-- If Engram and OpenSpec differ materially, do NOT choose one silently, do NOT overwrite either side, and do NOT launch dependent work.
-- Stop automatic flow, report both artifact references plus a concise difference summary when available, and ask which backend is authoritative or which reconciliation action to take.
-- If one backend is merely missing, read the existing backend, repair the missing backend during the next successful phase write, and continue only after the repair succeeds.
-
-Mode changes mid-session:
-
-- Treat a requested `artifact_store.mode` change as a persistence migration decision, not a simple preference flip.
-- Before changing modes, resolve the active change, list existing artifact refs in the current backend, and check whether the target backend already contains conflicting artifacts.
-- If artifacts exist and the target backend is empty, migrate/repair according to `skills/_shared/persistence-contract.md` before launching the next phase.
-- If both backends contain material differences, STOP and ask for reconciliation before continuing.
-- Do not silently downgrade from a persistent mode (`engram`, `openspec`, `hybrid`) to `none` while an active change has artifacts.
-
-Cache the artifact store choice for the session. Pass it as `artifact_store.mode` to every sub-agent launch, and require every SDD sub-agent to persist or return artifacts according to that mode before responding.
+Detailed mode behavior, backend boundaries, defaulting, hybrid conflict handling, and migration/repair rules live in `skills/_shared/persistence-contract.md`.
 
 ### Delivery Strategy
 
@@ -665,16 +643,11 @@ Remediation loops:
 
 Token, phase, and artifact naming:
 
-| Concept | Name |
-| --- | --- |
-| Native status token | `spec` |
-| Phase/agent | `sdd-spec` |
-| Engram artifact key | `sdd/{change-name}/spec` |
-| OpenSpec collection path | `openspec/changes/{change-name}/specs/{domain}/spec.md` |
-
-Naming convention: `sdd-spec` is the phase/agent name, `spec` is the Engram artifact key (`sdd/{change-name}/spec`), and `specs` is the OpenSpec/status collection name because one change may produce multiple domain spec files. `security-design` may appear only for legacy/archive compatibility; do not launch or emit it as a new-change successor. `sdd-review-security` is an active phase/agent name; `review-security` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/review-security`); `securityDesign` and `securityReviewReport` are camelCase persisted state/status fields, with `securityDesign` legacy/read-only for new changes. `sdd-security-applicability` is a retired phase name that may appear only in old or archived data; do not launch it, map it to an agent/skill, or emit it as a new-change successor. `securityApplicability` may appear only as a compatibility field. For the mandatory test-design phase, `sdd-test-design` is the phase/agent name, `test-design` is the native/status token and Engram artifact key suffix (`sdd/{change-name}/test-design`), and `testDesign` is the camelCase persisted state/status field. Do not invent `sdd-specs`, `sdd-proposal`, `sdd-review-security-report` artifact keys, or `sdd-test-design` artifact keys.
-
-Use `sdd/{change-name}/spec` for Engram mode, `openspec/changes/{change-name}/specs/{domain}/spec.md` for OpenSpec mode, and both references for hybrid mode. Use `sdd/{change-name}/design` / `openspec/changes/{change-name}/design.md#secure-development-design` for embedded security obligations, `sdd/{change-name}/test-design` / `openspec/changes/{change-name}/test-design.md`, and `sdd/{change-name}/review-security` / `openspec/changes/{change-name}/review-security-report.md` for downstream artifact refs. Use legacy `security-design` and `security-applicability` refs only when reading old or archived changes.
+- Phase/agent names use the `sdd-<phase>` form; native/status tokens and Engram artifact suffixes use the unprefixed form, such as `spec`, `test-design`, and `review-security`.
+- OpenSpec may use collection names where needed, such as `specs/{domain}/spec.md`; Engram uses singular topic keys such as `sdd/{change-name}/spec`.
+- `security-design` and `security-applicability` are legacy/read-only compatibility refs only; do not launch, emit, or normalize them as active new-change successors.
+- Do not invent prefixed artifact keys such as `sdd-proposal`, `sdd-specs`, `sdd-test-design`, or `sdd-review-security-report`.
+- Detailed artifact refs and field naming live in `skills/_shared/sdd-phase-common.md#e-artifact-naming-convention`, `skills/_shared/persistence-contract.md#artifact-reference-resolver`, and `skills/_shared/sdd-status-contract.md#field-naming-across-contracts`.
 
 ### Result Contract
 
@@ -689,58 +662,24 @@ Orchestrator validation checklist:
 - Reject missing envelopes and final outputs that are only tool results rather than text containing the envelope.
 - Check phase-specific minimum details by reference to `skills/_shared/sdd-phase-common.md#d-return-envelope`.
 
-Contract field naming:
-
-| Contract | Field style | Routing field | Phase field | Completed phases field |
-| --- | --- | --- | --- | --- |
-| Phase result envelope | snake_case | `next_recommended` | N/A | N/A |
-| Native/status JSON | camelCase | `nextRecommended` | dependency states | N/A |
-| Persisted SDD state | camelCase | `nextRecommended` | `currentPhase` | `completedPhases` |
-
-Normalization rules:
-
-- Phase agents may continue returning `next_recommended` because `skills/_shared/sdd-phase-common.md` defines the phase envelope.
-- Before routing or persisting state, normalize phase envelope `next_recommended` into state/status `nextRecommended`.
-- Persisted state MUST use camelCase fields from `gentle-ai.sdd-state`; do not write `next_recommended`, `current_phase`, or `completed_phases` into state artifacts.
-- When reading legacy or malformed state with snake_case fields, treat it as stale/compatibility input: normalize it in memory, write back the camelCase state only after read-back validation passes, and never preserve both naming styles in the same state artifact.
+Field naming and normalization across phase envelopes, native/status JSON, and persisted state are defined in `skills/_shared/sdd-status-contract.md#field-naming-across-contracts`. Use that contract before routing or writing state; never persist snake_case routing fields into SDD state.
 
 ### State Transition Persistence (HARD GATE)
 
-After every successful delegated phase transition and Phase Gate pass, the orchestrator MUST update DAG state before launching the next phase or reporting completion. Follow `skills/_shared/persistence-contract.md` for backend-specific writes, minimum state fields, and failure handling. This is not optional: state is what makes `/sdd-continue`, compaction recovery, and cross-session recovery deterministic.
+After every delegated phase transition, the orchestrator MUST update DAG state before launching the next phase or reporting completion. This is the recovery pointer for `/sdd-continue`, compaction recovery, and cross-session recovery.
 
-Ordering: validate phase result with the Phase Gate -> persist/update DAG state -> read state back -> continue, ask, or report completion. If state persistence or read-back fails in `engram`, `openspec`, or `hybrid`, STOP before dependent work. Do not retry the completed phase automatically for persistence failures; repair or reconcile state first.
-
-State is an index and recovery pointer, not a replacement for artifacts. It must point to artifact refs/paths and summarize routing state; do not duplicate full proposal/spec/design/test-design/tasks bodies into state.
-
-Persist state after:
+Run this gate after:
 
 - Every phase `success` before launching the next phase
 - Every `partial` result that produced useful artifacts, recovery steps, or changed task/apply/archive progress
 - Every `blocked` result that creates or changes `blockedReasons`, required decisions, selected change, chain plan, or recovery instructions
 - Every delivery decision that changes `deliveryStrategy`, `chainStrategy`, `chainPlanRef`, `sizeException`, or `reviewBudgetLines`
 
-Minimum state schema: the authoritative `gentle-ai.sdd-state` minimum schema is defined in `skills/_shared/persistence-contract.md`. The orchestrator MUST write that schema, read it back, normalize legacy state only as described there, and MUST NOT duplicate full artifact bodies into state. Treat legacy `securityApplicability` and `securityDesign` fields exactly as the shared contract defines them: read-only compatibility refs, not active new-change phases or security authority.
+Ordering is strict: validate phase result -> persist/update DAG state -> read state back -> continue, ask, or report completion.
 
-Mode-specific writes:
+If state persistence or read-back fails in `engram`, `openspec`, or `hybrid`, STOP before dependent work. Do not retry the completed phase automatically for persistence failures; repair or reconcile state first.
 
-- `engram`: save/upsert state with `topic_key: "sdd/{change-name}/state"`; for automated state artifacts set `capture_prompt: false` when the tool schema supports it.
-- `openspec`: write `openspec/changes/{change-name}/state.yaml` using the shared `gentle-ai.sdd-state` schema.
-- `hybrid`: write BOTH Engram and OpenSpec state. Both writes must succeed and agree on `changeName`, `currentPhase`, `completedPhases`, `nextRecommended`, `blockedReasons`, `artifactRefs`, and `stateRevision`.
-- `none`: durable state is impossible. Do not write SDD/OpenSpec files, Engram observations, or local support files; warn that `/sdd-continue` and post-compaction recovery cannot be deterministic.
-
-Read-back verification:
-
-- After writing state in any persistent mode, read it back from the selected backend before continuing.
-- Verify `changeName`, `artifactStore`, `currentPhase`, `completedPhases`, `nextRecommended`, `artifactRefs`, `blockedReasons`, `stateRevision`, and `updatedAt` match the intended transition.
-- In `hybrid`, read both backends. If one write is missing, stale, or materially different, mark state persistence as failed and STOP before dependent work.
-- If read-back fails, do not trust the write result. Report the backend, expected state, observed state if any, and safest recovery action.
-
-Failure handling:
-
-- If state persistence fails after a phase `success`, treat the orchestration result as blocked before dependent work. Do not launch the next phase.
-- If one side of `hybrid` succeeds and the other fails, report partial persistence and require repair/reconciliation before continuing.
-- If existing state has a newer `stateRevision` or `updatedAt` than the state about to be written, STOP and reconcile; do not overwrite newer state.
-- If Engram state and OpenSpec state materially disagree in `hybrid`, apply the Hybrid Conflict Policy from `skills/_shared/persistence-contract.md` and ask for reconciliation before launching dependent work.
+State is an index and recovery pointer, not a replacement for artifacts. Do not duplicate full proposal/spec/design/test-design/tasks bodies into state. Backend writes, schema fields, read-back verification, legacy normalization, and failure handling are defined in `skills/_shared/persistence-contract.md#state-persistence-orchestrator`.
 
 ### Review Workload Guard (MANDATORY)
 

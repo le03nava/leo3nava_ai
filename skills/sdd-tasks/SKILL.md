@@ -26,7 +26,7 @@ You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the pr
 From the orchestrator:
 - Change name
 - Artifact store mode (`engram | openspec | hybrid | none`)
-- Delivery strategy (`ask-on-risk | auto-chain | single-pr | exception-ok`)
+- Delivery strategy (`ask-on-risk | auto-chain | single-pr | exception-ok | null`; `null` means delivery planning is still deferred)
 - Review budget lines when already resolved (`review_budget_lines`; default `400` when omitted because delivery planning is deferred)
 - Chain strategy when already resolved (`stacked-to-main | feature-branch-chain | pending`)
 - Size exception state when already resolved (`approved | pending | none`)
@@ -42,7 +42,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Mutates | None outside the produced tasks artifact. |
 | Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
 | Security consumption | Applicable narrative security rules, review-security expectations, and evidence expectations from `design.md#secure-development-design` and `test-design.md` must be represented as tasks or complete approved exceptions. Exhaustive `N/A` rationale and lifecycle row status belong to `review-security-report.md`. |
-| Review workload behavior | Preserve the Review Workload Forecast guard lines, resolved delivery strategy, chain strategy, size-exception field, and reviewable work-unit split. |
+| Review workload behavior | Preserve the Review Workload Forecast guard lines, delivery strategy (`null` when deferred), chain strategy, size-exception field, and reviewable work-unit split. |
 | Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
 | Block routing | `next_recommended: resolve-blockers` for missing required inputs, missing embedded secure development design, test-design gaps, testing capability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
 
@@ -132,7 +132,7 @@ openspec/changes/{change-name}/
 | Review budget risk | Low / Medium / High |
 | Chained PRs recommended | Yes / No |
 | Suggested split | <single PR or PR 1 → PR 2 → PR 3> |
-| Delivery strategy | <ask-on-risk / auto-chain / single-pr / exception-ok> |
+| Delivery strategy | <ask-on-risk / auto-chain / single-pr / exception-ok / null> |
 | Chain strategy | <stacked-to-main / feature-branch-chain / pending> |
 | Size exception | <approved / pending / none> |
 
@@ -203,6 +203,7 @@ If the estimate is **High** or likely above the session review budget:
    - **Feature Branch Chain** — the feature/tracker branch accumulates the final integration; PR #1 targets the tracker branch, later PRs target the immediate previous PR branch so each child diff stays focused. Only the tracker merges to main. Best for rollback control and coordinated releases.
    Size exceptions are not chain strategies. If the delivery path is an approved large single PR, keep `Chain strategy: pending`, set `Size exception: approved`, and record the maintainer approval evidence in the orchestration state.
 5. Use the received delivery strategy and any orchestrator-provided chain strategy to set `Decision needed before apply`:
+   - `null`: `No` for low/medium risk under budget; `Yes` for high risk, over-budget work, or missing chain/exception decisions — orchestrator resolves delivery after this forecast.
    - `ask-on-risk`: `Yes` — orchestrator asks before apply.
    - `auto-chain`: `No` — orchestrator proceeds with the first slice using the chosen chain strategy.
    - `single-pr`: `Yes` — orchestrator must require `size:exception` before apply.
@@ -304,7 +305,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 - Review budget risk: {Low | Medium | High}
 - 400-line budget risk: {Low | Medium | High}
 - Chained PRs recommended: {Yes | No}
-- Delivery strategy: {ask-on-risk | auto-chain | single-pr | exception-ok}
+- Delivery strategy: {ask-on-risk | auto-chain | single-pr | exception-ok | null}
 - Chain strategy: {stacked-to-main | feature-branch-chain | pending}
 - Size exception: {approved | pending | none}
 - Decision needed before apply: {Yes | No}
@@ -328,5 +329,5 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 - Apply any `rules.tasks` from `openspec/config.yaml`
 - If Strict TDD is active, integrate test-first tasks: RED task (write failing test) → GREEN task (make it pass) → REFACTOR task (clean up)
 - **Size budget**: Tasks artifact MUST be under 530 words. Each task: 1-2 lines max. Use checklist format, not paragraphs.
-- **Review workload guard**: ALWAYS include the Review Workload Forecast. If likely above the session review budget, recommend chained PRs and honor the received delivery strategy for whether a decision/exception is needed before apply.
+- **Review workload guard**: ALWAYS include the Review Workload Forecast. If likely above the session review budget, recommend chained PRs and honor the received delivery strategy for whether a decision/exception is needed before apply. If delivery strategy is `null`, surface apply-time decisions through the forecast; do not invent a strategy.
 - Return the Section D envelope per `skills/_shared/sdd-phase-common.md`; the tasks summary belongs in `detailed_report`.
