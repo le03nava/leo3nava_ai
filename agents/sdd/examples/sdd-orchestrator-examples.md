@@ -7,43 +7,46 @@ Long-form examples live here so `prompts/sdd/sdd-orchestrator.md` stays focused 
 **Trigger:** User says "use SDD to add dark mode".
 
 ```text
-Orchestrator: [ask-questions tool - 4 base groups in one call]
+Orchestrator: Entry Routing classifies this as a new mutating SDD change.
+Orchestrator: [ask-questions tool - 2 base groups in one call]
   Pace:      Interactive <- user picks this
   Artifacts: OpenSpec    <- user picks this
-  PRs:       Ask me      <- user picks this
-  Review:    400 lines   <- user picks this
 
 Orchestrator caches session state:
   {
     "execution_mode":    "interactive",
     "artifact_store":    "openspec",
-    "delivery_strategy": "ask-on-risk",
-    "review_budget_lines": 400
+    "delivery_strategy": null,
+    "review_budget_lines": null,
+    "chain_strategy":    null
   }
 
--> Entry Routing classifies this as a new mutating SDD change, then runs backend-aware Init Guard:
+-> Runs backend-aware Init Guard:
   artifact_store.mode = openspec
   checks openspec/config.yaml
   -> Not found -> delegates sdd-init sub-agent with artifact_store.mode = openspec
-  -> sdd-init writes openspec/config.yaml. Delegates sdd-explore, then sdd-propose.
+  -> sdd-init writes openspec/config.yaml. Delegates sdd-explore.
+-> Interactive proposal question round before sdd-propose:
+  "Before I write the proposal, what business outcome should dark mode optimize for?
+   Any brand/accessibility constraints, target user situations, or first-slice boundaries?"
+  User answers, corrects assumptions, or explicitly skips/approves.
+-> Delegates sdd-propose with exploration ref + proposal-shaping answers/skip decision.
 -> Shows proposal summary to user, asks: "Continuar con spec y design?"
 ```
 
-If the user had picked `PRs: Chained`, preflight would also collect the conditional chain strategy in the same grouped question when possible:
+If the user asks `/sdd-status` instead, Entry Routing treats it as read-only and bypasses preflight:
 
 ```text
-  PRs:            Chained              <- maps to delivery_strategy: auto-chain
-  Chain Strategy: Feature branch chain <- maps to chain_strategy: feature-branch-chain
+Orchestrator: produces status only; does not ask Pace/Artifacts, run sdd-init, or mutate artifacts.
 ```
 
-If the user picks `PRs: Ask me`, chain strategy is intentionally deferred until `sdd-tasks` forecasts chaining and the user chooses to split.
-
-When `PRs: Chained` is selected, the cached session state includes both delivery and chain strategy:
+Delivery decisions are intentionally deferred until `sdd-tasks` produces the Review Workload Forecast or the user explicitly asks to decide delivery earlier:
 
 ```json
 {
-  "delivery_strategy": "auto-chain",
-  "chain_strategy": "feature-branch-chain"
+  "delivery_strategy": "ask-on-risk | auto-chain | single-pr | exception-ok | null",
+  "review_budget_lines": "number | null",
+  "chain_strategy": "stacked-to-main | feature-branch-chain | null"
 }
 ```
 
@@ -89,13 +92,14 @@ Gatekeeper checklist (retry):
   [x] No hallucination?          PASS
   [x] No drift?                  PASS
   [x] Routing coherence?         PASS
-  [x] State persisted?           PASS - normalized `next_recommended` -> state `nextRecommended`
 
-State update written before launching design:
+State Persistence Gate:
+  Write state update before launching design:
   schemaName: gentle-ai.sdd-state
   currentPhase: spec
   completedPhases: [spec]
   nextRecommended: design
+  Read-back: PASS - persisted state matches intended transition
 
--> Gate PASS. Orchestrator continues to sdd-design automatically.
+-> Phase Gate PASS + State Persistence Gate PASS. Orchestrator continues to sdd-design automatically.
 ```

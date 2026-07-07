@@ -8,7 +8,9 @@ Phase skills MAY define phase-local artifact obligations such as required inputs
 
 The orchestrator passes `artifact_store.mode` with one of: `engram | openspec | hybrid | none`.
 
-The orchestrator ASKs the user which mode they want when `/sdd-new`, `/sdd-ff`, or `/sdd-continue` is invoked for the first time in a session. The choice is cached for the session.
+The orchestrator asks/caches artifact mode during minimal preflight before the first mutating SDD route in a session. Status/read-only routes may bypass preflight and must not mutate artifacts just to resolve mode.
+
+User-facing artifact options are OpenSpec, Engram, Both, and None/Ephemeral. Map them internally to `openspec`, `engram`, `hybrid`, and `none` respectively.
 
 Default (if user doesn't specify): if Engram is available → `engram`. Otherwise → `none`.
 

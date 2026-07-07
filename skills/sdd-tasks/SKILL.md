@@ -27,7 +27,7 @@ From the orchestrator:
 - Change name
 - Artifact store mode (`engram | openspec | hybrid | none`)
 - Delivery strategy (`ask-on-risk | auto-chain | single-pr | exception-ok`)
-- Review budget lines from SDD Session Preflight (`review_budget_lines`; default `400` when omitted)
+- Review budget lines when already resolved (`review_budget_lines`; default `400` when omitted because delivery planning is deferred)
 - Chain strategy when already resolved (`stacked-to-main | feature-branch-chain | pending`)
 - Size exception state when already resolved (`approved | pending | none`)
 
@@ -189,7 +189,7 @@ Each task MUST be:
 
 ### Review Workload Forecast Rules
 
-Before finalizing tasks, estimate whether implementation is likely to exceed the session `review_budget_lines` from SDD Session Preflight (`additions + deletions`). This is a planning guard, not an exact diff count. If the orchestrator did not pass a budget, use `400`.
+Before finalizing tasks, estimate whether implementation is likely to exceed the resolved session `review_budget_lines` (`additions + deletions`). This is a planning guard, not an exact diff count. If the orchestrator did not pass a budget because delivery planning is still deferred, use `400`.
 
 Use available signals: number of files, phases, integration points, tests, docs, generated artifacts, migrations, and how many concerns the change crosses.
 
