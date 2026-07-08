@@ -33,7 +33,7 @@ From the orchestrator:
 
 ## Phase Artifact Contract
 
-Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
+Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`. Common archive readiness, review/security-review consumption, task-completion gates, safe-evidence rules, and routing defaults are defined in `skills/_shared/sdd-post-apply-gates.md`.
 
 | Concern | Contract |
 | --- | --- |
@@ -53,86 +53,35 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the full archive summary in `detailed_report`.
 
-## Routing Contract
+## Routing and Readiness Contract
 
+- Apply `skills/_shared/sdd-post-apply-gates.md#archive-readiness` before syncing specs, moving folders, or claiming SDD cycle completion.
 - Successful archive -> return `next_recommended: none`.
-- Missing `review-report` or unreadable/ambiguous review evidence -> return `next_recommended: review`.
-- Missing `review-security-report` or unreadable/ambiguous security review evidence -> return `next_recommended: review-security`.
-- Blocking `review-report` findings -> return `next_recommended: apply`.
-- Missing or non-passing `verify-report` -> return `next_recommended: verify`.
-- Persisted tasks contain unchecked implementation tasks without approved stale-checkbox reconciliation -> return `next_recommended: apply`.
-- Missing proposal/spec/design/test-design without explicit partial-archive approval -> return `next_recommended: resolve-blockers`.
-- Missing mandatory embedded secure design or mandatory security evidence without complete approved exceptions -> return `next_recommended: resolve-blockers`.
-- Destructive merge confirmation, unsafe action context, archive destination conflict, or archive operation outside `allowedEditRoots` -> return `next_recommended: resolve-blockers`.
+- Archive readiness failures route according to the shared Archive Readiness table.
+- Archive-specific filesystem/spec-sync blockers route to `resolve-blockers`, except implementation task incompleteness routes to `apply` as defined by the shared readiness contract.
 - Status `partial` after filesystem operations -> return `next_recommended: resolve-blockers` and include exact recovery steps in `detailed_report`.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
 
-### Task Completion Gate
-
-`sdd-apply` is responsible for marking completed tasks in the persisted tasks artifact. `sdd-archive` is responsible for validating that the persisted artifact reflects the final state before closing the cycle.
-
-Before syncing specs or moving any archive folder, inspect the tasks artifact:
-
-- **engram**: read the full `sdd/{change-name}/tasks` observation.
-- **openspec/hybrid**: read `openspec/changes/{change-name}/tasks.md`.
-
-If any implementation task remains unchecked (`- [ ]`):
-
-1. STOP and return `blocked` with `next_recommended: apply`; do not sync specs, move the change folder, or claim the SDD cycle is complete.
-2. Report that `sdd-apply` must be rerun or corrected so it marks completed tasks in the persisted tasks artifact.
-3. Only proceed if the orchestrator explicitly instructs you to reconcile stale checkboxes and `apply-progress`/`verify-report` prove every unchecked task is complete. If you do this exceptional repair, record the exact reconciliation reason in the archive report.
-
-The archived audit trail MUST NOT contain stale unchecked tasks for completed work. Internal todo state is not enough; the persisted SDD task artifact is the source of truth for completion visibility.
-
-### Strict-vs-OpenSpec Archive Policy
-
-OpenSpec permits archiving with incomplete artifacts or tasks after a user confirmation. gentle-ai is stricter by default:
-
-- Incomplete implementation tasks block archive unless they are stale checkboxes and apply-progress/verify-report prove completion.
-- Blocking findings in `review-report` / `review-security-report` and CRITICAL issues in `verify-report` always block archive. Do not accept an override for blocking review findings or CRITICAL verification issues.
-- Missing mandatory security evidence blocks archive unless every gap has a complete approved exception with approver, guideline ID, accepted-risk rationale, and mitigation or follow-up.
-- `sdd-archive` does not own normal task completion. `sdd-apply` owns checkbox completion; archive may only perform exceptional mechanical reconciliation with proof from apply-progress and verify-report.
-- Missing proposal/spec/design/test-design artifacts should be reported. Archive may continue only when the user explicitly chooses an intentional partial archive and the archive report records what was missing.
-
-### Action Context Guard
-
-- If structured status reports `actionContext.mode: workspace-planning`, STOP. Do not move workspace changes into repo-local archives or edit linked repos.
-- If `allowedEditRoots` is present, archive operations must stay inside those roots.
-
-## Decision Gates
+## Archive-Specific Decision Gates
 
 | Condition | Action |
 |---|---|
-| `review-report` is missing, unreadable, or ambiguous | Return `blocked` with `next_recommended: review`; archive readiness cannot be proven. |
-| `review-report` contains blocking findings, CRITICAL review failures, or a blocking verdict | Return `blocked` with `next_recommended: apply`; do not archive. |
-| `review-security-report` is missing, unreadable, or ambiguous | Return `blocked` with `next_recommended: review-security`; archive readiness cannot be proven. |
-| `review-security-report` contains blocking findings, CRITICAL security review failures, or a blocking verdict | Return `blocked` with `next_recommended: apply`; do not archive. |
-| `review-security-report` has unresolved corporate source-row blockers, missing/duplicate/unknown Source IDs, malformed schema, missing compact mappings, unsafe evidence, unsupported `N/A`, or missing mandatory source-row evidence | Return `blocked`; route to `apply` for implementation/contract evidence remediation and to `resolve-blockers` for catalog/schema/artifact/unsafe-evidence/unsupported-`N/A` causes. |
-| `verify-report` is missing | Return `blocked` with `next_recommended: verify`; archive readiness cannot be proven. |
-| `verify-report` contains CRITICAL issues or verdict `FAIL` | Return `blocked` with `next_recommended: apply`; do not accept an override. |
-| Persisted tasks contain unchecked implementation tasks | Return `blocked` with `next_recommended: apply` unless explicitly approved stale-checkbox reconciliation is backed by apply-progress and verify-report proof. |
-| Proposal/spec/design/test-design artifacts are missing | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides explicit intentional partial archive approval. |
-| `design.md#secure-development-design` is missing for a new active change | Return `blocked` with `next_recommended: resolve-blockers`; do not archive. |
-| Standalone `security-design.md` is missing for a new active change | Continue; do not require it. It is legacy/read-only compatibility data only. |
-| Mandatory applicable security evidence is missing | Return `blocked` with `next_recommended: resolve-blockers` unless each gap has a complete approved exception. |
-| Security exception lacks approver, guideline ID, accepted-risk rationale, or mitigation/follow-up | Return `blocked` with `next_recommended: resolve-blockers`; incomplete exceptions do not satisfy archive readiness. |
-| `actionContext.mode: workspace-planning` | Return `blocked` with `next_recommended: resolve-blockers`; do not move folders or edit linked repos. |
-| Archive operation would leave `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and report the offending path. |
 | Delta spec removal lacks `(Reason: ...)` or `(Migration: ...)` | Return `blocked` with `next_recommended: resolve-blockers`; do not delete from main specs. |
 | Delta spec rename lacks explicit old and new requirement names | Return `blocked` with `next_recommended: resolve-blockers`; do not rename in main specs. |
 | Merge would be destructive or remove large sections | Return `blocked` with `next_recommended: resolve-blockers` and `confirmation_required: destructive-merge`; the orchestrator owns confirmation. |
 | Archive destination already exists | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides an explicit alternate destination. |
+| Archive operation would leave `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and report the offending path. |
 | Archive verification fails after filesystem operations | Return `partial` with `next_recommended: resolve-blockers` and exact failed checks and recovery paths. |
 | Archive report persistence fails | Return `partial` with `next_recommended: resolve-blockers` and the full archive report inline in `detailed_report`. |
 
 ## What to Do
 
 ### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+Load supplemental skills according to `skills/_shared/skill-resolver.md` and the executor minimum in `skills/_shared/sdd-phase-common.md` Section A.
 
 ### Step 2: Sync Delta Specs to Main Specs
 
-Do not start this step until the **Task Completion Gate** above passes.
+Do not start this step until shared Archive Readiness passes.
 
 **IF mode is `engram`:** Skip filesystem sync — artifacts live in Engram only. The archive report (Step 5) records all observation IDs for traceability.
 

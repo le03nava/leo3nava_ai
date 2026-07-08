@@ -74,7 +74,7 @@ Routing rules for `next_recommended`:
 
 ### Step 1: Load Skills
 
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+Load supplemental skills according to `skills/_shared/skill-resolver.md` and the executor minimum in `skills/_shared/sdd-phase-common.md` Section A.
 
 ### Step 2: Read Required Inputs
 

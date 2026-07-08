@@ -71,7 +71,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 ## Execution Steps
 
-1. Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+1. Load supplemental skills according to `skills/_shared/skill-resolver.md` and the executor minimum in `skills/_shared/sdd-phase-common.md` Section A.
 2. Inspect project files (`package.json`, `app.json`, `app.config.js`, `app.config.ts`, `metro.config.js`, `react-native.config.js`, `android/`, `ios/`, `go.mod`, `pyproject.toml`, `pom.xml`, `build.gradle`, `build.gradle.kts`, `settings.gradle`, `settings.gradle.kts`, `*.kt`, `*.kts`, CI, lint/test config) and summarize stack/conventions.
 3. Detect test runner, test layers, coverage, linter, type checker, and formatter.
 4. Resolve Strict TDD from agent marker, `openspec/config.yaml`, detected runner fallback, or no-runner fallback.
@@ -95,6 +95,7 @@ The `artifacts` list MUST explicitly report each artifact as saved, skipped, or 
 ## References
 
 - [references/init-details.md](references/init-details.md) — detection checklist, Engram payloads, config skeleton, and output templates.
-- `../_shared/sdd-phase-common.md` — skill loading protocol.
+- `../_shared/skill-resolver.md` — supplemental skill loading and `skill_resolution` protocol.
+- `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
 - `../_shared/engram-convention.md` — Engram artifact naming.
 - `../_shared/openspec-convention.md` — openspec layout and rules.

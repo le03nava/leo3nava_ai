@@ -82,7 +82,7 @@ Use the source-row layer as operational security evidence below the compact `SEC
 
 ## Execution Steps
 
-1. Load supplemental skills via shared SDD Section A.
+1. Load supplemental skills according to `skills/_shared/skill-resolver.md` and the shared SDD Section A executor minimum.
 2. Apply `skills/_shared/sdd-post-apply-gates.md`, then resolve and read mandatory inputs from the selected backend or `contextFiles`.
 3. Confirm `design.md#secure-development-design` exists before evaluating evidence. If it is missing, stop with a blocking result and route to `resolve-blockers`.
 4. Confirm `review-report.md` is non-blocking and cite its verdict, blocking summary, and relevant evidence without copying its full matrix.
@@ -126,7 +126,8 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 ## References
 
-- `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `../_shared/skill-resolver.md` — supplemental skill loading and `skill_resolution` protocol.
+- `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
 - `../_shared/persistence-contract.md` — artifact keys, backend behavior, hybrid conflict policy, and read-back verification.
 - `references/security-guideline-catalog.md` — authoritative compact SEC guideline IDs, taxonomy, corporate Source ID inventory, compact mappings, PCI alignment, and catalog snapshot.
 - `references/report-template.md` — required `review-security-report.md` contract/template.

@@ -547,7 +547,7 @@ No-skip rules:
 - Do not jump from apply to verify or archive; `sdd-review` and `sdd-review-security` must run and produce non-blocking reports first.
 - Do not jump from review to verify or archive; `sdd-review-security` must run and produce a non-blocking review-security-report first.
 - Do not jump from review-security to archive; `sdd-verify` must run and produce a passing verify-report first.
-- Do not treat `apply-progress` alone as archive readiness; archive requires non-blocking review and passing verification.
+- Do not treat `apply-progress` alone as archive readiness; archive readiness follows `skills/_shared/sdd-post-apply-gates.md#archive-readiness`.
 
 No-parallel dependent planning:
 
@@ -573,7 +573,7 @@ Token, phase, and artifact naming:
 - OpenSpec may use collection names where needed, such as `specs/{domain}/spec.md`; Engram uses singular topic keys such as `sdd/{change-name}/spec`.
 - `security-design` and `security-applicability` are legacy/read-only compatibility refs only; do not launch, emit, or normalize them as active new-change successors.
 - Do not invent prefixed artifact keys such as `sdd-proposal`, `sdd-specs`, `sdd-test-design`, or `sdd-review-security-report`.
-- Detailed artifact refs and field naming live in `skills/_shared/sdd-phase-common.md#e-artifact-naming-convention`, `skills/_shared/persistence-contract.md#artifact-reference-resolver`, and `skills/_shared/sdd-status-contract.md#field-naming-across-contracts`.
+- Phase/artifact naming gotchas live in `skills/_shared/sdd-phase-common.md#e-artifact-naming-convention`; detailed artifact refs live in `skills/_shared/persistence-contract.md#artifact-reference-resolver`; routing tokens and field naming live in `skills/_shared/sdd-status-contract.md#field-naming-across-contracts`.
 
 ### Result Contract
 

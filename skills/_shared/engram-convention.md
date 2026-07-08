@@ -1,8 +1,8 @@
 # Engram Artifact Convention (backend reference only)
 
-NOTE: This document is a backend-specific reference for Engram names, calls, and recovery details. The authoritative cross-mode persistence rules live in `skills/_shared/persistence-contract.md`; phase skills MUST follow that contract for mode resolution, read/write behavior, hybrid conflict handling, and persistence verification.
+NOTE: This document is a backend-specific reference for Engram topic names and call shapes. The authoritative cross-mode persistence rules live in `skills/_shared/persistence-contract.md`; phase skills MUST follow that contract for mode resolution, read/write behavior, hybrid conflict handling, state schema, recovery, and persistence verification.
 
-Use this file only when an Engram-specific key, call shape, or recovery example is needed. Do not treat it as a competing source for artifact-store mode behavior.
+Use this file only when an Engram-specific key or call shape is needed. Do not treat it as a competing source for artifact-store mode behavior, SDD state shape, recovery routing, or lifecycle policy.
 
 ## Naming Rules
 
@@ -44,30 +44,18 @@ Set `capture_prompt: false` when the Engram tool schema supports it; if an older
 - `sdd/{project}/testing-capabilities` (`config`): Strict TDD mode, test commands, test layers, coverage, and quality tools.
 - `skill-registry` (`config`): skill index with exact `SKILL.md` paths for orchestrator injection.
 
-### State Artifact
+### State Artifact Key
 
-```
-mem_save(
-  title: "sdd/{change-name}/state",
-  topic_key: "sdd/{change-name}/state",
-  type: "architecture",
-  project: "{project}",
-  capture_prompt: false,
-  content: "change: {change-name}\nphase: {last-phase}\nartifact_store: engram\nartifacts:\n  proposal: true\n  specs: true\n  design: false\n  tasks: false\ntasks_progress:\n  completed: []\n  pending: []\nlast_updated: {ISO date}"
-)
+State uses the normal naming rule with `artifact-type: state`:
+
+```text
+topic_key: sdd/{change-name}/state
+title:     sdd/{change-name}/state
 ```
 
-Recovery: `mem_search("sdd/{change-name}/state")` → `mem_get_observation(id)` → parse YAML → restore state.
+The state schema, recovery order, reconciliation behavior, and read-back requirements are defined in `skills/_shared/persistence-contract.md#state-persistence-orchestrator` and `skills/_shared/persistence-contract.md#state-recovery-orchestrator`.
 
-## Recovery Protocol (2 steps)
-
-Memory lifecycle rule (when Engram exposes lifecycle metadata/tooling):
-- At session start or before architecture-sensitive work, call `mem_review` with action `list` for the current project when the tool is available.
-- If `mem_review` is unavailable, do not fail the task. Continue with normal `mem_context`/`mem_search`, and still apply lifecycle metadata from any returned observations when present.
-- `active` memories may be used normally.
-- `needs_review` memories are stale context, not trusted facts.
-- Surface `needs_review` context and verify it against current evidence before relying on it.
-- Do NOT call `mem_review` with action `mark_reviewed` automatically. Only call `mark_reviewed` after explicit user confirmation or through a dedicated memory maintenance command.
+## Reading Artifacts (2 steps)
 
 ```
 Step 1: mem_search(query: "sdd/{change-name}/{artifact-type}", project: "{project}") → truncated preview + ID
@@ -88,14 +76,14 @@ STEP B — RETRIEVE FULL CONTENT (mandatory):
   mem_get_observation(id: {design_id})
 ```
 
-Loading project context:
+Project context key:
 
 ```text
 mem_search(query: "sdd-init/{project}", project: "{project}") → get ID
 mem_get_observation(id) → full project context
 ```
 
-Loading testing capabilities:
+Testing capabilities key:
 
 ```text
 mem_search(query: "sdd/{project}/testing-capabilities", project: "{project}") → get ID
@@ -144,11 +132,9 @@ mem_search(query: "sdd/{change-name}/", project: "{project}")
 → Returns all artifacts for that change
 ```
 
-## Project Name Resolution (engram v1.11.0+)
+## Project Name Resolution
 
-Engram auto-detects the project name from the git remote at MCP startup. The `--project` flag and `ENGRAM_PROJECT` env var can override detection. All project names are normalized to lowercase and trimmed.
-
-If the agent saves a memory under a project name that doesn't match existing observations, engram warns about potential name drift. Use `mem_merge_projects` (MCP tool) or `engram projects consolidate` (CLI) to merge variants.
+Engram normally auto-detects the project name from the git remote. Use the current detected project consistently for all SDD artifact saves so topic-key upserts target the same project namespace.
 
 ## Upsert Behavior
 

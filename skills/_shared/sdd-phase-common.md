@@ -51,15 +51,16 @@ Consumption rules for executors:
 
 ## A. Skill Loading
 
-1. Check if the orchestrator injected a `## Skills to load before work` block in your launch prompt. If yes, read those exact `SKILL.md` files before task-specific work.
-2. If no skills block was provided, check for `SKILL: Load` instructions. If present, load those exact skill files.
-3. If neither was provided, search for the skill registry as a fallback:
-   a. `mem_search(query: "skill-registry", project: "{project}")` — if found, `mem_get_observation(id)` for full content
-   b. Fallback: read `.atl/skill-registry.md` from the project root if it exists
-   c. From the registry's skills index, match triggers to your task and read the exact listed `SKILL.md` paths.
-4. If no registry exists, proceed with your phase skill only.
+`skills/_shared/skill-resolver.md` is the source of truth for supplemental skill lookup, path injection, fallback loading, and `skill_resolution` reporting.
 
-NOTE: the preferred path is (1) — exact skill paths selected by the orchestrator. Paths (2) and (3) are fallbacks. Searching the registry is SKILL LOADING, not delegation. If `## Skills to load before work` is present, IGNORE redundant `SKILL: Load` instructions.
+Executor minimum:
+
+1. Prefer exact `skill_paths` / `## Skills to load before work` injected by the orchestrator.
+2. Read those exact `SKILL.md` files before task-specific work.
+3. If no paths were injected, follow the fallback rules in `skill-resolver.md`.
+4. Report `skill_resolution` using the shape and acceptance semantics from `skill-resolver.md#step-4-report-resolution`.
+
+Loading supplemental skills is not delegation. SDD phase executors still execute their own phase and MUST NOT launch sub-agents.
 
 ## B. Artifact Retrieval
 
@@ -123,7 +124,7 @@ Required envelope fields:
 | `artifacts` | Array/list of artifacts produced, updated, read, or intentionally omitted. Use the artifact entry shape below. |
 | `next_recommended` | Next bounded routing token or phase token, normalized by the orchestrator through `skills/_shared/sdd-status-contract.md`. |
 | `risks` | Structured risk entries using the shape below, or `None`. |
-| `skill_resolution` | How supplemental skills were loaded. Return the structured shape below so the orchestrator can gate missing required skills without guessing. |
+| `skill_resolution` | How supplemental skills were loaded. Return the structured shape from `skills/_shared/skill-resolver.md#step-4-report-resolution` so the orchestrator can gate missing required skills without guessing. |
 
 Status semantics:
 
@@ -168,42 +169,9 @@ Risk rules:
 - Any `CRITICAL` risk or `blocker: true` prevents dependent phases from launching.
 - Warnings may continue only when explicitly non-blocking and consistent with the phase-specific rules.
 
-```yaml
-skill_resolution:
-  mode: paths-injected | fallback-registry | fallback-path | none
-  loaded:
-    - name: {skill-name}
-      path: {absolute SKILL.md path-or-null}
-  missing_required:
-    - {skill-name}
-  registry_source: session-cache | engram | atl-file | fallback-path | none
-  notes: {text-or-null}
-```
+Use `mode: none` only when no supplemental skills were required or no registry/paths were available. If the orchestrator injected `## Skills to load before work`, prefer `mode: paths-injected` and list every path actually loaded according to `skill-resolver.md`.
 
-Use `mode: none` only when no supplemental skills were required or no registry/paths were available. If the orchestrator injected `## Skills to load before work`, prefer `mode: paths-injected` and list every path actually loaded.
-
-Routing token convention:
-
-`skills/_shared/sdd-status-contract.md` is the routing-token source of truth. The table below is a convenience mirror for phase envelopes; if it ever differs from `sdd-status-contract.md`, use the status contract.
-
-| Native/status token | Phase agent token |
-| --- | --- |
-| `propose` | `sdd-propose` |
-| `spec` | `sdd-spec` |
-| `design` | `sdd-design` |
-| `test-design` | `sdd-test-design` |
-| `tasks` | `sdd-tasks` |
-| `apply` | `sdd-apply` |
-| `review` | `sdd-review` |
-| `review-security` | `sdd-review-security` |
-| `verify` | `sdd-verify` |
-| `archive` | `sdd-archive` |
-| `sdd-new` | orchestrator workflow |
-| `select-change` | ask user to choose |
-| `resolve-blockers` | `resolve-blockers` |
-| `none` | `none` |
-
-Phase envelopes may use either the native/status token or the phase agent token for `next_recommended`. The orchestrator MUST normalize through this table before routing or validating successors.
+Routing token and field naming rules live in `skills/_shared/sdd-status-contract.md`. Phase envelopes return `next_recommended`; consumers normalize it through the status contract before routing, comparing successors, or persisting state.
 
 Phase-specific minimum details:
 
@@ -236,10 +204,12 @@ Example:
 **Next**: sdd-spec
 **Risks**: None
 **Skill Resolution**: paths-injected — 3 skills (react-19, typescript, tailwind-4)
-(other values: `fallback-registry`, `fallback-path`, or `none — no registry found`)
+See `skills/_shared/skill-resolver.md` for the full `skill_resolution` shape and allowed modes.
 ```
 
 ## E. Artifact Naming Convention
+
+This section only covers phase/artifact naming gotchas for phase envelopes and persisted artifacts. Routing-token mapping and camelCase/snake_case field normalization live in `skills/_shared/sdd-status-contract.md`; backend artifact refs live in `skills/_shared/persistence-contract.md`.
 
 - `sdd-propose` and `sdd-spec` are phase/agent names.
 - `proposal` and `spec` are singular Engram artifact keys: `sdd/{change-name}/proposal`, `sdd/{change-name}/spec`.

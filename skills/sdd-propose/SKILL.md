@@ -85,7 +85,7 @@ Routing rules for `next_recommended`:
 - Prefer 3-5 concrete product questions per round. Include the assumptions that would otherwise be made. Do not ask about test commands, PR shape, changed-line budget, or other harness decisions unless the user explicitly asked to discuss delivery.
 
 ### Step 1: Load Skills
-Follow **Section A** from `skills/_shared/sdd-phase-common.md`.
+Load supplemental skills according to `skills/_shared/skill-resolver.md` and the executor minimum in `skills/_shared/sdd-phase-common.md` Section A.
 
 ### Step 2: Create Change Directory
 

@@ -232,7 +232,7 @@ Recovery reconciliation rules:
 - If `blockedReasons` is non-empty or `nextRecommended` is `resolve-blockers`, report blockers and stop before launching phases.
 - If cached preflight and recovered state disagree on `artifactStore`, stop and reconcile unless one side is clearly missing/stale by `stateRevision` or `updatedAt`. Delivery strategy, review budget, and chain strategy may be `null` until the tasks/delivery guard resolves them; reconcile only conflicting non-null values.
 - If state is missing or invalid but persistence is enabled, reconstruct only a shape-compatible fallback status from artifact presence and `skills/_shared/sdd-status-contract.md`; do not route directly from ad hoc artifact checks.
-- When fallback reconstruction is required, choose the earliest missing phase in DAG order and apply the status contract dependency-state rules. Preserve the post-apply order: `apply -> review -> review-security -> verify -> archive`; archive requires non-blocking review reports plus a passing verify report.
+- When fallback reconstruction is required, choose the earliest missing phase in DAG order and apply the status contract dependency-state rules. Preserve the post-apply order: `apply -> review -> review-security -> verify -> archive`; archive readiness is defined by `skills/_shared/sdd-post-apply-gates.md#archive-readiness`.
 - Valid state is authoritative for `currentPhase` and `nextRecommended`; use artifact-presence fallback only when state is missing or invalid.
 - Re-run the backend-aware SDD Init Guard before repairing or rewriting recovered state.
 
@@ -276,85 +276,20 @@ Verification rules:
 - NEVER force `openspec/` creation unless orchestrator explicitly passed `openspec` or `hybrid`
 - If unsure which mode to use, default to `none`
 
-## Sub-Agent Context Rules
+## Cross-Contract Boundaries
 
-Sub-agents launch with a fresh context and NO access to the orchestrator's instructions or memory protocol.
+This file owns persistence mechanics only. Keep adjacent orchestration and executor behavior in their dedicated contracts:
 
-Who reads, who writes:
-- Non-SDD (general task): orchestrator searches engram, passes summary in prompt; sub-agent saves discoveries via `mem_save`
-- SDD (phase with dependencies): sub-agent reads artifacts directly from backend; sub-agent saves its artifact
-- SDD (phase without dependencies, e.g. explore): nobody reads; sub-agent saves its artifact
-- SDD test-design phase: `sdd-test-design` reads proposal, spec, and design directly from the selected backend and saves `test-design`; later dependent SDD phases read `test-design` from the backend when their phase contracts require it
+| Concern | Source of truth |
+| --- | --- |
+| SDD phase context, dependency retrieval, artifact persistence handoff, and final response ordering | `skills/_shared/sdd-phase-common.md` |
+| Supplemental skill registry lookup, `## Skills to load before work`, and `skill_resolution` reporting | `skills/_shared/skill-resolver.md` |
+| OpenSpec paths, folder layout, and delta-spec file conventions | `skills/_shared/openspec-convention.md` |
+| Engram topic naming and Engram-specific call examples | `skills/_shared/engram-convention.md` |
 
-Why this split:
-- Orchestrator reads for non-SDD: it knows what context is relevant; sub-agents doing their own searches waste tokens on irrelevant results
-- Sub-agents read for SDD: SDD artifacts are large; inlining them in the orchestrator prompt would consume the entire context window
-- Sub-agents always write: they have the complete detail on what happened; nuance is lost by the time results flow back to the orchestrator
+Persistence-specific reminders retained here:
 
-## Orchestrator Prompt Instructions for Sub-Agents
-
-Non-SDD:
-```
-PERSISTENCE (MANDATORY):
-If you make important discoveries, decisions, or fix bugs, you MUST save them to engram before returning:
-  mem_save(title: "{short description}", type: "{decision|bugfix|discovery|pattern}",
-           project: "{project}", content: "{What, Why, Where, Learned}")
-Do NOT return without saving what you learned. This is how the team builds persistent knowledge across sessions.
-```
-
-SDD (with dependencies):
-```
-Artifact store mode: {engram|openspec|hybrid|none}
-
-Read dependency artifacts from the selected backend:
-  engram: mem_search(query: "sdd/{change-name}/{type}", project: "{project}") -> mem_get_observation(id)
-  openspec: read the artifact path from openspec-convention.md / the status contract
-  test-design dependencies: sdd-test-design reads proposal, spec, and design; downstream phases read test-design when their phase contract requires test-planning evidence
-  hybrid: read both Engram and OpenSpec when both refs are available, fallback only when one backend is absent, and report any mismatch
-  none: use only the dependency content explicitly provided by the orchestrator; if missing, return blocked
-
-PERSISTENCE (MANDATORY — do NOT skip):
-Persist your completed artifact according to artifact_store.mode:
-  engram: mem_save(title/topic_key: "sdd/{change-name}/{artifact-type}", type: "architecture", project: "{project}", capture_prompt: false, content: full artifact)
-  openspec: write/update the file path defined in openspec-convention.md; read existing file first and do not overwrite blindly
-  hybrid: write BOTH Engram and OpenSpec; both writes must succeed for status: success
-  none: return the full SDD artifact inline only; do not write SDD/OpenSpec files, Engram observations, or local support files
-If you return without persisting or returning the artifact according to the selected mode, the next phase CANNOT find it and the pipeline BREAKS.
-```
-
-Recovery fallback for `test-design`: if persisted state says design is complete but `artifactRefs.testDesign` is empty, the orchestrator must resolve the artifact directly from `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md`. If the artifact is still missing, continuation must recommend `test-design` / `sdd-test-design` before launching `sdd-tasks`.
-
-SDD (no dependencies):
-```
-Artifact store mode: {engram|openspec|hybrid|none}
-
-PERSISTENCE (MANDATORY — do NOT skip):
-Persist your completed artifact according to artifact_store.mode:
-  engram: mem_save(title/topic_key: "sdd/{change-name}/{artifact-type}", type: "architecture", project: "{project}", capture_prompt: false, content: full artifact)
-  openspec: write/update the file path defined in openspec-convention.md; read existing file first and do not overwrite blindly
-  hybrid: write BOTH Engram and OpenSpec; both writes must succeed for status: success
-  none: return the full SDD artifact inline only; do not write SDD/OpenSpec files, Engram observations, or local support files
-If you return without persisting or returning the artifact according to the selected mode, the next phase CANNOT find it and the pipeline BREAKS.
-```
-
-For SDD artifacts, `capture_prompt: false` is explicit and mandatory when the Engram tool schema supports it. Engram v1.15.3 defaults `capture_prompt` to true for normal human/proactive saves, but automated pipeline artifacts must not capture the user's prompt. Do not infer this from `type` because SDD artifacts and real human architecture decisions both use `architecture`. If an older schema rejects or does not expose `capture_prompt`, omit it rather than failing.
-
-## Sub-Agent Response Ordering
-
-When a sub-agent persists artifacts (via `mem_save` or file writes), the persistence call MUST happen BEFORE the final text response. The sub-agent's absolute last output must be text, never a tool call.
-
-**Why**: The Task tool returns the sub-agent's final output to the parent. If the sub-agent ends with a tool call, the parent receives only the tool result (e.g., `"Observation saved"`) — the sub-agent's text analysis is lost. Always: do your work → save → respond with text envelope.
-
-Sub-agents must NOT call `mem_session_summary` — that's reserved for top-level agents only.
-
-## Skill Registry
-
-The orchestrator pre-resolves skill paths from the skill registry and injects them as `## Skills to load before work` in your launch prompt. Sub-agents read those exact `SKILL.md` files before task-specific work.
-
-To generate/update: run the `skill-registry` skill, or run `sdd-init`.
-
-Sub-agent skill loading: check for a `## Skills to load before work` block in your prompt — if present, read those exact files. If not present, check for `SKILL: Load` instructions as a fallback. If neither exists, proceed without — this is not an error.
-
-## Detail Level
-
-The orchestrator may pass `detail_level`: `concise | standard | deep`. This controls output verbosity but does NOT affect what gets persisted — always persist the full artifact.
+- SDD phase agents read required artifacts from the selected backend using exact refs/paths supplied by status or launch context; they must not reconstruct missing artifacts from prose.
+- Every persistent SDD artifact write must follow the selected mode and pass read-back verification before a phase reports `status: success`.
+- For automated SDD artifacts saved to Engram, use `capture_prompt: false` when the tool schema supports it; omit the field rather than failing on older schemas.
+- Recovery fallback for `test-design`: if persisted state says design is complete but `artifactRefs.testDesign` is empty, resolve the artifact directly from `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md`. If it is still missing, continuation must recommend `test-design` / `sdd-test-design` before launching `sdd-tasks`.

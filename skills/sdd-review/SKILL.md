@@ -53,7 +53,7 @@ Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routi
 
 ## Execution Steps
 
-1. Load supplemental skills via shared SDD Section A.
+1. Load supplemental skills according to `skills/_shared/skill-resolver.md` and the shared SDD Section A executor minimum.
 2. Apply `skills/_shared/sdd-post-apply-gates.md` and read the selected change status plus all required inputs from the active artifact store.
 3. Read `references/control-catalog.md` and confirm 96 unique Item IDs mapped one-to-one to corporate checklist source items 1 through 96.
 4. Inspect applied changes, task evidence, specs, design including `design.md#secure-development-design` narrative rules, and test-design cases. Treat standalone `security-design.md` as optional legacy/archive context only.
@@ -71,5 +71,6 @@ Return the Section D envelope. Put `## Review Report Summary` in `detailed_repor
 - [references/control-catalog.md](references/control-catalog.md) — stable 96-control review catalog and manual count evidence.
 - [references/report-template.md](references/report-template.md) — required `review-report.md` contract/template.
 - `../sdd-review-security/references/security-guideline-catalog.md` — security guideline IDs, taxonomy, evidence model, and authority boundary.
-- `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `../_shared/skill-resolver.md` — supplemental skill loading and `skill_resolution` protocol.
+- `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
 - `../_shared/sdd-post-apply-gates.md` — common post-apply gates, routing defaults, safe evidence, and matrix ownership boundaries.

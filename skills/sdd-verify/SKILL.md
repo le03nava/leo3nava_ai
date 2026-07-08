@@ -94,7 +94,7 @@ Common post-apply gates and review-evidence consumption rules are defined in `sk
 
 ## Execution Steps
 
-1. Load relevant skills via shared SDD Section A.
+1. Load relevant supplemental skills according to `skills/_shared/skill-resolver.md` and the shared SDD Section A executor minimum.
 2. Apply `skills/_shared/sdd-post-apply-gates.md`, then retrieve artifacts via shared Section B for the active persistence mode or read the concrete `contextFiles` from structured status.
 3. Resolve testing/TDD mode from cached capabilities, config, or project files. Prefer `sdd/{project}/testing-capabilities`, then `openspec/config.yaml`, then project files.
 4. Count completed and incomplete tasks. Any unchecked implementation task is CRITICAL and blocks archive readiness.
@@ -134,5 +134,6 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 - [references/report-format.md](references/report-format.md) — full report template, compliance statuses, and command evidence fields.
 - [strict-tdd-verify.md](strict-tdd-verify.md) — load only when Strict TDD is active.
-- `../_shared/sdd-phase-common.md` — skill loading, retrieval, persistence, and return envelope.
+- `../_shared/skill-resolver.md` — supplemental skill loading and `skill_resolution` protocol.
+- `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
 - `../_shared/sdd-post-apply-gates.md` — common post-apply gates, review evidence consumption, source-row consumption, safe evidence, and matrix ownership boundaries.

@@ -48,6 +48,15 @@ Read these exact files before reading, writing, reviewing, testing, or creating 
 
 The sub-agent MUST read those files before task-specific work. `SKILL.md` is the runtime contract and source of truth.
 
+Executor loading rules:
+
+1. If a `## Skills to load before work` block is present, read only those exact paths for supplemental skills and ignore redundant `SKILL: Load` instructions.
+2. If no injected paths are present but explicit `SKILL: Load` paths exist, read those exact files and report `mode: fallback-path`.
+3. If neither injected paths nor explicit fallback paths exist, resolve the registry using Step 1, match relevant skills using Step 2, read the exact listed paths, and report `mode: fallback-registry`.
+4. If no registry or relevant supplemental skills exist, proceed with the phase skill only and report `mode: none`.
+
+Searching the registry for skill loading is not delegation. Executor phase agents still execute their own phase and MUST NOT launch sub-agents.
+
 ### Step 4: Report Resolution
 
 Sub-agents MUST report `skill_resolution`:
