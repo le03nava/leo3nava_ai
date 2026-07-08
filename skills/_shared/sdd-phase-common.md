@@ -67,6 +67,40 @@ Follow `skills/_shared/persistence-contract.md` for artifact-store mode resoluti
 
 Phase skills remain responsible for naming their required inputs and reading every required dependency before producing phase output.
 
+## B1. SDD Phase Context Contract
+
+SDD phase agents read artifacts directly from the selected backend using exact refs from the launch envelope. They do not perform broad memory searches, infer active changes, or reconstruct missing artifacts from prose.
+
+Mode-specific context rules:
+
+- `engram`: read only the provided topic keys via `mem_search` / `mem_get_observation`; persist completed artifacts with `capture_prompt: false` when supported.
+- `openspec`: read/write only the provided OpenSpec paths and paths defined by `skills/_shared/openspec-convention.md`.
+- `hybrid`: read both refs when both are provided; apply the Hybrid Conflict Policy before using either side if they differ materially.
+- `none`: use only inline context provided by the orchestrator; if a required dependency is missing from the prompt, return `blocked` with `next_recommended: resolve-blockers`.
+
+Required context by phase:
+
+| Phase | Required refs/context | Optional refs/context | Writes | Block if missing |
+| --- | --- | --- | --- | --- |
+| `sdd-explore` | user request, project context, testing capabilities when available | related prior context summary | `explore` | project context is unavailable and exploration would speculate |
+| `sdd-propose` | user request or explore result sufficient to avoid material speculation | answered proposal questions, prior product decisions | `proposal` | product/business facts are missing and would require guessing |
+| `sdd-spec` | proposal | explore, product assumptions | `spec` | proposal missing/unreadable |
+| `sdd-design` | proposal + spec | architecture conventions, related files summary, baseline security considerations | `design` | proposal/spec missing/unreadable |
+| `sdd-test-design` | proposal + spec + design with `## Secure Development Design` | testing capabilities, design risks, embedded security controls | `test-design` | proposal/spec/design or embedded secure design section missing/unreadable |
+| `sdd-tasks` | spec + design with `## Secure Development Design` narrative rules + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/test-design missing/unreadable |
+| `sdd-apply` | tasks + spec + design with `## Secure Development Design` narrative rules + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
+| `sdd-review` | proposal + spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress/evidence + changed-file context + actionContext | review catalog, changed files summary | `review-report` | review inputs, changed-file context, safe workspace context, or persistence capability is missing |
+| `sdd-review-security` | design with `## Secure Development Design` narrative rules + non-blocking review-report + apply-progress/evidence + changed-file context | tasks, test-design, catalog | `review-security-report` | embedded security design, review evidence, changed-file context, or persistence capability is missing |
+| `sdd-verify` | spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress/evidence + non-blocking review-report + non-blocking review-security-report + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | review/security-review evidence, verification evidence, or required artifacts are missing |
+| `sdd-archive` | proposal + spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress + non-blocking review-report + non-blocking review-security-report + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | review-report/review-security-report missing/blocking, verify-report missing/non-passing, mandatory security evidence missing, or required artifacts unavailable |
+
+Context integrity checks:
+
+- Confirm `changeName`, `artifact_store.mode`, `currentPhase`/`nextRecommended`, and `stateRevision` when provided before doing phase work.
+- If an artifact ref points to a different change, stale state, wrong mode, missing backend, or materially different hybrid content, return `blocked`; do not silently continue.
+- If `apply-progress`, tasks, chain plan, review budget, or actionContext changed compared with the launch envelope, return `blocked` or report the mismatch in the result envelope.
+- If a required dependency is missing, do not create a placeholder artifact downstream. Route back to the owning earlier phase.
+
 ## C. Artifact Persistence
 
 Every phase that produces or mutates an artifact MUST persist and verify it according to `skills/_shared/persistence-contract.md`. Skipping persistence or read-back verification BREAKS the pipeline because downstream phases cannot trust the artifact references.
@@ -218,15 +252,19 @@ Example:
 
 SDD must protect reviewer cognitive load, not only generate tasks.
 
-- The default PR review budget is **400 changed lines** (`additions + deletions`), unless the orchestrator has resolved a different `review_budget_lines` during deferred delivery planning.
-- The orchestrator may keep `delivery_strategy` as `null` until `sdd-tasks` produces a Review Workload Forecast or the user explicitly requests delivery planning.
-- The orchestrator MUST pass the current `delivery_strategy` value to `sdd-tasks` (`null` when deferred) and pass the resolved decision to `sdd-apply`.
-- `sdd-tasks` MUST forecast whether the planned work may exceed that budget.
-- The forecast MUST include exact plain-text guard lines: `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, `Chain strategy: stacked-to-main|feature-branch-chain|pending`, `Size exception: approved|pending|none`, `Review budget lines: <number>`, `Review budget risk: Low|Medium|High`, and legacy `400-line budget risk: Low|Medium|High`.
-- `size:exception` is a delivery/approval decision, not a chain strategy. Represent it with `Size exception`, and keep `Chain strategy` limited to `stacked-to-main`, `feature-branch-chain`, or `pending`.
-- If the forecast is high, `sdd-tasks` MUST recommend chained or stacked PRs using deliverable work units.
-- `sdd-apply` MUST NOT start oversized work unless the delivery strategy resolves to chained/stacked PR slices or explicitly accepted `size:exception`.
-- Each chained PR slice must have a clear start, clear finish, autonomous scope, verification, and reasonable rollback.
-- In a Feature Branch Chain, PR #1 targets the feature/tracker branch and later child PRs target the immediate previous PR branch; if GitHub shows previous slices in a child diff, retarget/rebase until the diff is clean.
+- **Authority boundary:** this section is the shared Review Workload / Delivery Guard contract. The orchestrator enforces it, `sdd-tasks` produces the forecast, and `sdd-apply` consumes the resolved decision. Phase skills may add phase-local validation, but they MUST NOT redefine the common delivery policy here.
+- **Budget semantics:** `review_budget_lines` means changed lines (`additions + deletions`), not net delta or file count. Default to **400 changed lines** unless the orchestrator resolved a different budget. Treat work that likely exceeds about one focused review session as review-budget risk even when the numeric estimate is under budget.
+- **Deferred decision:** the orchestrator may keep `delivery_strategy`, `review_budget_lines`, and `chain_strategy` as `null` until `sdd-tasks` produces a Review Workload Forecast or the user explicitly asks to decide delivery earlier. Pass `delivery_strategy: null` to `sdd-tasks` while deferred; pass the resolved decision to `sdd-apply`.
+- **Forecast producer:** `sdd-tasks` MUST estimate whether implementation may exceed the resolved budget and include exact plain-text guard lines: `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, `Chain strategy: stacked-to-main|feature-branch-chain|pending`, `Size exception: approved|pending|none`, `Review budget lines: <number>`, `Review budget risk: Low|Medium|High`, and legacy `400-line budget risk: Low|Medium|High`.
+- **Forecast validity:** the orchestrator MUST reject a missing, stale, ambiguous, or incomplete forecast before `sdd-apply`. Re-run `sdd-tasks` once with corrective feedback when the forecast is malformed. Recompute the forecast when scope, tasks, delivery strategy, chain plan, review budget, or artifact dependencies changed after the forecast.
+- **Forecast handling:** low-risk work under budget may proceed as one reviewable unit; medium/near-budget work may proceed only with work-unit implementation and changed-line monitoring; high-risk, over-budget, `Chained PRs recommended: Yes`, or `Decision needed before apply: Yes` requires a resolved delivery path before implementation.
+- **Delivery strategies:** `ask-on-risk` asks the user when the forecast requires a delivery decision; `auto-chain` proceeds with chained/stacked slices but still requires an explicit `chain_strategy`; `single-pr` requires approved `size:exception` before over-budget apply; `exception-ok` proceeds only when size-exception evidence is recorded.
+- **Chain strategies:** valid chain strategies are `stacked-to-main` and `feature-branch-chain`. `size:exception` is a delivery/approval decision, not a chain strategy. Keep `Chain strategy` limited to `stacked-to-main`, `feature-branch-chain`, or `pending`.
+- **Chain plan requirements:** when chaining is selected, persist a chain plan before `sdd-apply` with ordered slices, current slice boundary, dependency diagram, per-slice review estimate, verification plan, rollback scope, and out-of-scope/follow-up work. Each slice must have a clear start, clear finish, autonomous scope, verification, and reasonable rollback.
+- **Feature Branch Chain:** PR #1 targets the feature/tracker branch; later child PRs target the immediate previous child branch; only the tracker is intended to merge to `main`. If a child diff includes previous slices, retarget/rebase before review.
+- **Size exception evidence:** record approver/instruction, rationale for not splitting or accepting a large PR, accepted risk, verification plan, rollback plan, and follow-up work. A vague "ok" or phase approval is not `size:exception` approval.
+- **Apply boundary:** `sdd-apply` MUST NOT start oversized work unless the delivery strategy resolves to a chained/stacked slice or explicitly accepted `size:exception`. If actual changed lines exceed the resolved budget or invalidate the forecast, stop before PR creation, archive, or another implementation slice and re-apply this guard.
+- **PR authorization boundary:** delivery strategy shapes implementation and review; it does not authorize creating, pushing, or opening PRs unless the user explicitly requested PR work or the active command/phase contract includes PR creation.
+- **Required supplemental skills:** when chaining is selected or forecasted work exceeds 400 changed lines, orchestrator launches for `sdd-tasks` and `sdd-apply` must include resolved `chained-pr` and `work-unit-commits` skill paths when available. Missing required skills are a gate failure for apply/PR-shaped work.
 
 This guard exists to reduce reviewer burnout and keep implementation delivery safe. Do not treat it as optional process noise.

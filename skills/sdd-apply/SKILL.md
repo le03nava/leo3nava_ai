@@ -101,7 +101,7 @@ Before writing ANY code:
 
 #### Step 2a: Enforce Review Workload Decision
 
-Before implementing, inspect the tasks artifact for `Review Workload Forecast`.
+Before implementing, inspect the tasks artifact for `Review Workload Forecast` and enforce `skills/_shared/sdd-phase-common.md#f-review-workload-guard`. This phase consumes the resolved delivery decision; it must not choose a missing strategy or approve an exception.
 
 If the forecast says any of the following:
 
@@ -112,13 +112,11 @@ If the forecast says any of the following:
 
 Then you MUST confirm the orchestrator/user provided a resolved delivery path:
 
-1. **`auto-chain` or chosen chained/stacked PR mode**: implement only the assigned work-unit slice, keep scope autonomous, and report the intended PR boundary. Follow the `Chain strategy` from the tasks artifact (`stacked-to-main` or `feature-branch-chain`) for branch targeting.
-2. **`exception-ok` or single PR with exception**: continue only if the prompt explicitly says the maintainer accepts `size:exception` AND the tasks artifact or launch context says `Size exception: approved`.
-3. **`single-pr` above budget**: continue only after the prompt explicitly records `size:exception` AND the tasks artifact or launch context says `Size exception: approved`.
+1. For chained/stacked work, implement only the assigned work-unit slice, keep scope autonomous, and report the intended boundary.
+2. For large single-PR work, continue only when the launch context records approved `size:exception` evidence and the tasks artifact says `Size exception: approved`.
+3. For unresolved decisions, stop before writing code; the orchestrator owns user interaction.
 
-Also check for `Chain strategy` in the tasks artifact. If present and not `pending`, follow it consistently:
-- `stacked-to-main`: implement the assigned slice as an autonomous unit intended to merge to `main` in order. Do not use feature-branch-chain tracker/child targeting rules.
-- `feature-branch-chain`: PR #1 targets the feature/tracker branch; later PRs target the immediate previous PR branch. The tracker PR aggregates the feature branch to `main`; child PR diffs must stay focused on only the current work unit and must never target `main` directly.
+Also check for `Chain strategy` in the tasks artifact. If present and not `pending`, follow the shared guard's rules for that strategy consistently.
 
 Also check for `Size exception` in the tasks artifact or launch context:
 - `approved`: a large single-PR path may proceed only when the prompt also records maintainer approval evidence.

@@ -205,6 +205,49 @@ Failure handling:
 
 Historical `security-design` and `security-applicability` current-phase or next-recommended values may be read from old state only as compatibility data. They MUST NOT be emitted for new state, normalized into runnable successors, mapped to phase agents, or treated as active security authority.
 
+## State Recovery (Orchestrator)
+
+Use this when recovering after compaction, mid-session context drift, or `/sdd-continue` when state is not already trusted.
+
+Recovery sources by mode:
+
+| Mode | Recovery source |
+|------|-----------------|
+| `engram` | `mem_search(query: "sdd/*/state" or "sdd/{change-name}/state", project: "{project}")` -> `mem_get_observation(id)` |
+| `openspec` | Read `openspec/changes/{change-name}/state.yaml` after selecting or confirming the active change |
+| `hybrid` | Read BOTH Engram state and OpenSpec `state.yaml` when both exist; fallback only when one backend is absent; apply the Hybrid Conflict Policy when they differ materially |
+| `none` | State is not recoverable after compaction; use only current conversation context, and ask whether to restart with persistent mode when insufficient |
+
+Minimum recovered-state validation:
+
+- `schemaName: gentle-ai.sdd-state`
+- supported `schemaVersion`
+- `changeName` matches the selected change
+- `artifactStore` matches cached/recovered preflight mode or has been explicitly reconciled
+- `currentPhase`, `completedPhases`, `nextRecommended`, `artifactRefs`, `blockedReasons`, `stateRevision`, and `updatedAt` are present
+- `delivery.deliveryStrategy`, `delivery.reviewBudgetLines`, `delivery.chainStrategy`, `delivery.chainPlanRef`, and `delivery.sizeException` are restored when present
+
+Recovery reconciliation rules:
+
+- If `blockedReasons` is non-empty or `nextRecommended` is `resolve-blockers`, report blockers and stop before launching phases.
+- If cached preflight and recovered state disagree on `artifactStore`, stop and reconcile unless one side is clearly missing/stale by `stateRevision` or `updatedAt`. Delivery strategy, review budget, and chain strategy may be `null` until the tasks/delivery guard resolves them; reconcile only conflicting non-null values.
+- If state is missing or invalid but persistence is enabled, reconstruct only a shape-compatible fallback status from artifact presence and `skills/_shared/sdd-status-contract.md`; do not route directly from ad hoc artifact checks.
+- When fallback reconstruction is required, choose the earliest missing phase in DAG order and apply the status contract dependency-state rules. Preserve the post-apply order: `apply -> review -> review-security -> verify -> archive`; archive requires non-blocking review reports plus a passing verify report.
+- Valid state is authoritative for `currentPhase` and `nextRecommended`; use artifact-presence fallback only when state is missing or invalid.
+- Re-run the backend-aware SDD Init Guard before repairing or rewriting recovered state.
+
+Recovery safety checklist:
+
+- State is readable in the selected backend.
+- Hybrid state has no material Engram/OpenSpec conflict.
+- State schema/version are valid.
+- `artifactStore` matches preflight or has been explicitly reconciled.
+- `blockedReasons` are empty and `nextRecommended` is not `resolve-blockers`.
+- Delivery/chain/size-exception context is restored before apply or PR-shaped work.
+- Required artifact refs for the next phase are readable.
+- Init Guard is satisfied for the selected mode.
+- Dependency Graph readiness passes for the recovered `nextRecommended`.
+
 ## Artifact Persistence Verification
 
 Every phase that produces or mutates a persistent artifact MUST verify the selected backend before reporting success.

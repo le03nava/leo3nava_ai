@@ -59,6 +59,42 @@ Sub-agents MUST report `skill_resolution`:
 
 If a sub-agent reports anything other than `paths-injected`, the orchestrator MUST re-read the registry before the next delegation.
 
+Expected shape:
+
+```yaml
+skill_resolution:
+  mode: paths-injected | fallback-registry | fallback-path | none
+  loaded:
+    - name: {skill-name}
+      path: {absolute SKILL.md path-or-null}
+  missing_required:
+    - {skill-name}
+  registry_source: session-cache | engram | atl-file | fallback-path | none
+  notes: {text-or-null}
+```
+
+Required-skill checks:
+
+- If the launch envelope included `skill_paths`, the result should report `mode: paths-injected` and list the loaded skills, unless the sub-agent explicitly explains why a path could not be read.
+- If a task required `chained-pr`, `work-unit-commits`, testing, review, security, PR, or repo-specific skills, `missing_required` must be empty before dependent work continues.
+- If `sdd-apply` runs with review-budget risk or chained delivery, missing `chained-pr` or `work-unit-commits` is a gate failure.
+- If `sdd-verify` runs with Strict TDD or testing requirements, missing relevant testing/verification instructions is a gate failure.
+
+Acceptance policy:
+
+| `skill_resolution.mode` | Low-risk read-only task | SDD planning phase | `sdd-apply` / `sdd-verify` / PR / security-sensitive work |
+| --- | --- | --- | --- |
+| `paths-injected` | Accept | Accept | Accept if required skills loaded |
+| `fallback-registry` | Accept with warning; refresh cache | Accept only if required skills loaded; refresh cache | Gate warning or failure if required skills were not loaded |
+| `fallback-path` | Accept only for known allowed paths | Accept only for known required paths; refresh registry | Gate failure unless all required paths are known and loaded |
+| `none` | Accept only if no relevant skills existed | Gate warning; re-check registry before next phase | Gate failure when skills were required |
+
+Corrective loop:
+
+- When required skills are missing, re-read the registry (`mem_search` -> `mem_get_observation`, fallback `.atl/skill-registry.md`) and re-run the same phase once with exact `SKILL.md` paths injected.
+- If the retry still misses required skills, STOP and report the missing skills, registry source used, and the phase blocked.
+- Persist a discovery when registry lookup is missing, stale, or repeatedly fails so future sessions do not silently repeat the problem.
+
 ## Compaction Safety
 
 - The registry persists in Engram and `.atl/skill-registry.md`.

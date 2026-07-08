@@ -189,6 +189,8 @@ Each task MUST be:
 
 ### Review Workload Forecast Rules
 
+Follow the shared Review Workload / Delivery Guard in `skills/_shared/sdd-phase-common.md#f-review-workload-guard`. This phase produces the forecast; it does not ask the user or approve delivery exceptions.
+
 Before finalizing tasks, estimate whether implementation is likely to exceed the resolved session `review_budget_lines` (`additions + deletions`). This is a planning guard, not an exact diff count. If the orchestrator did not pass a budget because delivery planning is still deferred, use `400`.
 
 Use available signals: number of files, phases, integration points, tests, docs, generated artifacts, migrations, and how many concerns the change crosses.
@@ -198,16 +200,10 @@ If the estimate is **High** or likely above the session review budget:
 1. Mark `Chained PRs recommended` as `Yes`.
 2. Split tasks into **work units** that can become chained or stacked PRs.
 3. Each suggested PR must have a clear start, clear finish, verification, and autonomous scope.
-4. Do not ask the user directly. If chain strategy is missing, set `Decision needed before apply: Yes` and `Chain strategy: pending`; the orchestrator owns user interaction. The valid strategies are:
-   - **Stacked PRs to main** — each PR merges to main in order. Fast iteration, fix on the go. Best for speed-first teams and independent slices.
-   - **Feature Branch Chain** — the feature/tracker branch accumulates the final integration; PR #1 targets the tracker branch, later PRs target the immediate previous PR branch so each child diff stays focused. Only the tracker merges to main. Best for rollback control and coordinated releases.
-   Size exceptions are not chain strategies. If the delivery path is an approved large single PR, keep `Chain strategy: pending`, set `Size exception: approved`, and record the maintainer approval evidence in the orchestration state.
+4. Do not ask the user directly. If chain strategy is missing, set `Decision needed before apply: Yes` and `Chain strategy: pending`; the orchestrator owns user interaction. Valid strategies and size-exception semantics are defined by the shared guard.
 5. Use the received delivery strategy and any orchestrator-provided chain strategy to set `Decision needed before apply`:
-   - `null`: `No` for low/medium risk under budget; `Yes` for high risk, over-budget work, or missing chain/exception decisions — orchestrator resolves delivery after this forecast.
-   - `ask-on-risk`: `Yes` — orchestrator asks before apply.
-   - `auto-chain`: `No` — orchestrator proceeds with the first slice using the chosen chain strategy.
-   - `single-pr`: `Yes` — orchestrator must require `size:exception` before apply.
-   - `exception-ok`: `No` — maintainer has accepted `size:exception`; set `Size exception: approved` and keep `Chain strategy: pending` unless a real chain strategy is also selected.
+   - `null`: follow the shared deferred-decision rule.
+   - `ask-on-risk`, `auto-chain`, `single-pr`, `exception-ok`: derive `Decision needed before apply`, `Chain strategy`, and `Size exception` from the shared guard and the orchestration context.
 
 Do not bury this in prose. Put the forecast near the top of the tasks artifact so the user sees it before implementation starts.
 

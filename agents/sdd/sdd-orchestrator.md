@@ -298,7 +298,7 @@ Request routing:
 - **New SDD change** (`/sdd-new` or natural-language new change): run the mutating Init Guard, launch `sdd-explore` when useful, then satisfy Proposal Shaping before `sdd-propose`. Never jump directly to `sdd-apply`.
 - **Fast-forward planning** (`/sdd-ff`): run the mutating Init Guard, then advance proposal -> specs -> design -> test-design -> tasks according to execution mode and gatekeeper rules.
 - **Continue existing change** (`/sdd-continue` or equivalent): run the mutating Init Guard, produce or consume structured status, then route by normalized `nextRecommended` and dependency states.
-- **Explicit phase request** (`/sdd-explore`, `/sdd-apply`, `/sdd-review`, `/sdd-review-security`, `/sdd-verify`, `/sdd-archive`, or natural-language equivalent): validate that phase's required dependencies before launch. If dependencies are missing, STOP and suggest the correct earlier phase (`/sdd-new`, `/sdd-ff`, or `/sdd-continue`).
+- **Explicit phase request** (`/sdd-explore`, `/sdd-apply`, `/sdd-review`, `/sdd-review-security`, `/sdd-verify`, `/sdd-archive`, or natural-language equivalent): validate readiness through `skills/_shared/sdd-status-contract.md` before launch. If dependencies are missing or blocked, STOP and suggest the correct earlier phase (`/sdd-new`, `/sdd-ff`, or `/sdd-continue`).
 
 Status-token routing:
 
@@ -308,14 +308,12 @@ Status-token routing:
 - If `blockedReasons` is non-empty or the normalized token is `resolve-blockers`, report blockers and STOP, except for the status-contract allowance where `verify` may run only to remediate or refresh blocker evidence.
 - `select-change` means ask the user to choose and STOP; `none` means report completion/no-op; `sdd-new` starts the new-change workflow.
 
-Phase-specific routing gates:
+Phase readiness gate:
 
-- `sdd-apply`: require preflight, satisfied init, resolved active change, existing spec/design with `## Secure Development Design` narrative rules/test-design/tasks, passed review workload guard, and `actionContext` allowing edits.
-- `sdd-review`: require completed apply evidence or completed task state, readable proposal/spec/design with `## Secure Development Design` narrative rules/test-design/tasks, changed-file context, and safe workspace context; blocking review findings route back to `sdd-apply`.
-- `sdd-review-security`: require a readable non-blocking `review-report`, design with `## Secure Development Design` narrative rules, changed-file/apply evidence, and safe workspace context; blocking security review findings route back to `sdd-apply` or `resolve-blockers`.
-- `sdd-verify`: require design embedded security evidence plus test-design plus tasks plus apply evidence/completed task state plus non-blocking `review-report` and `review-security-report`, except when verification is explicitly allowed to refresh/remediate blockers.
-- `sdd-archive`: require readable non-blocking `review-report` and `review-security-report`, readable passing `verify-report`, proposal/spec/design with `## Secure Development Design` narrative rules/test-design/tasks/apply-progress/review-report/review-security-report/verify-report, and mandatory security evidence or complete approved exceptions unless an approved partial archive exception exists.
-- If any phase returns `next_recommended: sdd-archive` before `review-report`, `review-security-report`, or `verify-report` exists, override that routing and run the missing phase in DAG order (`sdd-review` before `sdd-review-security` before `sdd-verify`). Archive is never a direct successor of apply, review, or review-security.
+- Do not duplicate phase-specific dependency rules here. Detailed readiness, post-apply ordering, review/security-review evidence requirements, archive readiness, legacy security-artifact handling, and action-context checks live in `skills/_shared/sdd-status-contract.md` plus the target phase skill.
+- For any explicit phase request or phase result, normalize `next_recommended` / `nextRecommended`, inspect dependency state for that phase, and launch only when the status contract reports it as ready.
+- If `blockedReasons` is non-empty, dependency state is `blocked`, or normalized routing is `resolve-blockers`, STOP and report the blocker. Do not infer readiness from prose or optimistic phase summaries.
+- If a phase's returned route conflicts with the status contract's dependency state, prefer the status contract and route to the earliest ready/missing phase in DAG order.
 
 If archive-time stale-checkbox reconciliation is intentionally approved, include this explicit signal when launching `sdd-archive`:
 
@@ -498,95 +496,23 @@ Detailed mode behavior, backend boundaries, defaulting, hybrid conflict handling
 
 ### Delivery Strategy
 
-This is deferred until `sdd-tasks` produces the Review Workload Forecast or until the user explicitly requests delivery planning. It controls how the orchestrator protects reviewer load after forecasted implementation size and risk. It does not authorize PR creation by itself.
+Delivery planning is deferred until `sdd-tasks` produces a Review Workload Forecast or until the user explicitly requests it. The shared Review Workload / Delivery Guard in `skills/_shared/sdd-phase-common.md#f-review-workload-guard` is the source of truth for budget semantics, strategy meanings, chain plan requirements, `size:exception` evidence, and PR authorization boundaries.
 
-If missing when the delivery guard needs it, ask which delivery/review strategy they want:
+Orchestrator responsibilities:
 
-- **`ask-on-risk`** (default): Ask later if `sdd-tasks` forecasts high risk or estimated changed lines exceed the resolved `review_budget_lines`.
-- **`auto-chain`**: If forecast is high, continue with chained/stacked PR slices without asking whether to split, but still ask for missing `chain_strategy` and any destructive or PR-creating approval.
-- **`single-pr`**: Prefer one PR. If forecast exceeds the resolved review budget or 400 changed lines, STOP and require maintainer-approved `size:exception` before apply.
-- **`exception-ok`**: Allow a large PR only because the maintainer explicitly accepts `size:exception`; still require recorded rationale, risk, and verification plan.
-
-Review budget semantics:
-
-- `review_budget_lines` means changed lines: additions + deletions, not net line delta and not file count.
-- The default review-health limit is 400 changed lines unless preflight cached a stricter or looser explicit budget.
-- A PR should remain reviewable in about 60 minutes. If estimated reviewer load exceeds that even under the numeric budget, treat it as review-budget risk.
-
-Forecast handling:
-
-| Forecast from `sdd-tasks` | Required behavior |
-| --- | --- |
-| Low risk and under budget | Continue toward one PR using work-unit commits. |
-| Medium risk or near budget | Continue, but require `sdd-apply` to implement by work unit and monitor changed lines before PR creation. |
-| High risk, `Chained PRs recommended: Yes`, `Decision needed before apply: Yes`, or over budget | Resolve and apply `delivery_strategy` before launching `sdd-apply`. |
-
-Chained delivery requirements:
-
-- When `delivery_strategy` produces chained PRs, `sdd-tasks` and `sdd-apply` MUST follow `chained-pr` and `work-unit-commits`.
-- Every slice must have a clear work-unit boundary: current slice, start state, finished state, dependencies, out-of-scope work, verification plan, and rollback boundary.
-- `auto-chain` authorizes splitting automatically; it does not authorize mixing chain strategies, creating PRs, skipping verification, or applying unrelated tasks.
-- If `chain_strategy` is missing when chaining is required, ask for it before `sdd-apply`, even in Automatic mode.
-
-`size:exception` evidence requirements:
-
-- Record who approved the exception or the exact maintainer instruction in the conversation/artifact state.
-- Record why the change cannot be split safely or why a large single PR is intentionally accepted.
-- Record accepted reviewer risk, verification plan, rollback plan, and any follow-up work.
-- A vague "ok" or "continue" is not approval for `size:exception`; the user must explicitly approve the exception or large single PR.
-
-PR authorization boundary:
-
-- Delivery strategy prepares implementation and review shape; it does not create, push, or open PRs unless the user explicitly requested PR work or the active command/phase contract includes PR creation.
-- Before any PR creation, still follow the PR-specific skills and checks (`branch-pr`, `chained-pr`, review/fresh-context rules, and repository-specific templates).
-
-Cache the delivery strategy once resolved. Pass `delivery_strategy: null` to planning phases until it is resolved; pass the resolved value to `sdd-apply` prompts.
+- Keep `delivery_strategy`, `review_budget_lines`, and `chain_strategy` as `null` until the guard requires a decision.
+- Pass `delivery_strategy: null` to planning phases while deferred; pass the resolved value and evidence to `sdd-apply`.
+- When the forecast requires a decision, ask only for the missing user-owned choice or evidence: delivery strategy, chain strategy, or explicit `size:exception` approval.
+- Persist delivery decisions and read state back before launching `sdd-apply`.
+- Never treat delivery planning as PR authorization. PR creation still requires explicit PR-scoped user intent and the PR skills/checks.
 
 ### Chain Strategy
 
-When `delivery_strategy` results in chained PRs (either by user choice via `ask-on-risk` or automatically via `auto-chain`), use the cached `chain_strategy` if already resolved. If no `chain_strategy` is cached, ask the user which chain strategy to use before launching `sdd-apply`:
+The shared Review Workload / Delivery Guard owns chain semantics, valid strategies, chain-plan shape, and PR-skill requirements. The orchestrator only coordinates the decision and handoff.
 
-- **`stacked-to-main`**: Each PR merges to main in order. Fast iteration, fix on the go. Best for speed-first teams and independent slices.
-- **`feature-branch-chain`**: The feature/tracker branch accumulates final integration; PR #1 targets the tracker branch, later child PRs target the immediate previous PR branch so review diffs stay focused. Only the tracker merges to main. Best for rollback control and coordinated releases.
-
-Selection rules:
-
-- Choose `stacked-to-main` when each slice is independently reviewable, independently verifiable, and can safely merge to `main` in order.
-- Choose `feature-branch-chain` when slices need accumulated integration before `main`, when the feature needs coordinated release, or when rollback/control is more important than fast incremental mainline merges.
-- If the split cannot produce coherent work-unit slices, do not force chaining; require `size:exception` evidence instead.
-
-Chain invariants:
-
-- Do not mix chain strategies after the user chooses one. A strategy change is a delivery-plan change and must be explicitly approved.
-- Each PR/slice must represent one deliverable work unit and include the tests/docs that verify that unit.
-- Each child PR must expose only its own work-unit diff. If it includes changes from prior or future slices, treat that as a base/target bug: stop and retarget/rebase before continuing.
-- Every child PR must include chain context: start state, finished state, prior dependencies, follow-up work, out-of-scope work, verification, rollback scope, and a dependency diagram that marks the current PR.
-- PR creation is still governed by the PR authorization boundary in [Delivery Strategy](#delivery-strategy); choosing a chain strategy does not by itself authorize creating, pushing, or opening PRs.
-
-Feature-branch-chain rules:
-
-- Create or use a draft/no-merge tracker PR for the feature branch when PR creation is in scope.
-- Child PR #1 targets the tracker branch.
-- Later child PRs target the immediate previous child PR branch so review diffs stay focused.
-- Keep the tracker PR draft/no-merge until all child PRs are reviewed, verified, and integrated.
-- Only the tracker branch is intended to merge to `main` at the end of the chain.
-
-Required chain plan before `sdd-apply`:
-
-- Chosen `chain_strategy`
-- Ordered slice/PR plan
-- Current slice boundary
-- Dependency diagram
-- Review budget estimate for each slice (`additions + deletions`)
-- Verification plan per slice
-- Rollback scope per slice
-- Out-of-scope/follow-up work
-
-Persist the selected `chain_strategy` and chain plan in the active artifact state before launching `sdd-apply`. If chain state persistence fails, STOP before implementation.
-
-Cache the chain strategy once resolved. Pass `chain_strategy: null` until it is resolved; do not ask again unless the user changes scope.
-
-When delivery planning yields chained PRs, treat `chained-pr` and `work-unit-commits` as required skill matches: resolve them by registry name through this template's existing skill-resolution mechanism (the same one it already uses to pass skills to phases) and ensure the `sdd-tasks` and `sdd-apply` phases load and follow them BEFORE planning, implementing, or creating any PR. Do not hardcode skill paths; defer resolution to that mechanism.
+- If chained delivery is required and `chain_strategy` is missing, ask the user to choose before `sdd-apply`, even in Automatic mode.
+- Persist the selected `chain_strategy` and chain plan in state, then read state back before implementation.
+- Pass the resolved strategy, chain plan/current slice boundary, and required supplemental skill paths to `sdd-apply`.
 
 ### Dependency Graph
 
@@ -683,45 +609,15 @@ State is an index and recovery pointer, not a replacement for artifacts. Do not 
 
 ### Review Workload Guard (MANDATORY)
 
-After `sdd-tasks` completes and before launching `sdd-apply`, validate the task result's `Review Workload Forecast`. This guard protects reviewer load and PR quality; Automatic mode does not relax it.
+After `sdd-tasks` completes and before launching `sdd-apply`, enforce `skills/_shared/sdd-phase-common.md#f-review-workload-guard`. Automatic mode does not relax this guard.
 
-Required forecast fields:
+Minimum orchestrator checks:
 
-- `estimated_changed_lines`: additions + deletions, not net delta
-- `review_budget_lines`: resolved delivery-guard budget, or `null` when not yet chosen
-- `review_budget_risk`: Low | Medium | High
-- `chained_prs_recommended`: Yes | No
-- `decision_needed_before_apply`: Yes | No
-- `rationale`: concise reason for the recommendation
-- `work_unit_boundaries`: proposed implementation units or reason they cannot be split
-
-If the forecast is missing, stale, ambiguous, or lacks required fields, the guard FAILS. Re-run `sdd-tasks` once with corrective feedback requesting a complete `Review Workload Forecast`. If the retry still lacks a valid forecast, STOP and report the missing fields. Do not launch `sdd-apply` without a valid forecast.
-
-Treat the forecast as stale and re-run `sdd-tasks` before apply when scope, tasks, chain plan, review budget, delivery strategy, or artifact dependencies changed after the forecast was produced.
-
-Forecast handling:
-
-- **Low risk and under budget:** continue toward one PR using work-unit commits. Pass resolved `delivery_strategy`, `review_budget_lines`, and the work-unit boundaries to `sdd-apply`; unresolved values may remain `null` if the forecast does not require a delivery decision.
-- **Medium risk or near budget:** continue only if `sdd-apply` is instructed to implement by work unit, monitor actual changed lines, and stop before PR creation or another slice if actual changed lines exceed budget.
-- **High risk, `Chained PRs recommended: Yes`, `Review budget risk: High`, `400-line budget risk: High`, estimated changed lines exceed resolved `review_budget_lines`, or `Decision needed before apply: Yes`:** resolve and apply `delivery_strategy` before launching `sdd-apply`.
-
-For high-risk or decision-needed forecasts, apply `delivery_strategy`:
-
-- **`ask-on-risk`**: STOP and ask whether to split into chained/stacked PRs or proceed with `size:exception`. If the user chooses chained PRs and `chain_strategy` is not yet cached, also ask which chain strategy to use (stacked-to-main or feature-branch-chain).
-- **`auto-chain`**: Do not ask about splitting. If `chain_strategy` is not yet cached, ask which chain strategy to use. Require a persisted chain plan before `sdd-apply`. Then pass to `sdd-apply`: implement only the next autonomous slice using work-unit commits, with clear start, finish, verification, and rollback boundary.
-- **`single-pr`**: STOP and require/record maintainer-approved `size:exception` before `sdd-apply` when forecast exceeds budget.
-- **`exception-ok`**: Continue only when `size:exception` evidence is recorded; pass to `sdd-apply` that this run uses maintainer-approved `size:exception`.
-
-Hard checks before `sdd-apply`:
-
-- If chaining is selected or forecast exceeds 400 changed lines, confirm `chained-pr` and `work-unit-commits` were resolved and included in the `sdd-tasks` / `sdd-apply` launch context.
-- If chaining is selected, require cached `chain_strategy`, a chain plan, current slice boundary, verification plan, rollback scope, and persisted state containing `chainPlanRef` before implementation.
-- If `size:exception` is used, require explicit evidence: approver/instruction, rationale, accepted risk, verification plan, rollback plan, and follow-up work.
-- A vague "ok", "continue", or interactive phase approval is not `size:exception` approval.
-- Automatic mode may use cached `auto-chain` and cached `chain_strategy`; it may NOT invent missing delivery choices, `size:exception`, choose a missing `chain_strategy`, create PRs, or approve destructive/irreversible actions.
-- If actual changed lines reported by `sdd-apply` exceed `review_budget_lines` or invalidate the forecast, STOP before PR creation, archive, or another implementation slice and re-apply this guard.
-
-When launching `sdd-apply`, always include the resolved `delivery_strategy`, `chain_strategy`, and any chosen PR boundary/exception in the prompt.
+- The tasks artifact contains a readable, current Review Workload Forecast with the required guard lines from the shared contract.
+- Missing, stale, ambiguous, or incomplete forecasts trigger one corrective `sdd-tasks` retry. If still invalid, STOP.
+- High-risk, over-budget, chained, or `Decision needed before apply: Yes` forecasts must resolve delivery strategy, chain strategy when needed, or explicit `size:exception` evidence before `sdd-apply`.
+- Delivery/chain/exception decisions must be persisted in state and read back before implementation.
+- The `sdd-apply` launch must include the resolved delivery context, current slice boundary when applicable, and required supplemental skill paths.
 
 ## Model Assignments
 
@@ -841,64 +737,19 @@ For each sub-agent launch:
 
 ### Skill Resolution Feedback
 
-After every delegation that returns a result, check the `skill_resolution` field:
+Follow `skills/_shared/skill-resolver.md#step-4-report-resolution` for the `skill_resolution` shape, acceptance policy, required-skill checks, and corrective loop.
 
-- `paths-injected` -> preferred path; exact skill paths were passed and loaded.
-- `fallback-registry` -> acceptable only when the sub-agent loaded the same required skills from the registry; refresh the orchestrator skill cache before the next delegation.
-- `fallback-path` -> acceptable only when every loaded path is known, allowed, and points to an expected `SKILL.md`; refresh the registry and prefer injected paths next time.
-- `none` -> acceptable only when no relevant supplemental skills were required for the task.
+Orchestrator minimum:
 
-Expected shape:
-
-```yaml
-skill_resolution:
-  mode: paths-injected | fallback-registry | fallback-path | none
-  loaded:
-    - name: {skill-name}
-      path: {absolute SKILL.md path-or-null}
-  missing_required:
-    - {skill-name}
-  registry_source: session-cache | engram | atl-file | fallback-path | none
-  notes: {text-or-null}
-```
-
-Required-skill checks:
-
-- If the launch envelope included `skill_paths`, the result must report `mode: paths-injected` and list the loaded skills, unless the sub-agent explicitly explains why a path could not be read.
-- If a task required `chained-pr`, `work-unit-commits`, testing, review, security, PR, or repo-specific skills, `missing_required` must be empty before dependent work continues.
-- If `sdd-apply` runs with review-budget risk or chained delivery, missing `chained-pr` or `work-unit-commits` is a gate failure.
-- If `sdd-verify` runs with Strict TDD or testing requirements, missing relevant testing/verification instructions is a gate failure.
-
-Action table:
-
-| `skill_resolution.mode` | Low-risk read-only task | SDD planning phase | `sdd-apply` / `sdd-verify` / PR / security-sensitive work |
-| --- | --- | --- | --- |
-| `paths-injected` | Accept | Accept | Accept if required skills loaded |
-| `fallback-registry` | Accept with warning; refresh cache | Accept only if required skills loaded; refresh cache | Gate warning or failure if required skills were not loaded |
-| `fallback-path` | Accept only for known allowed paths | Accept only for known required paths; refresh registry | Gate failure unless all required paths are known and loaded |
-| `none` | Accept only if no relevant skills existed | Gate warning; re-check registry before next phase | Gate failure when skills were required |
-
-Corrective loop:
-
-- When required skills are missing, re-read the registry (`mem_search` -> `mem_get_observation`, fallback `.atl/skill-registry.md`) and re-run the same phase once with exact `SKILL.md` paths injected.
-- If the retry still misses required skills, STOP and report the missing skills, registry source used, and the phase blocked.
-- Persist a discovery with `mem_save` when registry lookup is missing, stale, or repeatedly fails so future sessions do not silently repeat the problem.
+- Prefer `paths-injected`; refresh the skill registry before the next delegation when a phase reports any fallback mode.
+- Treat non-empty `missing_required` as a gate failure for apply, verify, PR, security-sensitive work, chained delivery, or Strict TDD verification.
+- Retry the same phase once with exact `SKILL.md` paths when required skills are missing; stop and report if the retry still misses them.
 
 ### Sub-Agent Context Protocol
 
 Sub-agents get a fresh context with NO implicit memory. The orchestrator controls context access through the launch envelope, artifact refs, skill paths, and explicit instructions.
 
 Context principle: pass references by default, not bodies. Inline full artifact content only when `artifact_store.mode` is `none`, the artifact is intentionally tiny, or the sub-agent cannot retrieve the dependency from the selected backend.
-
-Context budget:
-
-| `detail_level` | Use when | Context strategy |
-| --- | --- | --- |
-| `concise` | Simple follow-up, read-only status, low-risk retry | Pass only required refs, status, blockers, and exact next action. |
-| `standard` | Normal SDD phases | Pass launch envelope, required artifact refs, selected optional refs, relevant constraints, and skill paths. |
-| `deep` | Risky design/apply/verify, hybrid conflict, broad repo understanding | Pass full launch envelope, all relevant refs, status excerpts, conflict summaries, and explicit verification expectations. |
-
-`detail_level` controls prompt verbosity only. It never reduces required persistence, artifact reads, gatekeeper checks, or result envelope requirements.
 
 #### Non-SDD Tasks (general delegation)
 
@@ -910,43 +761,7 @@ Context budget:
 
 #### SDD Phases
 
-SDD phase agents read artifacts directly from the selected backend using exact refs from the launch envelope. They do not perform broad memory searches, infer active changes, or reconstruct missing artifacts from prose.
-
-Mode-specific context rules:
-
-- `engram`: read only the provided topic keys via `mem_search` / `mem_get_observation`; persist completed artifacts with `capture_prompt: false` when supported.
-- `openspec`: read/write only the provided OpenSpec paths and paths defined by `skills/_shared/openspec-convention.md`.
-- `hybrid`: read both refs when both are provided; apply the Hybrid Conflict Policy before using either side if they differ materially.
-- `none`: use only inline context provided by the orchestrator; if a required dependency is missing from the prompt, return `blocked` with `next_recommended: resolve-blockers`.
-
-Required context by phase:
-
-| Phase | Required refs/context | Optional refs/context | Writes | Block if missing |
-| --- | --- | --- | --- | --- |
-| `sdd-explore` | user request, project context, testing capabilities when available | related prior context summary | `explore` | project context is unavailable and exploration would speculate |
-| `sdd-propose` | user request or explore result sufficient to avoid material speculation | answered proposal questions, prior product decisions | `proposal` | product/business facts are missing and would require guessing |
-| `sdd-spec` | proposal | explore, product assumptions | `spec` | proposal missing/unreadable |
-| `sdd-design` | proposal + spec | architecture conventions, related files summary, baseline security considerations | `design` | proposal/spec missing/unreadable |
-| `sdd-test-design` | proposal + spec + design with `## Secure Development Design` | testing capabilities, design risks, embedded security controls | `test-design` | proposal/spec/design or embedded secure design section missing/unreadable |
-| `sdd-tasks` | spec + design with `## Secure Development Design` narrative rules + test-design | proposal, review budget, delivery/chain preferences | `tasks` | spec/design/test-design missing/unreadable |
-| `sdd-apply` | tasks + spec + design with `## Secure Development Design` narrative rules + test-design + actionContext + Review Workload Guard result | apply-progress, chain plan, strict TDD instructions | `apply-progress` | required artifacts, safe edit roots, or review guard are missing |
-| `sdd-review` | proposal + spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress/evidence + changed-file context + actionContext | review catalog, changed files summary | `review-report` | review inputs, changed-file context, safe workspace context, or persistence capability is missing |
-| `sdd-review-security` | design with `## Secure Development Design` narrative rules + non-blocking review-report + apply-progress/evidence + changed-file context | tasks, test-design, catalog | `review-security-report` | embedded security design, review evidence, changed-file context, or persistence capability is missing |
-| `sdd-verify` | spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress/evidence + non-blocking review-report + non-blocking review-security-report + testing capabilities | strict TDD evidence, changed files summary | `verify-report` | review/security-review evidence, verification evidence, or required artifacts are missing |
-| `sdd-archive` | proposal + spec + design with `## Secure Development Design` narrative rules + test-design + tasks + apply-progress + non-blocking review-report + non-blocking review-security-report + verify-report + state | chain plan, size exception, stale-checkbox reconciliation approval, partial archive exception | `archive-report` | review-report/review-security-report missing/blocking, verify-report missing/non-passing, mandatory security evidence missing, or required artifacts unavailable |
-
-Context integrity checks:
-
-- Sub-agent must confirm `changeName`, `artifact_store.mode`, `currentPhase`/`nextRecommended`, and `stateRevision` when provided before doing phase work.
-- If an artifact ref points to a different change, stale state, wrong mode, missing backend, or materially different hybrid content, return `blocked`; do not silently continue.
-- If `apply-progress`, tasks, chain plan, review budget, or actionContext changed compared with the launch envelope, return `blocked` or report the mismatch in the result envelope.
-- If a required dependency is missing, do not create a placeholder artifact downstream. Route back to the owning earlier phase.
-
-Output ordering:
-
-- Sub-agents persist artifacts according to `artifact_store.mode` before returning their final text envelope.
-- The final sub-agent output must be text containing the [Result Contract](#result-contract), not a tool result.
-- SDD sub-agents must not call `mem_session_summary`; only the top-level orchestrator writes session summaries.
+Follow `skills/_shared/sdd-phase-common.md#b1-sdd-phase-context-contract` for phase-specific context, mode-specific artifact access, and integrity checks. The orchestrator passes launch envelope refs/paths and lets phase agents read required artifacts from the selected backend.
 
 #### Strict TDD Forwarding (MANDATORY)
 
@@ -982,56 +797,24 @@ When launching `sdd-apply` for a continuation batch:
 If context was compacted (you see a compaction message or lose SDD state), recover before continuing:
 
 1. Persist a concise session summary using the runtime's available memory/session-summary mechanism when prior context is still available. This preserves what happened before compaction without coupling the orchestrator contract to one tool name.
-2. Resolve the active `artifact_store.mode` from cached preflight if available. If missing, recover state first; if state cannot prove the mode, ask the user to re-confirm preflight before phase work.
-3. Recover DAG state from the selected backend using the [State Transition Persistence](#state-transition-persistence-hard-gate) contract:
-   - `engram`: `mem_search(query: "sdd/*/state", project: "{project}")` -> `mem_get_observation(id)`.
-   - `openspec`: read `openspec/changes/{change-name}/state.yaml` after selecting the active change.
-   - `hybrid`: read BOTH Engram state and `openspec/changes/{change-name}/state.yaml` when both exist. If they differ materially, apply the Hybrid Conflict Policy and STOP for reconciliation; do not silently prefer one backend.
-   - `none`: state cannot be recovered after compaction; explain that persistence was disabled and ask whether to restart with a persistent mode.
-4. Validate recovered state before trusting it:
-   - `schemaName: gentle-ai.sdd-state`
-   - supported `schemaVersion`
-   - `changeName` matches the selected change
-   - `artifactStore` matches cached/recovered preflight mode
-   - `currentPhase`, `completedPhases`, `nextRecommended`, `artifactRefs`, `blockedReasons`, `stateRevision`, and `updatedAt` are present
-   - `delivery.deliveryStrategy`, `delivery.reviewBudgetLines`, `delivery.chainStrategy`, `delivery.chainPlanRef`, and `delivery.sizeException` are restored when present
-5. If `blockedReasons` is non-empty or `nextRecommended` is `resolve-blockers`, report blockers and STOP. Do not launch phases.
-6. Re-run the backend-aware SDD Init Guard for the selected mode. Do not repair or rewrite recovered state until init is satisfied.
-7. Verify artifact refs required for `nextRecommended` are readable in the selected backend.
-8. Normalize and validate readiness with `skills/_shared/sdd-status-contract.md`. Use artifact-presence fallback only if state is missing or invalid; valid state is authoritative for `currentPhase` and `nextRecommended`.
-9. Resume from `nextRecommended`. Do NOT restart from `/sdd-new` if artifacts already exist.
+2. Resolve `artifact_store.mode` from cached preflight or recovered state. If neither can prove the mode, ask the user to re-confirm preflight before phase work.
+3. Recover and validate DAG state using `skills/_shared/persistence-contract.md#state-recovery-orchestrator`.
+4. If recovery reports blockers, unresolved backend conflicts, or `nextRecommended: resolve-blockers`, report blockers and STOP.
+5. Re-run the backend-aware SDD Init Guard for the selected mode. Do not repair or rewrite recovered state until init is satisfied.
+6. Verify artifact refs required for `nextRecommended` are readable in the selected backend.
+7. Normalize and validate readiness with `skills/_shared/sdd-status-contract.md`.
+8. Resume from `nextRecommended`. Do NOT restart from `/sdd-new` if artifacts already exist.
 
 ### Mid-Session Resumption
 
 If the orchestrator lost track mid-session (no compaction, just context drift):
 
 1. Resolve `artifact_store.mode` from the cached SDD Session Preflight.
-2. Recover DAG state from the selected backend using the [State Transition Persistence](#state-transition-persistence-hard-gate) contract:
-   - `engram`: `mem_search(query: "sdd/{change-name}/state", project: "{project}")` -> `mem_get_observation(id)`.
-   - `openspec`: read `openspec/changes/{change-name}/state.yaml`.
-   - `hybrid`: read BOTH Engram and OpenSpec state when both exist; apply the Hybrid Conflict Policy if they differ materially.
-   - `none`: use only current conversation context; if insufficient, ask the user to restart planning with persistence enabled.
-3. Validate `schemaName`, `schemaVersion`, `changeName`, `artifactStore`, `currentPhase`, `completedPhases`, `nextRecommended`, `blockedReasons`, `stateRevision`, and `updatedAt` before trusting recovered state.
-4. If cached preflight and recovered state disagree on `artifactStore`, STOP and ask for reconciliation unless one side is clearly missing/stale by `stateRevision`/`updatedAt`. Delivery strategy, review budget, and chain strategy may be `null` until the tasks/delivery guard resolves them; reconcile only when both sides have conflicting non-null values.
-5. If `blockedReasons` is non-empty or `nextRecommended` is `resolve-blockers`, report blockers and STOP.
-6. Determine existing artifacts from recovered `completedPhases` and `artifactRefs`.
-7. If state is missing/invalid but persistence is enabled, use artifact presence only as a fallback to reconstruct a shape-compatible status object from `skills/_shared/sdd-status-contract.md`; do not route directly from ad hoc artifact checks.
-8. When fallback reconstruction is required, choose the earliest missing phase in DAG order and then apply the status contract's dependency-state rules. Preserve the safety-critical post-apply order: `apply -> review -> review-security -> verify -> archive`; archive requires non-blocking review reports plus a passing verify report.
-9. Map `currentPhase` -> `nextRecommended` using the [Dependency Graph](#dependency-graph) only when state lacks a valid `nextRecommended`.
-10. Re-enforce the Session Preflight cache only when required minimal values are missing and cannot be recovered from valid state. Do not ask the user to re-confirm Pace/Artifacts when cached preflight/state are still valid.
-11. Re-run Init Guard, verify next-phase readiness, and continue from the next phase.
-
-Recovery safety checklist:
-
-- [ ] State is readable in the selected backend.
-- [ ] Hybrid state has no material Engram/OpenSpec conflict.
-- [ ] State schema/version are valid.
-- [ ] `artifactStore` matches preflight or has been explicitly reconciled.
-- [ ] `blockedReasons` are empty and `nextRecommended` is not `resolve-blockers`.
-- [ ] Delivery/chain/size-exception context is restored before apply or PR-shaped work.
-- [ ] Required artifact refs for the next phase are readable.
-- [ ] Init Guard is satisfied for the selected mode.
-- [ ] Dependency Graph readiness passes for the recovered `nextRecommended`.
+2. Recover and validate DAG state using `skills/_shared/persistence-contract.md#state-recovery-orchestrator`.
+3. If cached preflight and recovered state conflict, follow the recovery reconciliation rules in the persistence contract and STOP when explicit reconciliation is required.
+4. If recovery reports blockers or `nextRecommended: resolve-blockers`, report blockers and STOP.
+5. Re-enforce the Session Preflight cache only when required minimal values are missing and cannot be recovered from valid state.
+6. Re-run Init Guard, verify next-phase artifact refs and readiness, and continue from the recovered `nextRecommended`.
 
 > If no state artifact exists, treat this as a new session: run [Entry Routing](#sdd-entry-routing-mandatory) first, bypass preflight for read-only status, and run minimal [Session Preflight](#sdd-session-preflight-hard-gate) -> [Init Guard](#sdd-init-guard-mandatory) only for mutating routes.
 
