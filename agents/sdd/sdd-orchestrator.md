@@ -420,7 +420,7 @@ The Phase Gate runs after every phase: when a delegated phase returns and BEFORE
 **What the gatekeeper checks (every phase, against the Result Contract):**
 
 - **Contract conformance:** the phase returned `status`, `executive_summary`, `detailed_report`, `artifacts`, `next_recommended`, `risks`, and `skill_resolution`, and `status` indicates success unless a phase-specific gate below says to stop.
-- **Artifact existence:** the declared artifact actually exists and is readable in the active backend — read it back (engram: `mem_search` + `mem_get_observation` on the topic key; openspec: read the file path). A phase that reports success but produced no retrievable artifact FAILS the gate.
+- **Artifact existence:** the phase envelope declares each expected artifact with `persisted: true`, `readable: true`, and a concrete backend ref/path/inline ref. In the happy path, rely on the executor's required persistence read-back and do **not** read full artifact bodies again. A phase that reports success without concrete retrievable artifact metadata FAILS the gate.
 - **No hallucination:** every file path, symbol, command, or artifact the phase claims it created or referenced must actually exist; spot-check the concrete claims. A referenced path that does not resolve FAILS the gate.
 - **No drift from inputs:** the output is consistent with the phase's required inputs per the Dependency Graph — spec stays within the proposal's scope, design answers the proposal, tasks cover spec and design, apply implements the tasks. Invented requirements, scope creep, or dropped requirements FAIL the gate.
 - **Routing coherence:** `next_recommended` follows the Dependency Graph and `risks` are within tolerance (no unaddressed CRITICAL).
@@ -433,9 +433,17 @@ The Phase Gate runs after every phase: when a delegated phase returns and BEFORE
 - **`sdd-archive` `status: partial`:** STOP and report the recovery path from `detailed_report`; do not declare the SDD cycle complete.
 - **Any phase report with unaddressed CRITICAL issues:** STOP, report the CRITICAL issues, and do not launch a dependent phase.
 
+**Post-phase artifact read policy (cost-aware):**
+
+- **Happy path:** do not read full artifact bodies immediately after a phase. Validate the envelope metadata, artifact refs/paths, routing token, risks, and then run the State Persistence Gate. The next phase executor owns reading the full dependency content.
+- **Minimal probe only when needed:** a bounded existence probe is allowed when metadata is incomplete, a path/ref is suspicious, state is missing or stale, the run is recovering after compaction, `artifact_store.mode` is `hybrid`, or the phase returns `partial`/`blocked` and the recovery path depends on artifact contents.
+- **OpenSpec:** prefer path existence/readability metadata and pass `contextFiles`/paths to the next executor; avoid `Read <artifact>.md [limit=N]` on every successful transition.
+- **Engram:** do not call `mem_get_observation` for the produced artifact in the happy path solely to re-read content; reserve it for recovery, ambiguity, or conflict checks.
+- **Hybrid:** read/compare both backends only when the status/envelope/state indicates a possible material conflict or when launching dependent work requires resolving hybrid authority.
+
 **Gatekeeper validation mechanism (cost-aware):**
 
-- **Inline validation for low-risk phase outputs** (`sdd-explore`, `sdd-spec`, `sdd-tasks`, `sdd-archive`): the orchestrator reads the returned artifact back and validates status, readability, scope, and routing. This is validation only; the orchestrator MUST NOT write artifacts or execute phase work inline.
+- **Inline validation for low-risk phase outputs** (`sdd-explore`, `sdd-spec`, `sdd-tasks`, `sdd-archive`): the orchestrator validates envelope conformance, artifact metadata, status, scope summary, risks, and routing. It does not read full artifact bodies in the happy path; use the minimal probe policy above only when needed. This is validation only; the orchestrator MUST NOT write artifacts or execute phase work inline.
 - **Fresh-context reviewer for high-risk phases** (`sdd-design`, `sdd-apply`): delegate a fresh-context reviewer sub-agent for independent judgment, because errors in these phases compound downstream. Use the `sdd-verify` model alias for the delegated gate review.
 - **Escalation on smell:** if an inline check on a low-risk phase finds any smell (status mismatch, unresolved path, suspected drift, missing artifact), escalate that phase to a fresh-context delegated review before deciding.
 
@@ -479,7 +487,7 @@ Run this Phase Gate after EVERY delegated phase in Automatic mode, before state 
 
 - [ ] **Status**: phase returned `status: success` (not `partial` or `blocked`)?
 - [ ] **Report present**: phase returned `detailed_report`, or the phase output is intentionally small enough to omit it?
-- [ ] **Artifact readable**: declared artifact exists and is retrievable — engram: `mem_get_observation(id)` returns content; openspec: file path resolves and is non-empty.
+- [ ] **Artifact metadata valid**: declared artifact has `persisted: true`, `readable: true`, and a concrete backend ref/path/inline ref; only use a bounded existence probe when the Post-phase Artifact Read Policy requires it.
 - [ ] **No hallucination**: spot-check 1–2 claimed file paths or symbol names — do they actually exist in the repo or backend?
 - [ ] **No drift**: output scope matches phase inputs — no invented requirements, no dropped requirements, no scope creep beyond what the dependency graph allows.
 - [ ] **Routing coherence**: `next_recommended` is a valid successor per the [Dependency Graph](#dependency-graph), and no unaddressed `CRITICAL` risks in the `risks` field.
@@ -600,7 +608,7 @@ Orchestrator validation checklist:
 - Ensure required envelope fields are present: `status`, `executive_summary`, `detailed_report`, `artifacts`, `next_recommended`, `risks`, and `skill_resolution`.
 - Normalize `next_recommended` through `skills/_shared/sdd-status-contract.md` before routing, comparing successors, or persisting `nextRecommended` state.
 - Block dependent phases when any risk has `severity: CRITICAL` or `blocker: true`; preserve the safety rule that CRITICAL/blocker risks prevent dependent phases.
-- Verify declared artifacts are persisted and readable in the selected backend; in `none` mode, verify the artifact is returned inline instead.
+- Verify declared artifact metadata reports `persisted: true`, `readable: true`, and concrete refs/paths in the selected backend; in `none` mode, verify the artifact is returned inline instead. Do not re-read full artifact bodies in the happy path because each executor owns persistence read-back before returning `success`.
 - Reject missing envelopes and final outputs that are only tool results rather than text containing the envelope.
 - Check phase-specific minimum details by reference to `skills/_shared/sdd-phase-common.md#d-return-envelope`.
 
@@ -734,7 +742,7 @@ After every sub-agent returns:
 
 - Validate the response against the [Result Contract](#result-contract). Missing envelope or final tool-result-only output is a gate failure.
 - Check `skill_resolution`; if it is not `paths-injected`, refresh the skill registry before the next delegation.
-- Verify declared artifacts are readable in the selected backend.
+- Validate declared artifact metadata in the selected backend. Avoid full artifact body reads in the happy path; pass refs/paths to the next executor and let that executor consume required contents.
 - Run the Automatic Mode Gatekeeper when in `auto` mode; this validates only the phase result.
 - After the Phase Gate passes, run the [State Transition Persistence](#state-transition-persistence-hard-gate) gate: persist/update DAG state, read it back, and only then launch dependent work or report completion.
 - If the sub-agent violated executor boundaries, returned no envelope, or omitted required fields, re-run the same phase once with corrective feedback when retryable; otherwise STOP and report the blocker.

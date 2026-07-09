@@ -71,8 +71,8 @@ sdd-spec returns:
 
 Gatekeeper checklist:
   [ ] Status: success?           FAIL - status is "partial"
-  [x] Artifact readable?         PASS - resolver can read the spec reference from the selected backend
-  [x] No hallucination?          PASS - resolved reference exists in Engram/OpenSpec, or inline context for none
+  [x] Artifact metadata valid?   PASS - envelope declares persisted/readable spec ref for the selected backend
+  [x] No hallucination?          PASS - resolved reference/path is concrete; no full artifact body read needed on this path
   [ ] No drift?                  SKIP - blocked by status failure
   [ ] Routing coherence?         SKIP - blocked by status failure
 
@@ -88,7 +88,7 @@ sdd-spec (retry) returns:
 
 Gatekeeper checklist (retry):
   [x] Status: success?           PASS
-  [x] Artifact readable?         PASS
+  [x] Artifact metadata valid?   PASS
   [x] No hallucination?          PASS
   [x] No drift?                  PASS
   [x] Routing coherence?         PASS
@@ -102,4 +102,5 @@ State Persistence Gate:
   Read-back: PASS - persisted state matches intended transition
 
 -> Phase Gate PASS + State Persistence Gate PASS. Orchestrator continues to sdd-design automatically.
+   sdd-design receives the spec ref/path and reads the full spec content as its own required input.
 ```
