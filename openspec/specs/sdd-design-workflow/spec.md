@@ -76,30 +76,31 @@ For new changes, successful `sdd-design` MUST route directly to `sdd-test-design
 
 ### Requirement: Operational Readiness Planning
 
-`sdd-design` MUST include `## Operational Readiness` when producing `design.md`. The section MUST define operational strategy and expected evidence for logs, monitoring mechanisms, administration, reprocessing, ownership, final documentation inputs, and unresolved gaps. Evaluation is mandatory; disclosure of real operational data is not. Every field MUST contain safe evidence, exact `Pendiente de confirmar:`, or exact `No aplica.` with optional rationale.
+`sdd-design` MAY include `## Operational Considerations` when the change design makes operational behavior applicable. The section MUST be design-owned and conditional, not a mandatory readiness gate. When present, it SHOULD cover applicable logs/errors, monitoring, administration operations, reprocessing/recovery, and backup/retention/cleanup/generated-artifact concerns. It MUST define expected downstream evidence only for applicable concerns and MUST use safe evidence, `Pendiente de confirmar:`, or `No aplica.` without inventing data.
 
-#### Scenario: Readiness strategy is designed
+#### Scenario: Applicable operational behavior is designed
 
-- GIVEN proposal and specs are readable
+- GIVEN proposal and specs show operational behavior applies
 - WHEN `sdd-design` succeeds
-- THEN `design.md` MUST include `## Operational Readiness`
-- AND it MUST describe expected evidence and monitoring mechanisms.
+- THEN `design.md` SHOULD include `## Operational Considerations`
+- AND it MUST describe expected evidence for applicable concerns only.
+
+#### Scenario: Operational behavior does not apply
+
+- GIVEN operational considerations are out of scope
+- WHEN `design.md` is written
+- THEN the section MAY be omitted or state `No aplica.` with rationale
+- AND downstream phases MUST NOT require readiness completeness.
 
 #### Scenario: Production data is unavailable
 
-- GIVEN a required operational field lacks user-provided data
-- WHEN design records readiness
-- THEN it MUST use exact `Pendiente de confirmar:` instead of inventing data.
-
-#### Scenario: Field is not applicable
-
-- GIVEN an operational field is out of scope
-- WHEN design records readiness
-- THEN it MUST use exact `No aplica.` with optional rationale.
+- GIVEN an applicable operational field lacks user-provided data
+- WHEN design records the consideration
+- THEN it MUST use `Pendiente de confirmar:` instead of inventing data.
 
 ### Requirement: Operational Evidence Safety in Design
 
-Design MUST keep safe SDD evidence separate from final operational documentation. It MUST NOT include production hostnames, IPs, ports, SID/service names, credentials, tokens, payloads, full ID lists, or generated file bytes unless the user explicitly provided them for final operational documentation.
+Design MUST keep safe SDD evidence separate from final operational documentation. It MUST NOT include production hostnames, IPs, ports, SID/service names, credentials, tokens, payloads, full ID lists, or generated file bytes unless the user explicitly provided them for final operational documentation. This safety boundary applies only to operational evidence that the design includes or references.
 
 #### Scenario: Restricted identifier is needed later
 

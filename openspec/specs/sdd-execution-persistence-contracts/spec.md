@@ -251,29 +251,29 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 ### Requirement: Operational Readiness Evidence Persistence
 
-SDD persistence, status, verify, and archive contracts MUST preserve operational-readiness evidence, placeholders, gaps, and artifact references across supported artifact-store modes. Verify and archive MUST confirm readiness completeness without requiring disclosure of real operational data.
+SDD persistence, status, verify, and archive contracts MUST preserve operational considerations, evidence, placeholders, gaps, and artifact references when they exist in design, test-design, tasks, apply, review, security review, verify, or archive evidence. Verify and archive MUST consume actual evidence rather than a shared operational-readiness contract. They MUST NOT require mandatory operational category completeness or disclosure of real operational data.
 
-#### Scenario: Readiness refs survive workflow
+#### Scenario: Operational refs survive workflow
 
-- GIVEN design, test-design, tasks, apply, review, and security review record readiness evidence
+- GIVEN any SDD artifact records operational considerations or gaps
 - WHEN status, verify, or archive resolves artifacts
-- THEN readiness refs and unresolved gaps MUST remain readable.
+- THEN those refs and unresolved gaps MUST remain readable.
 
-#### Scenario: Verify checks readiness completion
+#### Scenario: Verify checks applicable evidence
 
-- GIVEN mandatory readiness fields exist
+- GIVEN design or downstream artifacts make operational evidence applicable
 - WHEN verify runs
-- THEN each field MUST have evidence, exact `Pendiente de confirmar:`, or exact `No aplica.`.
+- THEN each applicable item MUST have safe evidence, `Pendiente de confirmar:`, or `No aplica.`.
 
-#### Scenario: Archive preserves handoff evidence
+#### Scenario: No applicable evidence exists
 
-- GIVEN verification passes
-- WHEN archive completes
-- THEN archived evidence MUST preserve readiness status, evidence refs, and unresolved gaps for manual documentation.
+- GIVEN design marks operational considerations not applicable or omits them safely
+- WHEN verify or archive runs
+- THEN missing readiness categories MUST NOT block completion.
 
 ### Requirement: Manual Operational Document Boundary
 
-The DAG MUST NOT treat `sdd-operational-doc` as a required phase. The utility MUST remain manual, post-archive, and archive-consuming. It MUST NOT invent data and MUST preserve operational document sections 1-9 and diagrams R1-R4.
+The DAG MUST NOT treat `sdd-operational-doc` as a required phase. The utility MUST remain manual, post-archive, and archive-consuming. It MUST generate from archived evidence, MUST NOT invent data, and MUST mark absent inapplicable values as `No aplica.` or unresolved applicable values as pending while preserving operational document sections 1-9 and diagrams R1-R4.
 
 #### Scenario: Archive completes without operational doc
 
@@ -283,14 +283,14 @@ The DAG MUST NOT treat `sdd-operational-doc` as a required phase. The utility MU
 
 #### Scenario: Manual utility consumes archive
 
-- GIVEN an archived change contains readiness evidence
+- GIVEN an archived change contains operational evidence or gaps
 - WHEN `sdd-operational-doc` is invoked manually
 - THEN it MUST read archived evidence first
-- AND unresolved fields MUST remain `Pendiente de confirmar:`.
+- AND absent values MUST remain pending or `No aplica.` without invention.
 
 ### Requirement: Final Documentation Restricted Data Boundary
 
-Production hostnames, IPs, ports, SID/service names, and similar operational identifiers MAY be included only in final operational documentation when explicitly provided by the user. Ordinary SDD evidence and examples MUST preserve safe placeholders or references instead.
+Production hostnames, IPs, ports, SID/service names, and similar operational identifiers MAY be included only in final operational documentation when explicitly provided by the user. Ordinary SDD evidence and examples MUST preserve safe placeholders or references for applicable operational considerations.
 
 #### Scenario: User provides final operational values
 

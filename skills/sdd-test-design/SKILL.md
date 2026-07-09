@@ -40,7 +40,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Mutates | None outside the produced test design artifact. |
 | Mandatory artifact behavior | Do not route directly from design to tasks without a complete `test-design` artifact. No-impact changes still produce a concise no-impact assessment rather than omitting the artifact. |
 | Planned evidence mapping | Preserve scenario, design-risk, applicable security category rule, check type, severity, expected evidence, no-impact assessment, and open-question mapping. Mandatory cases are verification-blocking when uncovered. |
-| Operational readiness planning | Consume `design.md#Operational Readiness` and plan static, documentary, manual, or automated checks from `skills/_shared/sdd-operational-readiness-contract.md` for marker exactness, traceability, safe evidence, monitoring mechanism coverage, restricted-data absence, final-document boundary, and unavailable-tooling substitutions. |
+| Operational considerations planning | Consume `design.md#Operational Considerations` or equivalent design evidence when present, and plan static, documentary, manual, or automated checks only for applicable operational evidence/gaps. If design omits operational considerations or marks them `No aplica.`, do not synthesize mandatory operational categories. |
 | Source-row planning | When `design.md#secure-development-design` describes corporate security context, plan static/manual/automated checks from applicable narrative category rules and changed-surface context only. Test-design MUST NOT require design to carry YAML, schema fields, compact controls, Source IDs, matrices, machine-readable applicability fields, or exhaustive `N/A` rows; it MUST preserve `review-security` as the owner that expands every Source ID exactly once and validates omitted/`N/A` rows. |
 | Unavailable tooling | If runtime, build, coverage, lint, typecheck, or format tooling is unavailable, record explicit unavailable-tooling notes and plan static/manual evidence instead. Missing tooling is never passing evidence. |
 | Downstream consumption | `sdd-tasks`, `sdd-apply`, `sdd-verify`, and archive readiness checks consume `test-design` as the test-planning source of truth. |
@@ -67,7 +67,7 @@ Routing rules for `next_recommended`:
 | Specs/design have no behavior or testability impact | Write a no-impact assessment in `test-design.md`; do not treat the artifact as absent. |
 | A mandatory spec scenario or design risk has no planned check and no justified skip | Return `blocked` or fix the draft before persistence. |
 | A mandatory applicable narrative security rule has no planned check, non-test evidence, or complete approved exception | Return `blocked` with `next_recommended: resolve-blockers`; uncovered mandatory security rules cannot proceed to tasks. |
-| `design.md#Operational Readiness` exists but readiness checks are missing | Fix the draft before persistence; mandatory readiness evidence cannot be left unplanned. |
+| Design includes applicable operational considerations but corresponding checks are missing | Fix the draft before persistence; applicable operational evidence cannot be left unplanned. |
 | Missing runtime/build/lint/type/format/coverage tooling is treated as a pass | Fix the draft before persistence; unavailable tooling requires static/documentary/manual substitute evidence and explicit notes. |
 | Test-design attempts to require design YAML, schema fields, compact controls, Source IDs, matrices, machine-readable applicability fields, or exhaustive `N/A` rows | Fix the draft before persistence; these are review-security-owned concerns, not test-design prerequisites. |
 | An applicable narrative rule lacks planned safe evidence | Return `blocked` with `next_recommended: resolve-blockers`; unsupported applicable coverage cannot proceed to tasks. |
@@ -86,8 +86,7 @@ Before writing the artifact, read:
 - Specs: requirements and scenarios that need coverage.
 - Design: architecture decisions, data flow, file changes, contracts, and testing strategy.
 - Embedded secure development design: `design.md#secure-development-design` changed-surface classification, applicable narrative category rules, required controls, mandatory evidence expectations, residual risks, safe-evidence policy, and approved exceptions. Historical exhaustive `N/A` rows may be read for compatibility, but new active test-design MUST NOT require them.
-- Operational readiness design: `design.md#Operational Readiness` strategy, evidence plan, exact marker usage, restricted-data boundary, monitoring mechanisms, unresolved gaps, owner phases, and manual operational document handoff.
-- Shared readiness contract: `skills/_shared/sdd-operational-readiness-contract.md` for mandatory categories, exact markers, safe-evidence boundary, and phase ownership.
+- Operational considerations design: `design.md#Operational Considerations` or equivalent design evidence for strategy, evidence plan, exact marker usage, restricted-data boundary, monitoring mechanisms, unresolved gaps, owner phases, and manual operational document handoff when applicable.
 - Testing capabilities when available:
   - Engram: `sdd/{project}/testing-capabilities`
   - OpenSpec: `openspec/config.yaml` `testing` section
@@ -101,12 +100,12 @@ Collect planned checks from:
 - Design risks, compatibility decisions, routing/state/persistence contracts, migrations, and rollout notes.
 - Applicable embedded secure-development narrative rules, mandatory evidence expectations, carried risks, and archive-gate notes.
 - Changed-surface context and applicable narrative category rules from `design.md#secure-development-design`; do not parse or require design YAML, schema fields, compact matrices, Source ID matrices, machine-readable applicability fields, or exhaustive `N/A` rows.
-- Operational-readiness categories and handoffs: logs/error evidence, monitoring mechanisms, administration, reprocessing/recovery, ownership, backup/retention/cleanup/generated artifacts, final-document inputs, exact markers, safe evidence, and unresolved gaps.
+- Operational considerations and handoffs from design evidence: logs/error evidence, monitoring mechanisms, administration, reprocessing/recovery, ownership, backup/retention/cleanup/generated artifacts, final-document inputs, exact markers, safe evidence, and unresolved gaps when applicable.
 - Testing capability constraints such as unavailable runners, missing coverage tooling, or static-only repositories.
 
 When runtime test runner, coverage, linter, type checker, or formatter commands are unavailable, plan static/manual evidence explicitly. Missing tooling is a reported constraint, not passing evidence.
 
-Readiness checks MUST include static/documentary/manual validation for exact `Pendiente de confirmar:` and `No aplica.` markers, evidence traceability, non-SQL-only monitoring mechanisms, restricted operational data absence, separation of ordinary SDD evidence from final operational document inputs, and unavailable-tooling carry-forward.
+Operational checks MUST include static/documentary/manual validation for exact `Pendiente de confirmar:` and `No aplica.` markers, evidence traceability, non-SQL-only monitoring mechanisms, restricted operational data absence, separation of ordinary SDD evidence from final operational document inputs, and unavailable-tooling carry-forward when the design makes those concerns applicable.
 
 Mandatory narrative-rule evidence blockers MUST stay visible: unsafe evidence or missing evidence for an applicable mandatory category rule blocks test-design. Exhaustive omitted-row and `N/A` validation belongs to `review-security-report.md`; warning-only coverage remains tracked as warnings and may route forward only when mandatory evidence is complete.
 
@@ -155,11 +154,11 @@ openspec/changes/{change-name}/
 | --- | --- | --- | --- | --- | --- | --- |
 | TD-001 | Spec: {requirement/scenario} | {planned check} | automated/manual/static | mandatory/non-mandatory | {command, artifact, file-contract check, or manual evidence} | {constraints/dependencies} |
 
-## Operational Readiness Checks
+## Operational Considerations Checks
 
 | Category | Planned Check | Type | Expected Evidence | Unavailable Tooling Note |
 | --- | --- | --- | --- | --- |
-| {readiness category} | {marker/traceability/safe-evidence/monitoring/final-doc-boundary check} | static/manual/documentary | {path, section, sanitized summary, marker, or N/A rationale} | {runtime/build/lint/type/format/coverage unavailable note when applicable} |
+| {operational concern} | {marker/traceability/safe-evidence/monitoring/final-doc-boundary check} | static/manual/documentary | {path, section, sanitized summary, marker, or N/A rationale} | {runtime/build/lint/type/format/coverage unavailable note when applicable} |
 
 ## Security Control Coverage
 
@@ -206,7 +205,7 @@ Before persisting or returning, verify:
 - Static/manual checks are allowed when no runtime test runner exists.
 - Unavailable runtime/build/coverage/lint/typecheck/format tooling is reported explicitly and never claimed as passing evidence.
 - No-impact changes include the no-impact assessment and still produce the artifact.
-- Operational readiness checks cover exact markers, traceability, safe evidence, monitoring mechanism coverage, final-document boundary, and restricted-data absence.
+- Operational considerations checks cover exact markers, traceability, safe evidence, monitoring mechanism coverage, final-document boundary, and restricted-data absence when design evidence makes those concerns applicable.
 - Blocking open questions set the return status to `blocked`.
 
 ### Step 6: Persist Artifact

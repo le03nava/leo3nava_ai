@@ -102,33 +102,45 @@ Security-related review controls MUST cross-reference the security guideline cat
 
 ### Requirement: Operational Readiness General Review
 
-`sdd-review` MUST validate operational-readiness existence, traceability, no-invention behavior, and exact placeholder usage without changing the fixed 96-control matrix shape. Readiness findings MAY be reported outside the matrix. Review MUST NOT require real operational data disclosure.
+`sdd-review` MUST validate operational evidence only when design, test-design, tasks, apply evidence, or archived context says operational considerations apply. Review MUST assess traceability, no-invention behavior, and placeholder usage for present or planned evidence without changing the fixed 96-control matrix shape. Review MUST NOT enforce mandatory operational category completeness or require real operational data disclosure.
 
-#### Scenario: Readiness evidence is traceable
+#### Scenario: Operational evidence is traceable
 
-- GIVEN apply evidence and SDD artifacts are readable
+- GIVEN applicable operational evidence is present in SDD artifacts
 - WHEN general review runs
-- THEN it MUST verify operational-readiness fields cite evidence, `Pendiente de confirmar:`, or `No aplica.`.
+- THEN it MUST verify the evidence cites safe sources, `Pendiente de confirmar:`, or `No aplica.`.
 
 #### Scenario: Review detects invented data
 
-- GIVEN a readiness field contains unsupported operational details
+- GIVEN operational evidence contains unsupported operational details
 - WHEN review validates traceability
 - THEN the finding MUST be blocking or routed to `resolve-blockers`.
 
+#### Scenario: Operational evidence is absent by design
+
+- GIVEN design marks operational considerations not applicable
+- WHEN review runs
+- THEN absence of readiness categories MUST NOT be a blocker.
+
 #### Scenario: Matrix shape is preserved
 
-- GIVEN readiness review is added
+- GIVEN operational review findings are recorded
 - WHEN `review-report.md` is written
 - THEN the 96-control matrix columns MUST remain unchanged
-- AND readiness evidence MAY appear in a separate section.
+- AND operational evidence MAY appear in a separate section.
 
 ### Requirement: Operational Review Handoff
 
-Review MUST hand off enough changed-file, evidence, placeholder, and gap context for `sdd-review-security` to validate leakage boundaries without duplicating security-review responsibilities.
+Review MUST hand off changed-file, evidence, placeholder, and gap context for operational considerations that exist. It MUST NOT create a handoff requirement from an absent shared readiness contract.
 
-#### Scenario: Security review receives readiness context
+#### Scenario: Security review receives applicable context
 
-- GIVEN general review is non-blocking
+- GIVEN general review finds applicable operational evidence
 - WHEN security review starts
-- THEN it MUST be able to read readiness evidence locations and unresolved gaps from review output.
+- THEN it MUST be able to read evidence locations and unresolved gaps from review output.
+
+#### Scenario: No applicable context exists
+
+- GIVEN no operational considerations apply
+- WHEN security review starts
+- THEN missing readiness handoff MUST NOT block the phase.

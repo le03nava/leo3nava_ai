@@ -31,7 +31,7 @@ Accept from the user or launch context:
 
 Use the selected backend through `skills/_shared/persistence-contract.md`.
 
-Archived Operational Readiness evidence is the first authority. Before drafting any section, read the archived readiness status, evidence refs, unresolved gaps, warning carry-forward, and manual-document handoff notes from archive artifacts when present. Use proposal, specs, design, test-design, tasks, review, review-security, and verify artifacts only to support or clarify the archived readiness handoff, not to invent missing operational facts.
+Archived operational evidence is useful input when present, but it is not required for generation. Before drafting any section, read archived operational evidence/status, refs, unresolved gaps, warning carry-forward, and manual-document handoff notes from archive artifacts when present. Use proposal, specs, design, test-design, tasks, review, review-security, and verify artifacts only to support or clarify the archived handoff, not to invent missing operational facts.
 
 | Mode | Read from |
 | --- | --- |
@@ -42,7 +42,7 @@ Archived Operational Readiness evidence is the first authority. Before drafting 
 
 When reading an OpenSpec archive, inspect available `proposal.md`, `specs/**/spec.md`, `design.md`, `test-design.md`, `tasks.md`, `review-report.md`, `review-security-report.md`, `verify-report.md`, and any archive report/evidence files.
 
-## Operational Readiness Boundary
+## Operational Evidence Boundary
 
 | Data class | Allowed in SDD evidence/archive sources | Allowed in final operational document |
 | --- | --- | --- |
@@ -72,7 +72,7 @@ If final restricted values are provided by the user, include them only in the ge
 | Condition | Action |
 | --- | --- |
 | Archived change cannot be found | Stop and ask for the archive path or change name. |
-| Archived Operational Readiness evidence is absent | Continue only as a clearly marked draft using `Pendiente de confirmar:` for applicable missing fields; do not backfill SDD evidence or treat the draft as archive readiness. |
+| Archived operational evidence is absent | Continue as a marked draft. Use `No aplica.` for inapplicable absent content and `Pendiente de confirmar:` for missing applicable content; do not backfill SDD evidence or treat the draft as archive readiness. |
 | Hybrid backends differ materially | Stop and ask which backend is authoritative. |
 | Product metadata is missing | Generate with `Pendiente de confirmar:` fields; do not block. |
 | Operational commands are missing | Do not fabricate; include pending placeholders with the exact missing command type. |
@@ -84,9 +84,9 @@ If final restricted values are provided by the user, include them only in the ge
 
 1. Resolve the archived change and selected backend.
 2. Read the template at `skills/sdd-operational-doc/assets/operational-document-template.md`.
-3. Read archived Operational Readiness evidence first: readiness status, refs, unresolved gaps, warnings, and manual-document handoff notes.
+3. Read archived operational evidence when present: operational status, refs, unresolved gaps, warnings, and manual-document handoff notes. Missing archived operational evidence is not a blocker.
 4. Read archived SDD artifacts only as supporting context and collect only safe evidence needed for the template.
-5. Derive entrypoints, touched objects, systems, schedules, UI impact, technologies, monitoring signals, logs, backup/reprocess operations, and support gaps from archived evidence. If evidence is missing, use the exact marker instead of inference.
+5. Derive entrypoints, touched objects, systems, schedules, UI impact, technologies, monitoring signals, logs, backup/reprocess operations, and support gaps from archived evidence. If evidence is absent and the content is inapplicable, write `No aplica.`; if evidence is absent but the content appears applicable, use `Pendiente de confirmar:` instead of inference.
 6. Generate the complete document in neutral professional Spanish.
 7. If writing to disk, use a safe Markdown path such as `openspec/changes/archive/YYYY-MM-DD-{change-name}/operational-document.md` unless the user provided another path.
 8. Return a concise summary with output location, sections marked `No aplica.`, and fields marked `Pendiente de confirmar:`.

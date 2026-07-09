@@ -1,10 +1,6 @@
-# sdd-operational-readiness-workflow Specification
+# Delta for sdd-operational-readiness-workflow
 
-## Purpose
-
-Define design-driven operational considerations, safe evidence boundaries, phase ownership, archive handoff, and manual operational documentation consumption for SDD changes.
-
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Design-Driven Operational Considerations
 
@@ -23,9 +19,12 @@ Operational considerations MUST be conditional and design-driven. Active phases 
 - WHEN downstream phases validate operational evidence
 - THEN they MUST NOT require mandatory readiness category completeness.
 
+## MODIFIED Requirements
+
 ### Requirement: Safe SDD Evidence Boundary
 
 Ordinary SDD evidence, code, tests, fixtures, and examples MUST NOT include production hostnames, IPs, ports, SID/service names, credentials, tokens, payloads, full ID lists, generated file bytes, or equivalent restricted operational details. Such identifiers MAY appear only in final operational documentation when explicitly provided by the user. This boundary applies wherever operational evidence exists.
+(Previously: this safety boundary supported a mandatory operational-readiness workflow.)
 
 #### Scenario: Restricted value appears in SDD evidence
 
@@ -36,6 +35,7 @@ Ordinary SDD evidence, code, tests, fixtures, and examples MUST NOT include prod
 ### Requirement: Phase Ownership Model
 
 Design MUST own whether operational considerations apply and define expected evidence when they do. Test-design, tasks, review, verify, and archive MUST consume actual design/test-design/tasks/apply/archive evidence without requiring a shared readiness contract. Review and review-security MUST keep distinct responsibilities.
+(Previously: all phases confirmed collection, traceability, completeness, and unresolved gaps for mandatory readiness.)
 
 #### Scenario: Design declares monitoring strategy
 
@@ -53,6 +53,7 @@ Design MUST own whether operational considerations apply and define expected evi
 ### Requirement: Manual Operational Document Consumption
 
 `sdd-operational-doc` MUST remain a manual post-archive utility. It MUST consume archived evidence, MUST NOT invent missing data, and MUST preserve sections 1-9 and diagrams R1-R4. Missing applicable values MUST remain pending; absent inapplicable values MUST be `No aplica.`.
+(Previously: it consumed archived readiness evidence from the mandatory workflow.)
 
 #### Scenario: Archived evidence has gaps
 
@@ -60,3 +61,10 @@ Design MUST own whether operational considerations apply and define expected evi
 - WHEN the operational document is generated
 - THEN missing applicable values MUST remain pending
 - AND inapplicable values MUST be `No aplica.`.
+
+## REMOVED Requirements
+
+### Requirement: Mandatory Operational Readiness Evaluation
+
+(Reason: operational readiness is no longer mandatory for every SDD change; applicability is owned by design.)
+(Migration: use `Design-Driven Operational Considerations` and downstream evidence from actual artifacts.)
