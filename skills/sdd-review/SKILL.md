@@ -34,8 +34,9 @@ Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routi
 | Review catalog | Use the stable 96-control corporate checklist catalog in `references/control-catalog.md`; every `REV-CORP-001..REV-CORP-096` Item ID must appear exactly once in the matrix. |
 | Matrix contract | The matrix header must be exactly: `Item`, `Artifact/Deliverable`, `Requirement`, `Reviewer`, `Standard`, `Severity`, `Complies`, `Affected Requirement`, `Evidence Location`, `Observations/Comments`. Do not add a Category column. |
 | Complies values | `Complies` is limited to `Yes`, `No`, or `N/A`. Every `N/A` row must include Evidence Location proving irrelevance and Observations/Comments explaining scope. |
+| Operational readiness review | Validate readiness existence, traceability, no-invention behavior, exact markers, evidence refs, unavailable-tooling notes, and unresolved gaps outside the fixed 96-control matrix, following `skills/_shared/sdd-operational-readiness-contract.md`. Do not add readiness rows or columns to the matrix. |
 | Security boundary | Review rows may cite security guideline IDs or source IDs in `Standard`, but `design.md#secure-development-design`, `review-security-report.md`, and `skills/sdd-review-security/references/security-guideline-catalog.md` remain authoritative for classification, mandatory controls, row evidence, and exceptions. |
-| Security handoff | `review-report.md` must include changed-file context, implementation evidence summaries, finding context, and `design.md#secure-development-design` references sufficient for `sdd-review-security` to validate security handoff evidence without duplicating the 96-control matrix. |
+| Security handoff | `review-report.md` must include changed-file context, implementation evidence summaries, finding context, `design.md#secure-development-design` references, and readiness refs/gaps sufficient for `sdd-review-security` to validate security handoff evidence without duplicating the 96-control matrix or owning leakage verdicts. |
 | Success routing | No blocking failures: `next_recommended: review-security`. Non-blocking findings must remain in the report as warnings. |
 | Failure routing | Critical, blocking, or explicitly blocking failed controls: `next_recommended: apply`; list failed controls and affected requirements. |
 | Block routing | Follow `skills/_shared/sdd-post-apply-gates.md`; invalid catalog shape also routes to `resolve-blockers`. |
@@ -48,6 +49,8 @@ Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routi
 | Catalog does not contain exactly 96 unique Item IDs | Return `blocked`; do not write a passing report. |
 | Any matrix row uses a `Complies` value outside `Yes`, `No`, `N/A` | Fix before persistence, or return `blocked`. |
 | Any `N/A` lacks Evidence Location or comment | Fix before persistence, or return `blocked`. |
+| Readiness checks are inserted into the 96-control matrix or change its header/row count | Fix before persistence, or return `blocked`; readiness belongs in a separate section. |
+| Readiness evidence contains unsupported invented operational values | Treat as blocking or route to `resolve-blockers`; review must not require real operational data disclosure. |
 | Blocking or critical control fails | Persist the report with verdict `FAIL`, return `next_recommended: apply`, and identify failed controls plus affected requirements. |
 | Only non-blocking findings exist | Persist the report with verdict `PASS WITH WARNINGS` and return `next_recommended: review-security`. |
 
@@ -58,13 +61,14 @@ Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routi
 3. Read `references/control-catalog.md` and confirm 96 unique Item IDs mapped one-to-one to corporate checklist source items 1 through 96.
 4. Inspect applied changes, task evidence, specs, design including `design.md#secure-development-design` narrative rules, and test-design cases. Treat standalone `security-design.md` as optional legacy/archive context only.
 5. Fill `review-report.md` using `references/report-template.md` and one matrix row per catalog Item ID, including changed-file/security handoff evidence for `sdd-review-security`.
+5a. Add a separate operational-readiness section that validates readiness fields have safe evidence, exact `Pendiente de confirmar:`, or exact `No aplica.`, checks traceability/no-invention/unavailable-tooling notes, and hands off refs plus unresolved gaps to `sdd-review-security` for leakage validation.
 6. Classify findings as blocking or non-blocking. Blocking/critical findings prevent verify; non-blocking findings proceed as warnings.
 7. Validate the report before persistence: required sections present, exact matrix header, 96 unique rows, valid `Complies`, complete `N/A` evidence, failed controls tied to affected requirements, and next recommendation matching verdict.
 8. Persist the review artifact and return the Section D envelope from `skills/_shared/sdd-phase-common.md`.
 
 ## Output Contract
 
-Return the Section D envelope. Put `## Review Report Summary` in `detailed_report` with change, inputs inspected, verdict, blocking summary, evidence summary, changed-file/security handoff summary, matrix row count, catalog validation result, security-boundary notes, unavailable runtime/coverage/lint/typecheck/format checks when relevant, next route to review-security, and the persisted artifact path/topic.
+Return the Section D envelope. Put `## Review Report Summary` in `detailed_report` with change, inputs inspected, verdict, blocking summary, evidence summary, operational-readiness summary outside the 96-control matrix, changed-file/security handoff summary including readiness refs/gaps, matrix row count, catalog validation result, security-boundary notes, unavailable runtime/coverage/lint/typecheck/format checks when relevant, next route to review-security, and the persisted artifact path/topic.
 
 ## References
 
@@ -74,3 +78,4 @@ Return the Section D envelope. Put `## Review Report Summary` in `detailed_repor
 - `../_shared/skill-resolver.md` — supplemental skill loading and `skill_resolution` protocol.
 - `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
 - `../_shared/sdd-post-apply-gates.md` — common post-apply gates, routing defaults, safe evidence, and matrix ownership boundaries.
+- `../_shared/sdd-operational-readiness-contract.md` — readiness categories, exact markers, safe evidence, phase ownership, and handoff boundaries.

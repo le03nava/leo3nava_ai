@@ -45,6 +45,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
 | Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, general review verdict/blocking state, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. |
 | Source-row preservation | When corporate source-row validation applies, preserve source-row coverage summary, catalog snapshot identity/path, exact Source ID count, compact `SEC-*` mappings, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, and review-security/verify verdict links. Archive MUST NOT require legacy standalone `security-design.md` or `scripts/validate_security_design.ps1` for active new changes, and MUST NOT copy the full review-security source-row matrix into archive summaries. |
+| Operational readiness preservation | Preserve readiness status, evidence refs, exact `Pendiente de confirmar:` gaps, exact `No aplica.` states, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries. Archive MUST NOT require `sdd-operational-doc` execution. |
 | Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
 | Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
 | Block routing | `next_recommended: review`, `review-security`, `verify`, `apply`, or `resolve-blockers` according to missing/blocking review evidence, missing verify evidence, unchecked tasks, missing embedded secure design, unsafe context, destructive merge, destination conflict, or persistence failure. |
@@ -72,6 +73,8 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 | Archive destination already exists | Return `blocked` with `next_recommended: resolve-blockers` unless the orchestrator provides an explicit alternate destination. |
 | Archive operation would leave `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and report the offending path. |
 | Archive verification fails after filesystem operations | Return `partial` with `next_recommended: resolve-blockers` and exact failed checks and recovery paths. |
+| Readiness refs, gaps, warnings, unavailable-tooling notes, or manual-doc handoff are missing from archive evidence | Return `blocked` or route per `skills/_shared/sdd-post-apply-gates.md`; do not complete archive by dropping readiness context. |
+| Archive criteria require running `sdd-operational-doc` | Fix the archive report before persistence; the utility is manual post-archive and not a DAG gate. |
 | Archive report persistence fails | Return `partial` with `next_recommended: resolve-blockers` and the full archive report inline in `detailed_report`. |
 
 ## What to Do
@@ -147,6 +150,7 @@ If the destination already exists, STOP and return `blocked` with the existing d
 - [ ] Archive contains `review-security-report.md` / security review artifact with a non-blocking verdict
 - [ ] Missing `test-design.md` is blocked unless an explicit partial archive exception is provided and recorded in the archive report
 - [ ] Mandatory applicable security evidence is verified or covered by complete approved exceptions recorded in the audit trail
+- [ ] Readiness status, evidence refs, unresolved gaps, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries are preserved without requiring `sdd-operational-doc` execution
 - [ ] Archived `tasks.md` has no unchecked implementation tasks, unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof
 - [ ] Active changes directory no longer has this change
 - [ ] Archive report lists all synced domains, archive destination, verification verdict, and any intentional-with-warnings reason
@@ -174,6 +178,7 @@ Before persistence, validate the archive report includes:
 - Verification verdict and confirmation that no CRITICAL issues were archived
 - Runtime test runner/linter/typechecker/formatter/coverage availability from verify evidence; unavailable tools must be recorded explicitly rather than treated as passing evidence
 - Corporate source-row audit trail when applicable: catalog snapshot identity/path, expected expanded Source ID count, exact-once coverage status, compact `SEC-*` mappings, safe evidence refs, `N/A` evidence/justification status, warning-only findings, complete exceptions, review-security source-row verdict, verify source-row consumption, report links, and confirmation that no source-row blockers remain
+- Operational readiness audit trail: readiness status, field-state summary, evidence refs, unresolved `Pendiente de confirmar:` gaps, `No aplica.` states, warning carry-forward, unavailable-tooling notes, complete exceptions if any, and manual-document handoff boundary confirming `sdd-operational-doc` remains manual post-archive
 - Confirmation that no legacy standalone `security-design.md` artifact or `scripts/validate_security_design.ps1` execution is required for active new-change archive readiness
 - Specs synced by domain with created/updated/removed/renamed counts
 - Archive destination or inline-only closure reason
@@ -208,6 +213,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - test-design.md ✅
 - review-report.md ✅ (non-blocking)
 - review-security-report.md ✅ (non-blocking)
+- operational readiness evidence ✅ (status, refs, gaps, warnings, unavailable tooling, manual-doc handoff)
 - tasks.md ✅ ({N}/{N} tasks complete)
 
 ### Source of Truth Updated
@@ -225,6 +231,7 @@ Ready for the next change.
 - NEVER archive missing mandatory security evidence unless every missing item has a complete approved exception in the audit trail
 - NEVER archive unresolved source-row blockers, missing compact source mappings, unsafe evidence, unsupported `N/A`, or missing mandatory source-row evidence.
 - ALWAYS preserve source-row coverage, catalog identity, compact mappings, warnings, exceptions, safe evidence references, report links, and unavailable-tooling notes in the audit trail when corporate source-row validation applies; summarize or link the full source-row matrix rather than copying it.
+- ALWAYS preserve operational readiness status, refs, gaps, exact markers, warnings, unavailable-tooling notes, and manual operational-document handoff boundaries; never require `sdd-operational-doc` execution to complete archive.
 - If the user explicitly approves a non-critical partial archive or stale-checkbox reconciliation, record the exact reason in the archive report and mark the archive as intentional-with-warnings
 - NEVER archive completed work while `tasks.md` / the tasks observation still shows stale unchecked implementation tasks
 - ALWAYS sync delta specs BEFORE moving to archive

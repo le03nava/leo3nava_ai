@@ -4,65 +4,65 @@
 
 | Campo | Valor |
 | --- | --- |
-| Producto | {Producto o Pendiente de confirmar: producto} |
-| Dueno de aplicacion | {Dueno de aplicacion o Pendiente de confirmar: dueno de aplicacion} |
-| Plataforma | {Plataforma o Pendiente de confirmar: plataforma} |
-| Lider de Proyecto TI | {Lider de Proyecto TI o Pendiente de confirmar: lider de proyecto TI} |
-| Desarrollador | {Desarrollador o Pendiente de confirmar: desarrollador} |
+| Producto | Pendiente de confirmar: producto. |
+| Dueno de aplicacion | Pendiente de confirmar: dueno de aplicacion. |
+| Plataforma | Pendiente de confirmar: plataforma. |
+| Lider de Proyecto TI | Pendiente de confirmar: lider de proyecto TI. |
+| Desarrollador | Pendiente de confirmar: desarrollador. |
 
 ### 1.1 Referencias
 
 | Archivo | Descripcion |
 | --- | --- |
-| {archivo} | {descripcion} |
+| Pendiente de confirmar: archivo de referencia. | Pendiente de confirmar: descripcion de referencia. |
 
 ## 2. Presentacion del Producto
 
-{Parrafo introductorio del cambio: que hace, por que se desarrollo y contexto funcional.}
+Pendiente de confirmar: descripcion del cambio, motivo de desarrollo y contexto funcional.
 
 ### 2.1 Objetivo
 
-{Una o dos lineas con el objetivo funcional del cambio.}
+Pendiente de confirmar: objetivo funcional del cambio.
 
 ### 2.2 Alcance
 
-{Alcance funcional con objetos modificados.}
+Pendiente de confirmar: alcance funcional y objetos modificados.
 
 ### 2.3 Sistemas Involucrados
 
-- {Sistema externo, base de datos, aplicacion externa o repositorio externo.}
+- Pendiente de confirmar: sistema externo, base de datos, aplicacion externa o repositorio externo.
 
 ### 2.4 Calendarizacion
 
-{Si hay tarea programada: nombre del proceso y hora de ejecucion. Si no aplica: No aplica.}
+Pendiente de confirmar: calendarizacion operativa. Si no corresponde, usar `No aplica.`.
 
 ### 2.5 Definiciones, Acronimos y Abreviaciones
 
 | Termino | Definicion |
 | --- | --- |
-| {termino} | {definicion} |
+| Pendiente de confirmar: termino. | Pendiente de confirmar: definicion. |
 
 ## 3. Respaldo y depuracion de informacion
 
-{Comandos concretos de respaldo de tablas operativas afectadas y politica de retencion. Si no aplica: No aplica. Si falta evidencia: Pendiente de confirmar.}
+Pendiente de confirmar: comandos concretos de respaldo, objetos operativos afectados y politica de retencion. Si no corresponde, usar `No aplica.`.
 
 ## 4. Ejecucion del producto
 
 | Tipo | Nombre | Invocacion | Descripcion |
 | --- | --- | --- | --- |
-| {procedure/job/endpoint/script} | {entrypoint} | `{comando o invocacion}` | {descripcion operativa} |
+| Pendiente de confirmar: tipo de entrypoint. | Pendiente de confirmar: nombre del entrypoint. | `Pendiente de confirmar: comando o invocacion.` | Pendiente de confirmar: descripcion operativa. |
 
 ### 4.x Invocacion operativa paso a paso
 
-1. {Paso operativo concreto.}
-2. {Paso operativo concreto.}
-3. {Validacion esperada.}
+1. Pendiente de confirmar: paso operativo concreto.
+2. Pendiente de confirmar: paso operativo concreto.
+3. Pendiente de confirmar: validacion esperada.
 
 ### Diagrama R1 Flujo Operativo Principal
 
 ```mermaid
 flowchart TD
-    A[Inicio] --> B[Invocar entrypoint]
+    A[Inicio] --> B[Pendiente de confirmar: invocar entrypoint]
     B --> C[Procesar informacion]
     C --> D{Resultado OK?}
     D -- Si --> E[Registrar exito]
@@ -83,30 +83,30 @@ No aplica.
 
 ```sql
 -- Q-MON-OK-1
-{SQL que responde si esta procesando adecuadamente}
+-- Pendiente de confirmar: consulta o mecanismo de monitoreo para proceso OK.
 ```
 
-Umbral nominal: {umbral nominal o Pendiente de confirmar: umbral nominal}.
+Umbral nominal: Pendiente de confirmar: umbral nominal.
 
 ### 6.2 Consultas de monitoreo — proceso con error
 
 ```sql
 -- Q-MON-ERR-1
-{SQL que responde si esta cayendo en error}
+-- Pendiente de confirmar: consulta o mecanismo de monitoreo para proceso con error.
 ```
 
 Umbral: 0.
 
 ### 6.3 Deteccion de falla del proceso
 
-Health-check: {health-check o Pendiente de confirmar: health-check}.
+Health-check: Pendiente de confirmar: health-check.
 
-Umbral de disparo: {umbral explicito o Pendiente de confirmar: umbral de disparo}.
+Umbral de disparo: Pendiente de confirmar: umbral de disparo.
 
 | Severidad | Condicion | Rol responsable | Accion |
 | --- | --- | --- | --- |
-| WARNING | {condicion warning} | {rol especifico} | {accion} |
-| CRITICAL | {condicion critical} | {rol especifico} | {accion} |
+| WARNING | Pendiente de confirmar: condicion warning. | Pendiente de confirmar: rol responsable. | Pendiente de confirmar: accion. |
+| CRITICAL | Pendiente de confirmar: condicion critical. | Pendiente de confirmar: rol responsable. | Pendiente de confirmar: accion. |
 
 ### 6.4 Errores comunes
 
@@ -124,37 +124,37 @@ flowchart TD
 
 | Error | Causa | Solucion |
 | --- | --- | --- |
-| {error} | {causa} | {solucion} |
+| Pendiente de confirmar: error comun. | Pendiente de confirmar: causa. | Pendiente de confirmar: solucion. |
 
 ### 6.5 Logs
 
 | Ubicacion | Formato | Retencion |
 | --- | --- | --- |
-| {ubicacion} | {formato} | {retencion} |
+| Pendiente de confirmar: ubicacion segura o referencia a logs. | Pendiente de confirmar: formato. | Pendiente de confirmar: retencion. |
 
 ## 7. Administracion de la operacion
 
 ### 7.1 Detener el proceso (cuarentena)
 
 ```bash
-{comando concreto para detener o deshabilitar el entrypoint}
+Pendiente de confirmar: comando concreto para detener o deshabilitar el entrypoint.
 ```
 
-Validacion: {validacion de que no llegan nuevas invocaciones}.
+Validacion: Pendiente de confirmar: validacion de que no llegan nuevas invocaciones.
 
 ### 7.2 Reiniciar el proceso
 
 ```bash
-{comando concreto de re-habilitacion}
+Pendiente de confirmar: comando concreto de re-habilitacion.
 ```
 
-Validacion: {validacion de retoma de trafico}.
+Validacion: Pendiente de confirmar: validacion de retoma de trafico.
 
 ### 7.3 Actividades periodicas
 
 | Actividad | Frecuencia | Responsable |
 | --- | --- | --- |
-| {actividad} | {frecuencia} | {responsable} |
+| Pendiente de confirmar: actividad periodica. | Pendiente de confirmar: frecuencia. | Pendiente de confirmar: responsable. |
 
 ## 8. Reproceso
 
@@ -174,30 +174,30 @@ flowchart TD
 
 ```sql
 -- Q-REP-1
-{query para identificar registros candidatos}
+-- Pendiente de confirmar: consulta segura para identificar registros candidatos.
 ```
 
 #### (b) Marcar para reproceso
 
 ```sql
-{UPDATE explicito sobre tabla de auditoria/staging, por ejemplo status = 'PENDING' o to_reprocess = 'Y'}
+-- Pendiente de confirmar: instruccion segura para marcar registros de reproceso.
 ```
 
 #### (c) Corregir el dato/insumo
 
-{Instruccion operativa para corregir el dato o insumo.}
+Pendiente de confirmar: instruccion operativa para corregir el dato o insumo.
 
 #### (d) Re-invocar el entrypoint
 
 ```bash
-{comando o invocacion del entrypoint}
+Pendiente de confirmar: comando o invocacion del entrypoint.
 ```
 
 #### (e) Validar pendientes = 0 — Q-REP-3
 
 ```sql
 -- Q-REP-3
-{query para validar pendientes = 0}
+-- Pendiente de confirmar: consulta segura para validar pendientes igual a 0.
 ```
 
 ## 9. Tecnologias de la aplicacion
@@ -212,10 +212,10 @@ flowchart LR
     A --> D[Logs / Monitoreo]
 ```
 
-- SO: {sistema operativo o Pendiente de confirmar: SO}
-- BD: {base de datos o Pendiente de confirmar: BD}
-- Seguridad: {mecanismos de seguridad o Pendiente de confirmar: seguridad}
-- Servidor aplicaciones: {servidor o Pendiente de confirmar: servidor de aplicaciones}
-- Lenguajes: {lenguajes o Pendiente de confirmar: lenguajes}
-- Frameworks: {frameworks o Pendiente de confirmar: frameworks}
-- Herramientas de orquestacion: {herramientas o Pendiente de confirmar: herramientas de orquestacion}
+- SO: Pendiente de confirmar: SO.
+- BD: Pendiente de confirmar: BD.
+- Seguridad: Pendiente de confirmar: mecanismos de seguridad.
+- Servidor aplicaciones: Pendiente de confirmar: servidor de aplicaciones.
+- Lenguajes: Pendiente de confirmar: lenguajes.
+- Frameworks: Pendiente de confirmar: frameworks.
+- Herramientas de orquestacion: Pendiente de confirmar: herramientas de orquestacion.

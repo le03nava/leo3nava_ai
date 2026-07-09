@@ -42,6 +42,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Mutates | None outside the produced tasks artifact. |
 | Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
 | Security consumption | Applicable narrative security rules, review-security expectations, and evidence expectations from `design.md#secure-development-design` and `test-design.md` must be represented as tasks or complete approved exceptions. Exhaustive `N/A` rationale and lifecycle row status belong to `review-security-report.md`. |
+| Operational readiness consumption | Tasks must represent concrete readiness collection, exact-marker validation, safe-evidence checks, non-SQL monitoring coverage, unavailable-tooling notes, unresolved-gap carry-forward, and archive/manual-document handoff from `skills/_shared/sdd-operational-readiness-contract.md` and `test-design.md`. |
 | Review workload behavior | Preserve the Review Workload Forecast guard lines, delivery strategy (`null` when deferred), chain strategy, size-exception field, and reviewable work-unit split. |
 | Success routing | `next_recommended: apply`, including when the workload guard requires the orchestrator to resolve apply-time decisions. |
 | Block routing | `next_recommended: resolve-blockers` for missing required inputs, missing embedded secure development design, test-design gaps, testing capability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
@@ -65,6 +66,7 @@ Routing rules for `next_recommended`:
 | `design.md#secure-development-design` is missing for a new active change | Return `blocked` with `next_recommended: resolve-blockers`; do not write tasks. |
 | Standalone `security-design.md` is missing for a new active change | Continue; do not require it. It is legacy/read-only compatibility data only. |
 | Mandatory security control evidence from `design.md#secure-development-design` or `test-design.md` is not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; do not drop mandatory security evidence. |
+| Mandatory operational-readiness evidence or checks from design/test-design are not represented in tasks | Return `blocked` with `next_recommended: resolve-blockers`; readiness work must not remain implicit. |
 | Task draft contains vague, non-verifiable, or oversized tasks | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 | Review workload risk is `High` against the received review budget and chain strategy is missing | Set `Decision needed before apply: Yes` and `Chain strategy: pending`; do not ask the user directly. |
 | Strict TDD is active | Include RED/GREEN/REFACTOR task ordering for affected behavior. |
@@ -86,11 +88,14 @@ From `test-design.md`, identify:
 - Mandatory cases that must become implementation, testing, or evidence tasks
 - Non-mandatory cases that should become advisory evidence tasks when feasible
 - Expected evidence that `sdd-apply` and `sdd-verify` will later consume
+- Operational-readiness checks for marker exactness, safe evidence, traceability, monitoring mechanism coverage, unavailable tooling, final-document boundaries, and restricted-data absence
 
 From mandatory `design.md#secure-development-design`, identify:
 - Changed-surface classification, applicable narrative category rules, static/manual validation notes, catalog context, safe-evidence policy, residual risks, and complete approved exceptions.
 - Expected evidence owners, review-security expectations, and implementation, verification, or archive evidence obligations for applicable rules.
 - Implementation, apply-evidence, review-security, verification, or archive-evidence tasks needed to satisfy mandatory controls.
+
+From `design.md#Operational Readiness` and `skills/_shared/sdd-operational-readiness-contract.md`, identify concrete tasks for evidence collection, exact `Pendiente de confirmar:` / `No aplica.` validation, safe-evidence inspection, non-SQL-only monitoring mechanism coverage, unresolved-gap ownership, archive preservation, manual operational-document handoff, and unavailable-tooling reporting. Do not create tasks that require real restricted operational values.
 
 Also read testing capabilities when available:
 - Engram: `sdd/{project}/testing-capabilities`
@@ -258,6 +263,7 @@ Before persisting or returning, verify:
 - Every mandatory planned case in `test-design.md` is represented by implementation, testing, or evidence work; omitted mandatory cases are blockers.
 - Every mandatory applicable security guideline has implementation, test-design, apply, verify, archive evidence, or a complete approved exception represented in tasks.
 - Static/manual validation notes, review-security evidence, archive evidence fields, and unavailable runtime/coverage/lint/typecheck/format reporting from `design.md#secure-development-design` / `test-design.md` are represented in tasks when applicable.
+- Operational readiness collection, marker validation, safe-evidence checks, monitoring mechanism coverage, archive/manual-document handoff, and unavailable-tooling notes are represented as concrete tasks when applicable.
 - The Review Workload Forecast includes the required plain-text guard lines.
 - If `Review budget risk` or `400-line budget risk` is `High`, Suggested Work Units are present.
 - If `feature-branch-chain` is selected, work units name the intended base boundaries.
