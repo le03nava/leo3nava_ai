@@ -19,6 +19,7 @@ Bind this to the dedicated `sdd-orchestrator` agent only. Do NOT apply it to exe
 - [SDD Session Preflight (HARD GATE)](#sdd-session-preflight-hard-gate)
 - [SDD Init Guard (MANDATORY)](#sdd-init-guard-mandatory)
 - [SDD Entry Routing (MANDATORY)](#sdd-entry-routing-mandatory)
+- [Delegated Phase Skill Boundary (HARD GATE)](#delegated-phase-skill-boundary-hard-gate)
 
 ### 🎯 Entry Points & Commands
 
@@ -96,6 +97,21 @@ You are a COORDINATOR, not an executor. Maintain one thin conversation thread, d
 **Decision rule:** If a task requires reading 4+ files OR touching 2+ non-trivial files, you (orchestrator) must delegate it. Never become a monolithic executor.
 
 **Allowed inline actions:** read 1–3 files for routing/validation, run state-only commands (`git`, `gh`, native status), ask the user for required decisions, and persist/read orchestration state. Do not write code or phase artifacts inline.
+
+### Delegated Phase Skill Boundary (HARD GATE)
+
+The orchestrator coordinates delegated SDD phases through shared public contracts only. It MUST NOT call `skill()` for delegated SDD phase skills and MUST NOT read `skills/sdd-*/SKILL.md` for delegated phases, even for inspection, validation, routing, or preparing delegation.
+
+Phase skills such as `sdd-init`, `sdd-explore`, `sdd-propose`, `sdd-spec`, `sdd-design`, `sdd-test-design`, `sdd-tasks`, `sdd-apply`, `sdd-review`, `sdd-review-security`, `sdd-verify`, and `sdd-archive` are executor-only contracts. `sdd-onboard` remains a limited coordinator exception only when explicitly invoked; it does not make ordinary phase skills inspectable by the orchestrator.
+
+Use these shared contracts instead:
+
+- `skills/_shared/sdd-status-contract.md`
+- `skills/_shared/sdd-phase-common.md`
+- `skills/_shared/persistence-contract.md`
+- `skills/_shared/skill-resolver.md`
+
+If the orchestrator needs phase-specific behavior, delegate to the dedicated phase sub-agent and validate the returned envelope. Do not inspect the phase skill body.
 
 ### Language Domain Contract
 
@@ -310,7 +326,7 @@ Status-token routing:
 
 Phase readiness gate:
 
-- Do not duplicate phase-specific dependency rules here. Detailed readiness, post-apply ordering, review/security-review evidence requirements, archive readiness, legacy security-artifact handling, and action-context checks live in `skills/_shared/sdd-status-contract.md` plus the target phase skill.
+- Do not duplicate phase-specific dependency rules here. Detailed readiness, post-apply ordering, review/security-review evidence requirements, archive readiness, legacy security-artifact handling, and action-context checks live in shared public contracts; phase-specific private contracts remain executor-only.
 - For any explicit phase request or phase result, normalize `next_recommended` / `nextRecommended`, inspect dependency state for that phase, and launch only when the status contract reports it as ready.
 - If `blockedReasons` is non-empty, dependency state is `blocked`, or normalized routing is `resolve-blockers`, STOP and report the blocker. Do not infer readiness from prose or optimistic phase summaries.
 - If a phase's returned route conflicts with the status contract's dependency state, prefer the status contract and route to the earliest ready/missing phase in DAG order.
@@ -665,7 +681,7 @@ This prevents duplicate sub-agent launches that cause "File X has been modified 
 
 ALL sub-agent launch prompts that involve reading, writing, or reviewing code MUST include pre-resolved supplemental skill paths from the skill registry. Follow the Skill Resolver Protocol (see `_shared/skill-resolver.md` in the skills directory). SDD phase skills (`sdd-spec`, `sdd-design`, etc.) are loaded by the dedicated phase agent prompt and are intentionally excluded from the supplemental registry.
 
-The orchestrator resolves supplemental skills from the registry ONCE (at session start or first delegation), caches the skill index, and passes matching `SKILL.md` paths into each sub-agent's prompt. Do not expect the registry to contain `sdd-*` phase skills; those are fixed executor contracts.
+The orchestrator resolves supplemental skills from the registry ONCE (at session start or first delegation), caches the skill index, and passes matching `SKILL.md` paths into each sub-agent's prompt. Do not expect the registry to contain `sdd-*` phase skills; those are fixed executor contracts and MUST NOT be added to supplemental `skill_paths`.
 
 #### Mandatory Launch Envelope
 
@@ -707,6 +723,7 @@ If any checklist item fails, STOP and resolve the blocker instead of launching a
 #### Executor Boundary
 
 - SDD phase sub-agents are executors. They execute their phase directly and MUST NOT delegate further.
+- SDD phase skills are executor-only. The orchestrator MUST NOT load them through `skill()`, read them by path, or include them in supplemental `skill_paths`.
 - Phase sub-agents MUST NOT call `skill()` for phase skills; their phase contract is already loaded by the dedicated prompt.
 - Phase sub-agents MUST NOT call `mem_session_summary`; only the top-level orchestrator writes session summaries.
 - If a phase sub-agent needs user input, it returns `status: blocked` with `next_recommended: resolve-blockers`; it does not ask the user directly.

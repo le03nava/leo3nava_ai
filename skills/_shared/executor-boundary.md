@@ -4,7 +4,7 @@ Use this shared boundary from SDD phase skills to prevent the orchestrator from 
 
 ## Delegated Phase Skills
 
-If you loaded a delegated phase skill via the `skill()` tool, you are the ORCHESTRATOR. Stop and delegate to the dedicated phase sub-agent using the platform delegation primitive. Delegated phase skills are for EXECUTORS only.
+If you loaded a delegated phase skill via the `skill()` tool, or read `skills/sdd-*/SKILL.md` for a delegated phase, you are the ORCHESTRATOR and this is a boundary violation. Stop using that loaded content for orchestration decisions. Delegate to the dedicated phase sub-agent using the launch envelope and platform delegation primitive. Delegated phase skills are for EXECUTORS only.
 
 If you are the dedicated phase sub-agent, the orchestrator gate does not apply to you. Continue with the phase work. Do not delegate. Do not call the Skill tool. You are the executor; execute the phase yourself.
 
