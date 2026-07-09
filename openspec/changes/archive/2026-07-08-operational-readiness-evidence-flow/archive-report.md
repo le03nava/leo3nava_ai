@@ -1,7 +1,7 @@
 # Archive Report: Operational Readiness Evidence Flow
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: operational-readiness-evidence-flow
 artifactStore: openspec

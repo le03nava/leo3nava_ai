@@ -132,7 +132,7 @@ None.
 ## Secure Development Design
 
 ```yaml
-schemaName: gentle-ai.sdd-embedded-secure-design
+schemaName: sdd.embedded-secure-design
 schemaVersion: 1
 changeName: corporate-source-row-security-validation
 classification: security-impacting

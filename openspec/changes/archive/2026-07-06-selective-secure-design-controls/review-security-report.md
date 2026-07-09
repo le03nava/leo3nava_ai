@@ -1,7 +1,7 @@
 # Review Security Report: Selective Secure Design Controls
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: selective-secure-design-controls
 verdict: PASS WITH WARNINGS

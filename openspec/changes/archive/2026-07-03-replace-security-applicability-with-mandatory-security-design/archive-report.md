@@ -1,7 +1,7 @@
 # Archive Report: Mandatory Security Design for SDD Changes
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: replace-security-applicability-with-mandatory-security-design
 artifactStore: openspec

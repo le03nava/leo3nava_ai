@@ -8,7 +8,7 @@
 # Review Security Report: {Change Title}
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: {change-name}
 verdict: PASS | PASS WITH WARNINGS | FAIL

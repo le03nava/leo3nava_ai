@@ -1,7 +1,7 @@
 # Review Security Report: Remove SDD Security Applicability Executor
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: remove-sdd-security-applicability-executor
 verdict: PASS WITH WARNINGS

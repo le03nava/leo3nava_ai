@@ -96,7 +96,7 @@ None.
 ## Secure Development Design
 
 ```yaml
-schemaName: gentle-ai.sdd-embedded-secure-design
+schemaName: sdd.embedded-secure-design
 schemaVersion: 1
 changeName: slim-secure-design-artifacts
 classification: security-impacting

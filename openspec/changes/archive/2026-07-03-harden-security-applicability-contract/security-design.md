@@ -1,7 +1,7 @@
 # Security Design: Harden Security Applicability Contract
 
 ```yaml
-schemaName: gentle-ai.sdd-security-design
+schemaName: sdd.security-design
 schemaVersion: 1
 changeName: harden-security-applicability-contract
 sourceApplicability: openspec/changes/harden-security-applicability-contract/security-applicability.md

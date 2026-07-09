@@ -1,7 +1,7 @@
 # Archive Report: Slim Secure Design Artifacts
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: slim-secure-design-artifacts
 artifactStore: openspec

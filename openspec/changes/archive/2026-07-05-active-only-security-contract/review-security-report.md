@@ -1,7 +1,7 @@
 # Review Security Report: Active-Only Security Contract
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: active-only-security-contract
 verdict: PASS WITH WARNINGS

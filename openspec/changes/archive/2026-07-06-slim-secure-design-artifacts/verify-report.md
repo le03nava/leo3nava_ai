@@ -1,7 +1,7 @@
 # Verification Report: Slim Secure Design Artifacts
 
 ```yaml
-schemaName: gentle-ai.sdd-verify-report
+schemaName: sdd.verify-report
 schemaVersion: 1
 changeName: slim-secure-design-artifacts
 artifactStore: openspec

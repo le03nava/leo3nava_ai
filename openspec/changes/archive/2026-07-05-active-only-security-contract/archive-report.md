@@ -1,7 +1,7 @@
 # Archive Report: Active-Only Security Contract
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: active-only-security-contract
 artifactStore: openspec

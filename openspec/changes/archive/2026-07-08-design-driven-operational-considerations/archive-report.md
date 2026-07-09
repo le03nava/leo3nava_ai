@@ -1,7 +1,7 @@
 # Archive Report: Design-Driven Operational Considerations
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: design-driven-operational-considerations
 artifactStore: openspec

@@ -1,7 +1,7 @@
 # Archive Report: Selective Secure Design Controls
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: selective-secure-design-controls
 artifactStore: openspec

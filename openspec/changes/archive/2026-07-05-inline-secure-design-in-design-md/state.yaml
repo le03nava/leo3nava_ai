@@ -1,4 +1,4 @@
-schemaName: gentle-ai.sdd-state
+schemaName: sdd.state
 schemaVersion: 1
 changeName: inline-secure-design-in-design-md
 artifactStore: openspec

@@ -99,7 +99,7 @@ You are a COORDINATOR, not an executor. Maintain one thin conversation thread, d
 
 ### Language Domain Contract
 
-> Source of truth: `gentle-ai.instructions.md` — *Language Domain Contract* section.
+> Source of truth: `skills/_shared/language-domain-contract.md`.
 
 **Orchestrator summary:** Reply to the user in their language and active persona. All generated artifacts (specs, tasks, code, comments, UI copy, tests, fixtures) default to English. Forward this rule explicitly to every sub-agent at launch.
 
@@ -151,7 +151,7 @@ Delegation is not optional once complexity appears. If a task crosses a trigger 
 
 #### Mandatory Delegation Triggers
 
-> Full definitions: `gentle-ai.instructions.md` — *Mandatory Delegation Triggers* section. These are non-skippable hard gates; tool unavailability is not a waiver.
+> Full definitions live in this orchestrator section and the shared executor/delegation contracts. These are non-skippable hard gates; tool unavailability is not a waiver.
 
 1. **4-file rule**: reading 4+ files to understand → delegate narrow exploration.
 2. **Multi-file write rule**: touching 2+ non-trivial files → delegate one writer.
@@ -247,10 +247,10 @@ flowchart TD
 
 ### Native SDD Dispatcher Guard
 
-Before routing, continuing, applying, reviewing, verifying, or archiving an SDD change,
-use the native dispatcher when `gentle-ai` is available: `gentle-ai sdd-continue [change] --cwd <repo>` or `gentle-ai sdd-status [change] --cwd <repo> --json --instructions`.
-Treat native status JSON as authoritative over prompt inference.
-Route only by `nextRecommended` and dependency states; never infer from free text. Normalize native/status tokens and prefixed phase tokens through `skills/_shared/sdd-status-contract.md` before comparing successors or launching an agent.
+Before routing, continuing, applying, reviewing, verifying, or archiving an SDD change, resolve status through `skills/_shared/sdd-status-contract.md` as the source of truth for this repository's complete DAG.
+The `gentle-ai` native dispatcher is optional advisory input only. It may be used to obtain compact OpenSpec status (`gentle-ai sdd-continue [change] --cwd <repo>` or `gentle-ai sdd-status [change] --cwd <repo> --json --instructions`) when available, but it MUST NOT override the local status contract or persisted state.
+Known compatibility limit: current native `gentle-ai` status may not model every active repository phase (`test-design`, `review`, `review-security`). If native output recommends skipping one of those phases, treat the native route as incomplete and reconstruct/normalize status from the local contract, artifact refs, persisted state, and backend-specific evidence.
+Route only by the locally normalized `nextRecommended` and dependency states; never infer from free text. Normalize native/status tokens and prefixed phase tokens through `skills/_shared/sdd-status-contract.md` before comparing successors or launching an agent.
 If `blockedReasons` is non-empty, do not proceed to apply, archive, or terminal work.
 If `nextRecommended` is `review`, launch `sdd-review` before verification;
 if `nextRecommended` is `review-security`, launch `sdd-review-security` before verification;

@@ -1,7 +1,7 @@
 # Verify Report: Operational Readiness Evidence Flow
 
 ```yaml
-schemaName: gentle-ai.sdd-verify-report
+schemaName: sdd.verify-report
 schemaVersion: 1
 changeName: operational-readiness-evidence-flow
 artifactStore: openspec

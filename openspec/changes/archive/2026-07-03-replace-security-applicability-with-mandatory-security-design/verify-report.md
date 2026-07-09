@@ -20,7 +20,7 @@ PASS WITH WARNINGS. Verification is archive-ready because there are 0 critical i
 | Next recommendation | archive |
 
 ```yaml
-schemaName: gentle-ai.sdd-verify-report
+schemaName: sdd.verify-report
 schemaVersion: 1
 changeName: replace-security-applicability-with-mandatory-security-design
 verdict: PASS WITH WARNINGS
@@ -51,7 +51,7 @@ generatedAt: 2026-07-03T15:37:14.7210116-06:00
 
 Verification read the proposal, seven delta specs, technical design, mandatory `security-design.md`, mandatory `test-design.md`, completed `tasks.md`, `apply-evidence.md`, non-blocking `review-report.md`, non-blocking `review-security-report.md`, OpenSpec config, and current repository evidence.
 
-Machine-readable archive routing summary: `schemaName=gentle-ai.sdd-verify-report`; `schemaVersion=1`; `changeName=replace-security-applicability-with-mandatory-security-design`; `verdict=PASS WITH WARNINGS`; `nextRecommended=archive`; `criticalFindings=0`; `artifactStore=openspec`; all implementation tasks complete (`12/12`, `0` incomplete); `review-report.md` non-blocking (`0` blocking findings); `review-security-report.md` non-blocking (`0` blocking findings).
+Machine-readable archive routing summary: `schemaName=sdd.verify-report`; `schemaVersion=1`; `changeName=replace-security-applicability-with-mandatory-security-design`; `verdict=PASS WITH WARNINGS`; `nextRecommended=archive`; `criticalFindings=0`; `artifactStore=openspec`; all implementation tasks complete (`12/12`, `0` incomplete); `review-report.md` non-blocking (`0` blocking findings); `review-security-report.md` non-blocking (`0` blocking findings).
 
 Result: **PASS WITH WARNINGS**. No critical findings were identified. All implementation tasks are checked complete. Both review gates are readable and non-blocking. Runtime test/lint/type/format/coverage/build tooling is unavailable by repository configuration, so verification evidence is static/manual plus the PowerShell security-design validator; unavailable runtime tooling is reported explicitly and is not counted as successful runtime evidence.
 

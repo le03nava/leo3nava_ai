@@ -147,7 +147,7 @@ Persist state after:
 Minimum state fields:
 
 ```yaml
-schemaName: gentle-ai.sdd-state
+schemaName: sdd.state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
@@ -220,7 +220,7 @@ Recovery sources by mode:
 
 Minimum recovered-state validation:
 
-- `schemaName: gentle-ai.sdd-state`
+- `schemaName: sdd.state`
 - supported `schemaVersion`
 - `changeName` matches the selected change
 - `artifactStore` matches cached/recovered preflight mode or has been explicitly reconciled

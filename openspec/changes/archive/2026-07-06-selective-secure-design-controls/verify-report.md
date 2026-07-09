@@ -1,7 +1,7 @@
 # Verify Report: Selective Secure Design Controls
 
 ```yaml
-schemaName: gentle-ai.sdd-verify-report
+schemaName: sdd.verify-report
 schemaVersion: 1
 changeName: selective-secure-design-controls
 verdict: PASS WITH WARNINGS

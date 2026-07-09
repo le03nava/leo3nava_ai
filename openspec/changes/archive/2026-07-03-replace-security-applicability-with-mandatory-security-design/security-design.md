@@ -1,7 +1,7 @@
 # Security Design: Mandatory Security Design for SDD Changes
 
 ```yaml
-schemaName: gentle-ai.sdd-security-design
+schemaName: sdd.security-design
 schemaVersion: 1
 changeName: replace-security-applicability-with-mandatory-security-design
 classification: security-impacting

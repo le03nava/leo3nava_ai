@@ -1,7 +1,7 @@
 # Security Applicability: Homologate SDD Execution and Persistence Contracts
 
 ```yaml
-schemaName: gentle-ai.sdd-security-applicability
+schemaName: sdd.security-applicability
 schemaVersion: 1
 changeName: homologate-sdd-execution-persistence-contracts
 classification: no-impact

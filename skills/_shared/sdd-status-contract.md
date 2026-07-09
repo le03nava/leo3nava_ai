@@ -15,12 +15,13 @@ Commands that select, continue, apply, verify, or archive an SDD change MUST fir
 
 ## Native Engine
 
-- When the `gentle-ai` binary is available, prefer `gentle-ai sdd-status [change] --cwd <repo> --json --instructions` for read-only status and `gentle-ai sdd-continue [change] --cwd <repo>` for dispatcher output.
-- Treat native status JSON as authoritative over prompt inference or manually reconstructed state.
+- This local status contract is the source of truth for this repository's complete SDD DAG. Status producers MUST include active phases `test-design`, `review`, and `review-security` before `verify` and `archive`.
+- The `gentle-ai` binary is optional advisory input. When available, `gentle-ai sdd-status [change] --cwd <repo> --json --instructions` or `gentle-ai sdd-continue [change] --cwd <repo>` MAY be used to obtain compact OpenSpec status, artifact paths, task progress, and blocker hints.
+- Native `gentle-ai` status MUST NOT override valid persisted state or this local contract. If native output is missing active repository phases, omits required review artifacts, routes `design -> tasks`, routes `apply -> verify`, or otherwise conflicts with the dependency rules below, treat the native route as incomplete and reconstruct/normalize status from local artifacts and persisted state.
 - When `blockedReasons` is non-empty, do not proceed to terminal, archive, or apply work. Return or report `blockedReasons` and stop unless `nextRecommended` is `verify`, in which case verification may run only to remediate or refresh evidence for the blockers. When `nextRecommended` is `resolve-blockers`, always report `blockedReasons` and stop.
-- `nextRecommended` is a bounded machine token for routing, not human prose. Route only by `nextRecommended` and dependency states.
+- `nextRecommended` is a bounded machine token for routing, not human prose. Route only by the locally normalized `nextRecommended` and dependency states.
 - Human-readable explanation belongs in `blockedReasons`, not `nextRecommended`.
-- If the binary is unavailable, fall back to this prompt contract and the manual status schema below. Manual fallback status MUST stay shape-compatible with native `gentle-ai.sdd-status` JSON even when values are reconstructed manually.
+- If the binary is unavailable or incomplete for the active DAG, fall back to this prompt contract and the manual status schema below. Manual fallback status MUST stay shape-compatible with `sdd.status` JSON where fields overlap, while preserving this repository's additional phase fields.
 
 ## Routing Token Mapping
 
@@ -70,7 +71,7 @@ Rules:
 Return status as markdown with these fields, or as equivalent JSON when the host supports it:
 
 ```yaml
-schemaName: gentle-ai.sdd-status
+schemaName: sdd.status
 schemaVersion: 2
 changeName: <change-name-or-null>
 artifactStore: engram | openspec | hybrid | none
@@ -181,7 +182,7 @@ Mode-specific status rules:
 - **`hybrid`**: `artifactRefs` contain both Engram topic keys and OpenSpec file paths. `artifactPaths` and `contextFiles` contain only filesystem paths. If matching Engram/OpenSpec artifacts materially differ, mark the artifact `partial` and add `blockedReasons` per the Hybrid Conflict Policy in `persistence-contract.md`.
 - **`none`**: `artifactRefs` may contain inline/session refs such as `inline:proposal`. `artifactPaths` and `contextFiles` are empty arrays.
 
-Native status JSON is authoritative when available. If native currently emits only `artifactStore: openspec`, treat that output as authoritative for OpenSpec-mode runs; manual fallback MUST use `artifactStore` and `artifactRefs` from the active session preflight for non-OpenSpec modes.
+Native status JSON is advisory when available. If native currently emits only `artifactStore: openspec`, use that output only as compact evidence for OpenSpec-mode artifact paths/task progress, then normalize through this local contract. Manual fallback MUST use `artifactStore` and `artifactRefs` from the active session preflight for non-OpenSpec modes.
 
 ## Apply State
 

@@ -1,6 +1,6 @@
 # Apply Evidence: Corporate Source Row Security Validation — WU4 Static Evidence
 
-schemaName: gentle-ai.sdd-apply-evidence
+schemaName: sdd.apply-evidence
 schemaVersion: 1
 changeName: corporate-source-row-security-validation
 artifactStore: openspec

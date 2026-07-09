@@ -1,7 +1,7 @@
 # Security Applicability: Add SDD Review Phase
 
 ```yaml
-schemaName: gentle-ai.sdd-security-applicability
+schemaName: sdd.security-applicability
 schemaVersion: 1
 changeName: add-sdd-review-phase
 classification: no-impact

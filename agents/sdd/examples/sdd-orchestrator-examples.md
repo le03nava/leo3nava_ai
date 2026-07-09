@@ -95,7 +95,7 @@ Gatekeeper checklist (retry):
 
 State Persistence Gate:
   Write state update before launching design:
-  schemaName: gentle-ai.sdd-state
+  schemaName: sdd.state
   currentPhase: spec
   completedPhases: [spec]
   nextRecommended: design

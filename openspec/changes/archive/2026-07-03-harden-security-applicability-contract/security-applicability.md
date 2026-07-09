@@ -1,7 +1,7 @@
 # Security Applicability: Harden Security Applicability Contract
 
 ```yaml
-schemaName: gentle-ai.sdd-security-applicability
+schemaName: sdd.security-applicability
 schemaVersion: 1
 changeName: harden-security-applicability-contract
 classification: security-impacting

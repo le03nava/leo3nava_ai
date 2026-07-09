@@ -16,7 +16,7 @@ explore? -> proposal -> spec -> security-applicability -> design -> security-des
 - `skills/sdd-review/references/control-catalog.md` and `report-template.md` define the 96-control review matrix with `Complies: Yes | No | N/A`, evidence location, and observations. Review can cite security guideline IDs, but it is explicitly not security authority.
 - `skills/_shared/sdd-security-contract.md` defines security vocabularies: `classification`, `securityImpact`, category decisions, operational severity, `evidenceStatus` values (`not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked`), owner phases, validation status, and exception fields.
 - `skills/_shared/security-guideline-catalog.md` contains the compact security taxonomy and eight current `SEC-*` guideline records, each with source IDs, mandatory flags, default complies, evidence hints, and notes.
-- `scripts/validate_security_applicability.ps1` validates only `security-applicability.md` and hardcodes `schemaName: gentle-ai.sdd-security-applicability`, `nextRecommended: design`, the eight taxonomy categories, guideline IDs, source IDs, no-impact proof, overrides, and validation metadata.
+- `scripts/validate_security_applicability.ps1` validates only `security-applicability.md` and hardcodes `schemaName: sdd.security-applicability`, `nextRecommended: design`, the eight taxonomy categories, guideline IDs, source IDs, no-impact proof, overrides, and validation metadata.
 
 The current OpenSpec source specs intentionally codify the existing conditional model:
 
@@ -47,7 +47,7 @@ The current OpenSpec source specs intentionally codify the existing conditional 
 
 ### Shared security/review contracts and validators
 
-- `skills/_shared/sdd-security-contract.md` — needs a new `gentle-ai.sdd-security-design` schema shape that covers classification, category matrix, guideline/control matrix, statuses, expected evidence, implementation/review-security evidence, exceptions, and archive gates in one mandatory artifact.
+- `skills/_shared/sdd-security-contract.md` — needs a new `sdd.security-design` schema shape that covers classification, category matrix, guideline/control matrix, statuses, expected evidence, implementation/review-security evidence, exceptions, and archive gates in one mandatory artifact.
 - `skills/_shared/security-guideline-catalog.md` — likely remains the source of taxonomy and `SEC-*` IDs, but may need explicit matrix-column guidance aligned with review conventions: `Complies`/applicability answer, evidence location, observations, plus security-specific `evidenceStatus`.
 - `skills/sdd-review/references/control-catalog.md` and `skills/sdd-review/references/report-template.md` — useful as a shape reference only; avoid making review the security authority.
 - `scripts/validate_security_applicability.ps1` — likely deprecated, replaced, or wrapped by a new validator such as `scripts/validate_security_design.ps1`; current hardcoded schema and `nextRecommended: design` are incompatible with the target DAG.

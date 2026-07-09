@@ -1,7 +1,7 @@
 # Review Security Report: Inline Secure Development Design in `design.md`
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: inline-secure-design-in-design-md
 verdict: PASS WITH WARNINGS

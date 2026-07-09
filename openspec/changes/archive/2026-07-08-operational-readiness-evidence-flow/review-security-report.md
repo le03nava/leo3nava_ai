@@ -1,7 +1,7 @@
 # Review Security Report: Operational Readiness Evidence Flow
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: operational-readiness-evidence-flow
 verdict: PASS WITH WARNINGS

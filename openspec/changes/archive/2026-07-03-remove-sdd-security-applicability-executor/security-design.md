@@ -1,7 +1,7 @@
 # Security Design: Remove SDD Security Applicability Executor
 
 ```yaml
-schemaName: gentle-ai.sdd-security-design
+schemaName: sdd.security-design
 schemaVersion: 1
 changeName: remove-sdd-security-applicability-executor
 sourceApplicability: direct-classification-from-proposal-specs-design

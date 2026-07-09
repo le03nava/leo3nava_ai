@@ -1,7 +1,7 @@
 # Archive Report: Corporate Source Row Security Validation
 
 ```yaml
-schemaName: gentle-ai.sdd-archive-report
+schemaName: sdd.archive-report
 schemaVersion: 1
 changeName: corporate-source-row-security-validation
 artifactStore: openspec

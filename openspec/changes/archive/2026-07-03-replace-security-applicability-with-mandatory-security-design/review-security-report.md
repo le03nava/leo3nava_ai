@@ -1,7 +1,7 @@
 # Review Security Report: Mandatory Security Design for SDD Changes
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: replace-security-applicability-with-mandatory-security-design
 verdict: PASS WITH WARNINGS
@@ -64,7 +64,7 @@ During this phase, `rg` was also unavailable in the shell environment; static se
 
 ## Validation Notes
 
-- Report schema is `gentle-ai.sdd-review-security-report` with `schemaVersion: 1`.
+- Report schema is `sdd.review-security-report` with `schemaVersion: 1`.
 - `nextRecommended` is `verify` because there are no blocking security findings.
 - All 8 compact SEC rows appear exactly once in the Security Row Validation matrix.
 - Matrix answers use only `Yes` or `N/A`; no `No` rows are present.

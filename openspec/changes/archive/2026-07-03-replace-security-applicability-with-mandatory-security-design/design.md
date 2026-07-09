@@ -50,7 +50,7 @@ review reports + verify evidence -> verify-report.md -> archive
 
 ## Interfaces / Contracts
 
-Status/native tokens include `review-security`. New-change state includes `artifactRefs.securityDesign` and `artifactRefs.securityReviewReport`; `securityApplicability` is legacy-only. `security-design.md` uses schema `gentle-ai.sdd-security-design` and must record classification, catalog identity, every category/guideline row, answer `Yes|No|N/A`, evidence location, observations, lifecycle status, controls, exceptions, and archive gates. `review-security-report.md` records verdict, validated rows, implementation evidence, blocking findings, exceptions, and `nextRecommended: verify|apply|resolve-blockers`.
+Status/native tokens include `review-security`. New-change state includes `artifactRefs.securityDesign` and `artifactRefs.securityReviewReport`; `securityApplicability` is legacy-only. `security-design.md` uses schema `sdd.security-design` and must record classification, catalog identity, every category/guideline row, answer `Yes|No|N/A`, evidence location, observations, lifecycle status, controls, exceptions, and archive gates. `review-security-report.md` records verdict, validated rows, implementation evidence, blocking findings, exceptions, and `nextRecommended: verify|apply|resolve-blockers`.
 
 ## Testing Strategy
 

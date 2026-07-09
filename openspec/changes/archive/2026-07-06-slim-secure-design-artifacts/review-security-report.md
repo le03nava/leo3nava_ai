@@ -1,7 +1,7 @@
 # Review Security Report: Slim Secure Design Artifacts
 
 ```yaml
-schemaName: gentle-ai.sdd-review-security-report
+schemaName: sdd.review-security-report
 schemaVersion: 1
 changeName: slim-secure-design-artifacts
 verdict: PASS WITH WARNINGS
@@ -249,7 +249,7 @@ Per `openspec/config.yaml#testing`, this repository has no runtime test runner, 
 
 After persistence, downstream phases should confirm:
 
-- `schemaName: gentle-ai.sdd-review-security-report`
+- `schemaName: sdd.review-security-report`
 - `changeName: slim-secure-design-artifacts`
 - `verdict: PASS WITH WARNINGS`
 - `sourceRowExpectedCount: 155`
