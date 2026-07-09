@@ -8,6 +8,7 @@
 - No inferir ni inventar producto, responsables, objetos, operaciones, seguridad, runtime, integraciones, licencias, hardware, software, pruebas o referencias.
 - Las referencias finales solo pueden incluir FCTI, historia, `.pks`, `.pkb` y `.sql` de packages/tablas creadas o modificadas por el desarrollo. No incluir scripts instaladores.
 - Las secciones condicionales BI/POS solo aplican si la evidencia archivada lo demuestra; si no, usar `No aplica.`.
+- Las vistas 4 + 1 deben incluir diagramas Mermaid cuando la evidencia archivada o el contexto explícito del documento final lo soporten. No inventar actores, clases, componentes, infraestructura ni relaciones; si no hay evidencia suficiente para un diagrama, escribir exactamente `Información no disponible en la evidencia archivada.` debajo del título del diagrama correspondiente.
 
 ## Identificación del Producto
 
@@ -67,7 +68,15 @@ Información no disponible en la evidencia archivada.
 
 Información no disponible en la evidencia archivada.
 
+#### Diagrama de clases
+
+Información no disponible en la evidencia archivada.
+
 ### 2.2.2 Vista de Desarrollo
+
+Información no disponible en la evidencia archivada.
+
+#### Diagrama de componentes
 
 Información no disponible en la evidencia archivada.
 
@@ -75,11 +84,23 @@ Información no disponible en la evidencia archivada.
 
 Información no disponible en la evidencia archivada.
 
+#### Diagrama de secuencia
+
+Información no disponible en la evidencia archivada.
+
 ### 2.3.4 Vista Física
 
 Información no disponible en la evidencia archivada.
 
+#### Diagrama de despliegue
+
+Información no disponible en la evidencia archivada.
+
 ### 2.3.5 Vista de Escenarios
+
+Información no disponible en la evidencia archivada.
+
+#### Diagrama de casos de uso
 
 Información no disponible en la evidencia archivada.
 
