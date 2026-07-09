@@ -57,6 +57,7 @@ Phase order: `explore? -> propose -> spec -> design -> test-design -> tasks -> a
 Manual post-archive utilities:
 
 - `sdd-operational-doc` generates a Spanish operational handoff document from an archived SDD change. It is intentionally manual and is not part of the required SDD DAG.
+- `sdd-technical-doc` generates a Spanish technical documentation Markdown file from an archived SDD change. It is intentionally manual, consumes archived evidence only, and is not part of the required SDD DAG, status, dependency, verify, or archive flow.
 
 For new changes, `sdd-design` owns secure development design inside `design.md#secure-development-design`. Standalone `security-design.md` and `security-applicability.md` are legacy/archive compatibility data only and MUST NOT gate new-change routing. Previous standalone security validators have been removed from active workflow contracts; security review validates embedded rows against the shared catalog and artifact evidence.
 
