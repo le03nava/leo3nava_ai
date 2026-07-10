@@ -8,14 +8,21 @@ Define the in-repo corporate security guideline snapshot, compact taxonomy, matr
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by narrative secure development design in `design.md#secure-development-design` and exhaustive `review-security-report.md` validation until an official external versioned source replaces it. Full source-row matrix output is audit-only unless explicitly requested.
+The repository MUST maintain the corporate security guideline catalog as an in-repo human snapshot based on the user-provided text plus a machine-readable operational JSON catalog for automation. The human snapshot MUST preserve source text, identifiers, version metadata, and audit readability. The operational JSON MUST preserve identifiers, vocabulary, taxonomy, compact controls, Source ID inventory, PCI alignment, compact mappings, expected counts, and report-mode defaults needed by narrative secure development design, `review-security-report.md` validation, and downstream scripts such as Excel/document generators. Full source-row matrix output is audit-only unless explicitly requested.
 
 #### Scenario: Catalog snapshot is available
 
 - GIVEN an SDD design or security review phase needs guideline context
 - WHEN it reads the catalog
-- THEN it MUST find guideline identifiers, source snapshot metadata, and applicable summaries
+- THEN it MUST find guideline identifiers, source snapshot metadata, and applicable summaries in the Markdown snapshot
 - AND it MUST support narrative secure design and security-review matrices.
+
+#### Scenario: Operational JSON is available
+
+- GIVEN a script or phase needs row expansion, mappings, counts, or export data
+- WHEN it reads `skills/sdd-review-security/references/security-guideline-catalog.operational.json`
+- THEN it MUST find schema metadata, vocabularies, taxonomy, compact guidelines, source sections, expanded Source IDs, PCI alignment, compact mappings, and expected Source ID count
+- AND it MUST be able to generate review-security coverage summaries, full audit matrices, Excel exports, or other documents without parsing Markdown tables.
 
 #### Scenario: Catalog source changes later
 

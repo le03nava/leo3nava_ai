@@ -2,6 +2,8 @@
 
 Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `test-design.md`, `review-security-report.md`, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
 
+> Automation source: use `security-guideline-catalog.operational.json` for scripts, Excel exports, and machine validation. This Markdown file remains the human-readable/auditable snapshot and preserves the full corporate guideline text.
+
 ## Snapshot Metadata
 
 | Field | Value |
@@ -12,7 +14,7 @@ Operational security checklist for embedded SDD secure development design in `de
 | Source | Initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
 | Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, grouped source-row coverage, evidence planning, `review-security-report.md`, verification, and archive gates |
-| Inventory authority | Authoritative inventory for the 155 concrete corporate Source IDs used by SDD source-row validation |
+| Inventory authority | `security-guideline-catalog.operational.json` is the machine-readable authoritative inventory for the 155 concrete corporate Source IDs used by SDD source-row validation; this Markdown preserves the human snapshot. |
 | Expected Source ID count | `155` |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
 | Operational severity vocabulary | `blocking`, `conditional`, `advisory` |

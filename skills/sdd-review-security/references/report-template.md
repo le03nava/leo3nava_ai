@@ -17,6 +17,8 @@ sourceReviewReport: {path-or-topic}
 sourceRowExpectedCount: 155
 sourceRowValidatedCount: 155
 sourceRowCoverage: complete | incomplete
+catalogOperationalSource: skills/sdd-review-security/references/security-guideline-catalog.operational.json
+catalogHumanSnapshot: skills/sdd-review-security/references/security-guideline-catalog.md
 sourceRowReportMode: summary | full-matrix
 sourceRowFullMatrix: omitted-audit-only | included
 sourceRowMatrixOwner: review-security-report.md when sourceRowReportMode=full-matrix
@@ -106,8 +108,8 @@ Group actionable source-row findings instead of burying them inside the 155-row 
 
 ## Matrix Rules
 
-- Validate every compact guideline from `references/security-guideline-catalog.md` exactly once in `## Security Row Validation`.
-- When corporate source-row validation applies, validate every expected Source ID from `references/security-guideline-catalog.md` exactly once and report `sourceRowExpectedCount`, `sourceRowValidatedCount`, and `sourceRowCoverage`.
+- Validate every compact guideline from `references/security-guideline-catalog.operational.json` exactly once in `## Security Row Validation`.
+- When corporate source-row validation applies, validate every expected Source ID from `references/security-guideline-catalog.operational.json` exactly once and report `sourceRowExpectedCount`, `sourceRowValidatedCount`, and `sourceRowCoverage`.
 - In summary mode, include section-level coverage plus focused source-row details only for rows that need review attention.
 - In full-matrix mode, include every expected Source ID exactly once.
 - `Applies` and `Complies` values are limited to `Yes`, `No`, or `N/A` unless the security contract explicitly allows a planning value for a non-report artifact.

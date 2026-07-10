@@ -1,6 +1,6 @@
 # SDD Security Contract
 
-Shared cross-phase contract for narrative secure design, downstream security evidence, routing boundaries, approved exceptions, and review-safe evidence. This file defines what every SDD phase may rely on. Operational catalog inventory, compact `SEC-*` rows, Source ID expansion, PCI mappings, and report matrix schemas belong to `skills/sdd-review-security/references/`.
+Shared cross-phase contract for narrative secure design, downstream security evidence, routing boundaries, approved exceptions, and review-safe evidence. This file defines what every SDD phase may rely on. Machine-readable operational catalog inventory, compact `SEC-*` rows, Source ID expansion, PCI mappings, and report matrix schemas belong to `skills/sdd-review-security/references/`; the Markdown catalog remains the human/audit snapshot.
 
 ## Phase Ownership Boundary
 

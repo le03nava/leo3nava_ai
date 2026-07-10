@@ -32,7 +32,7 @@ Follow the shared contracts instead of duplicating their rules:
 | Backend mechanics | `skills/_shared/sdd-phase-common.md` Sections B/C and `skills/_shared/persistence-contract.md`. |
 | Post-apply gates | `skills/_shared/sdd-post-apply-gates.md`. |
 | Security vocabulary/routing/safe evidence | `skills/_shared/sdd-security-contract.md`. |
-| Catalog authority | `references/security-guideline-catalog.md`. |
+| Catalog authority | `references/security-guideline-catalog.operational.json` for automation; `references/security-guideline-catalog.md` for human/audit snapshot text. |
 | Report shape | `references/report-template.md`. |
 | Detailed validation rules | `references/validation-rules.md`; load only after readiness gates pass and row validation is needed. |
 | Required inputs | Structured status; narrative `design.md#secure-development-design`; non-blocking `review-report.md`; tasks/apply evidence; changed-file context; `test-design.md`; security catalog; shared security contract. |
@@ -97,6 +97,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 - `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
 - `../_shared/persistence-contract.md` — artifact keys, backend behavior, hybrid conflict policy, and read-back verification.
 - `references/security-guideline-catalog.md` — authoritative compact SEC guideline IDs, taxonomy, corporate Source ID inventory, compact mappings, PCI alignment, and catalog snapshot.
+- `references/security-guideline-catalog.operational.json` — machine-readable operational catalog for scripts, Excel exports, row expansion, compact mappings, PCI alignment, and validation counts.
 - `references/report-template.md` — required `review-security-report.md` contract/template.
 - `references/validation-rules.md` — detailed compact/source-row validation, safe-evidence, routing, and report validation rules loaded after readiness passes.
 - `../_shared/sdd-security-contract.md` — narrative secure-design and review-security report schema contracts.

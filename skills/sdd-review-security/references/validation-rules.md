@@ -4,7 +4,7 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 
 ## Active Flow Boundary
 
-- Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, `review-report.md`, the security catalog, and shared security contracts.
+- Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, `review-report.md`, the machine-readable operational catalog JSON, the human snapshot Markdown when guideline text is needed, and shared security contracts.
 - Design and test-design remain narrative/selective inputs. Do not repair them by copying compact matrices, Source IDs, schema blocks, machine-readable applicability fields, or exhaustive `N/A` bookkeeping into those artifacts.
 - `review-security-report.md` is the only active artifact that may report compact/source validation results. Source-row validation is exhaustive, but full 155-row materialization is audit-only by default.
 - Do not duplicate or recreate the general 96-control `sdd-review` matrix; cite `review-report.md` as supporting evidence only.
@@ -13,7 +13,7 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 
 | Rule | Requirement |
 | --- | --- |
-| Exact compact coverage | Validate every compact `SEC-*` guideline from `security-guideline-catalog.md` exactly once. Missing, duplicate, or unknown compact IDs are blocking. |
+| Exact compact coverage | Validate every compact `SEC-*` guideline from `security-guideline-catalog.operational.json` exactly once. Missing, duplicate, or unknown compact IDs are blocking. |
 | Omission validation | Treat omitted design controls as reviewable decisions. Correlate proposal/specs/changed files/apply/test-design/review evidence to decide whether an omitted category/control is truly irrelevant. Missed applicable omissions are blockers. |
 | Evidence correlation | A row passes only with safe evidence, justified `N/A`, or a complete approved exception. Row presence or design omission alone is not evidence. |
 | Mandatory evidence gaps | Applicable mandatory rows without implementation evidence or complete approved exception are `No` / blocked and route to `apply` when remediation is implementation, prompt, contract, task, or apply-evidence work. |
