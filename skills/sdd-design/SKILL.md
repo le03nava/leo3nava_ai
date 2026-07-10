@@ -36,7 +36,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md`.
 | Required inputs | Proposal and specs: `sdd/{change-name}/{proposal|spec}` or OpenSpec change-folder equivalents, plus `skills/_shared/sdd-security-contract.md`. |
 | Produced artifact | `sdd/{change-name}/design` or `openspec/changes/{change-name}/design.md`. |
 | Mutates | None outside the produced design artifact. |
-| Secure design authority | For every new active change, `design.md#secure-development-design` is the active design-time classification and planning authority. It MUST classify the changed surface using the shared security contract, and include only human-readable rules for applicable security categories, evidence owners, residual risks, exceptions, and safe-evidence policy. Omitted security categories are reviewable omissions; exhaustive applicability and `N/A` decisions belong to `sdd-review-security`. |
+| Secure design authority | For every new active change, `design.md#secure-development-design` is the active design-time classification and planning authority. It MUST classify the changed surface using the shared security contract, and include only human-readable rules for applicable security categories, evidence owners, residual risks, exceptions, and safe-evidence policy. Omitted security categories are reviewable omissions; exhaustive validation coverage and `N/A` decisions belong to `sdd-review-security`. |
 | Source-row coverage | The embedded section MAY mention applicable category context in prose when needed. It MUST NOT read or copy the exhaustive 155-row Source ID inventory, create Source ID matrices, encode machine-readable applicability fields, or require per-row `N/A` evidence for omitted rows. |
 | Secure design shape | The embedded section MUST be narrative Markdown only: headings, paragraphs, and bullet lists are allowed. It MUST NOT contain security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, or all-row `N/A` bookkeeping. Historical schema-based exhaustive artifacts remain readable compatibility data only. |
 | Operational considerations authority | `design.md` owns operational applicability. Include `## Operational Considerations` only when the change needs operational behavior planning, or state `No aplica.` with rationale when useful. Downstream phases derive checks only from actual design/test-design evidence and MUST NOT require absent operational categories. |
@@ -224,7 +224,7 @@ Secure development design content rules:
 - Include only applicable narrative security category rules for new active designs. Do not require all security controls, all Source IDs, or per-row `N/A` rationale for omitted rows.
 - Treat `## Secure Development Design` as the active design-time security planning authority for changed-surface classification, applicable category rules, evidence owners, residual risks, exceptions, and safe-evidence policy.
 - Do NOT emit security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, all-row `N/A` bookkeeping, the general 96-control `sdd-review` matrix, or the exhaustive 155-row Source ID matrix in design.
-- Omitted categories are reviewable omissions. `review-security-report.md` owns compact and Source ID matrices, `Yes`/`No`/`N/A` decisions, non-applicable evidence, missed-applicable blockers, and exact-once Source ID expansion.
+- Omitted categories are reviewable omissions. `review-security-report.md` owns compact and Source ID validation coverage, `Yes`/`No`/`N/A` decisions, non-applicable evidence, missed-applicable blockers, and exact-once Source ID expansion/validation.
 - Applicable category rules MUST identify secure design decisions/controls, downstream evidence owners, expected evidence, residual risks, and archive expectations in prose.
 - No-impact designs MUST still record changed-surface rationale, touched/untouched runtime surfaces, and why no security category applies. They MUST NOT use all-row `N/A` bookkeeping to prove no-impact status.
 - Exceptions MUST include approver, approvedAt, accepted-risk rationale, mitigation/follow-up, and evidence gap. Incomplete exceptions do not satisfy archive readiness.
@@ -247,7 +247,7 @@ Secure design shape checks:
 - `## Secure Development Design` is present.
 - The section records changed-surface classification and applicable category rules in narrative form.
 - The section does not include security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, all-row `N/A` bookkeeping, the general 96-control review matrix, or the exhaustive 155-row Source ID matrix.
-- When corporate source-row review applies downstream, the secure design cites only high-level category context in prose and leaves exact-once compact/Source ID expansion plus `N/A` decisions to `review-security-report.md`.
+- When corporate source-row review applies downstream, the secure design cites only high-level category context in prose and leaves exact-once compact/Source ID validation plus `N/A` decisions to `review-security-report.md`.
 - Omitted categories are clearly treated as reviewable omissions for `review-security-report.md`, not as passing design-time `N/A` rows.
 
 Classification and evidence checks:

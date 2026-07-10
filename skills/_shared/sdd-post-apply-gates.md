@@ -130,7 +130,7 @@ Archive MUST block on:
 ## Matrix Ownership Boundary
 
 - `sdd-review` is the only active owner of the general 96-control review matrix.
-- `sdd-review-security` is the only active owner of exhaustive compact `SEC-*` row materialization and the exhaustive 155 Source ID matrix.
+- `sdd-review-security` is the only active owner of exhaustive compact `SEC-*` and 155 Source ID validation. Full Source ID matrix materialization is audit-only unless explicitly requested.
 - `sdd-verify` validates that the review reports are present, non-blocking, internally credible, and consumed as prerequisites. It MUST NOT reproduce or re-score either matrix.
 - `sdd-archive` preserves links, verdicts, warning summaries, exceptions, and audit references only.
 
@@ -138,7 +138,7 @@ Archive MUST block on:
 
 For corporate source-row changes:
 
-- `sdd-review-security` expands, materializes, and validates every expected Source ID exactly once.
+- `sdd-review-security` expands and validates every expected Source ID exactly once, then reports coverage metadata and focused findings by default.
 - `sdd-verify` consumes the security-review source-row verdict, warning summary, catalog snapshot identity/path, expected Source ID count, compact mapping status, safe-evidence status, `N/A` justification status, exceptions, evidence references, blocker absence, and report links.
 - `sdd-archive` preserves source-row coverage summaries, catalog identity/path, exact-once coverage status, compact mappings, warnings, exceptions, safe evidence references, `N/A` evidence/justification status, review-security verdict, verify consumption, and report links.
 - `sdd-verify` and `sdd-archive` block unresolved source-row blockers but do not duplicate the full Source ID matrix.

@@ -165,24 +165,24 @@ For new changes, persistence and status contracts MUST include `design.md` with 
 
 ### Requirement: Active Security Validator Removal
 
-New-change contracts MUST NOT require `scripts/validate_security_design.ps1`. If retained for archived artifacts, references MUST be explicitly marked legacy-only and MUST NOT participate in active status, continuation, verify, or archive gating.
+New-change contracts MUST use catalog and artifact evidence for security validation. Active status, continuation, review-security, verify, and archive gating MUST NOT depend on retired validator scripts.
 
-#### Scenario: Validator absence does not block
+#### Scenario: Retired validators do not participate
 
-- GIVEN the validator script is absent or retired
+- GIVEN retired validator scripts are absent from the active workflow
 - WHEN a new change reaches review-security, verify, or archive
 - THEN the workflow MUST use catalog and artifact evidence instead
-- AND absence of the script MUST NOT be a blocker.
+- AND retired validator availability MUST NOT be a blocker.
 
 ### Requirement: Source Row Persistence Compatibility
 
-The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, Engram, hybrid, and none modes according to the shared persistence contract. Backend behavior MUST NOT redefine source-row semantics. Source-row artifacts MUST remain recoverable through established review-security, verify, and archive keys/paths. Persistence MUST allow narrative designs and archived exhaustive designs to coexist without migration; verify/archive MUST require narrative design evidence plus the review-security report schema, not design YAML.
+The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, Engram, hybrid, and none modes according to the shared persistence contract. Backend behavior MUST NOT redefine source-row semantics. Source-row artifacts MUST remain recoverable through established review-security, verify, and archive keys/paths. Persistence MUST allow narrative designs and archived exhaustive designs to coexist without migration; verify/archive MUST require narrative design evidence plus the review-security report schema, not design YAML. New reports may persist summary-mode coverage metadata plus focused findings instead of the full 155-row matrix unless audit/full-matrix mode is explicitly requested.
 
 #### Scenario: OpenSpec mode preserves rows
 
 - GIVEN a change runs in OpenSpec mode
 - WHEN source-row artifacts are persisted
-- THEN rows MUST be stored in `review-security-report.md`
+- THEN coverage metadata, section summaries, focused findings, and audit-mode full rows when requested MUST be stored in `review-security-report.md`
 - AND downstream phases MUST read that report as source-row evidence.
 
 #### Scenario: Engram or hybrid mode preserves rows
@@ -222,11 +222,11 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 - GIVEN review-security is non-blocking and cites narrative design coverage
 - WHEN verify records final evidence
 - THEN it MUST preserve catalog identity, expected count, compact mappings, and report links
-- AND it MUST NOT require standalone `security-design.md` or `security-applicability.md`.
+- AND it MUST rely on embedded secure design plus review-security evidence.
 
 ### Requirement: Archive Source Row Preservation
 
-`sdd-archive` MUST require passing verification plus non-blocking source-row security review for new changes. Archive MUST preserve source-row coverage summaries, catalog snapshot identity/path, expected count, compact `SEC-*` mappings, warnings, exceptions, and evidence references without requiring legacy standalone security artifacts or copying the full review-security matrix into design/archive summaries.
+`sdd-archive` MUST require passing verification plus non-blocking source-row security review for new changes. Archive MUST preserve source-row coverage summaries, catalog snapshot identity/path, expected count, compact `SEC-*` mappings, warnings, exceptions, and evidence references without copying the full review-security matrix into design/archive summaries unless audit/full-matrix mode was explicitly requested.
 
 #### Scenario: Archive checks no source blockers remain
 
@@ -247,7 +247,14 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 - GIVEN `review-security-report.md` contains the exhaustive source-row matrix
 - WHEN archive writes final records
 - THEN it MUST link or summarize the matrix instead of duplicating it
-- AND archived evidence MUST remain readable without standalone legacy security artifacts.
+- AND archived evidence MUST remain readable through embedded secure design and review-security evidence.
+
+#### Scenario: Archive consumes summary-mode source evidence
+
+- GIVEN `review-security-report.md` uses summary mode with complete source-row validation coverage
+- WHEN archive writes final records
+- THEN it MUST preserve coverage metadata, section summaries, focused findings, warnings, exceptions, and report links
+- AND it MUST NOT require the full 155-row matrix unless audit/full-matrix mode was explicitly requested.
 
 ### Requirement: Operational Readiness Evidence Persistence
 

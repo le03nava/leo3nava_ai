@@ -19,26 +19,26 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Activation Contract
 
-Run after non-blocking `sdd-review` and before `sdd-verify`. Parse narrative `design.md#secure-development-design` category rules and omissions, expand the mandatory security catalog, consume `review-report.md`, apply/task evidence, changed-file context, and test-design coverage; persist `review-security-report.md` with its own schema, compact matrix, source-row matrix, row-level verdicts, evidence, observations, blockers, exceptions, and next routing. For corporate source-row validation, `review-security-report.md` is the only active new-change artifact that materializes the exhaustive compact-control matrix and exhaustive 155 Source ID matrix.
+Run after a non-blocking `sdd-review` and before `sdd-verify`. Validate narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, and `review-report.md` against the security catalog. Persist exactly one owned artifact: `review-security-report.md` / `sdd/{change-name}/review-security`.
+
+This phase owns security-review verdicts, compact `SEC-*` validation, corporate Source ID validation when applicable, missed-omission checks, safe-evidence checks, `N/A` decisions, blockers, warning carry-forward, and next routing. It does not replace general review, verification, archive readiness, or implementation fixes.
 
 ## Phase Artifact Contract
 
-Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.
-Common post-apply gates, review-evidence consumption rules, safe-evidence rules, matrix ownership boundaries, routing defaults, and persistence/read-back expectations are defined in `skills/_shared/sdd-post-apply-gates.md`.
+Follow the shared contracts instead of duplicating their rules:
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Structured status plus mandatory narrative `design.md#secure-development-design`, non-blocking `review-report.md`, tasks/apply progress or completed task evidence, changed-file context, `test-design.md`, `references/security-guideline-catalog.md`, and `skills/_shared/sdd-security-contract.md`. |
+| Backend mechanics | `skills/_shared/sdd-phase-common.md` Sections B/C and `skills/_shared/persistence-contract.md`. |
+| Post-apply gates | `skills/_shared/sdd-post-apply-gates.md`. |
+| Security vocabulary/routing/safe evidence | `skills/_shared/sdd-security-contract.md`. |
+| Catalog authority | `references/security-guideline-catalog.md`. |
+| Report shape | `references/report-template.md`. |
+| Detailed validation rules | `references/validation-rules.md`; load only after readiness gates pass and row validation is needed. |
+| Required inputs | Structured status; narrative `design.md#secure-development-design`; non-blocking `review-report.md`; tasks/apply evidence; changed-file context; `test-design.md`; security catalog; shared security contract. |
 | Produced artifact | `sdd/{change-name}/review-security` or `openspec/changes/{change-name}/review-security-report.md`. |
 | Mutates | None outside the produced security review report artifact. |
-| Security catalog | Use the phase-local authoritative catalog in `references/security-guideline-catalog.md`; every compact `SEC-*` guideline must be expanded exactly once, and corporate source-row validation must expand the catalog's 155 expected Source IDs exactly once. |
-| Matrix contract | Materialize compact rows and source rows in `review-security-report.md` using `references/report-template.md`, with `Complies` / answer values `Yes`, `No`, or `N/A`, evidence location, observations, lifecycle status, owner phase, and route from the catalog/security-contract vocabulary. Narrative design may omit non-applicable rows; review-security validates those omissions instead of requiring design to list them. Missing, duplicate, or unknown compact/source rows in the produced report are blocking. Missing applicable evidence, missed applicable design controls, or incomplete exceptions are `No` / `blocked`; `N/A` rows require evidence and justification in the report. |
-| Source-row contract | When corporate source-row validation applies, expand the authoritative catalog inventory and materialize all 155 expected Source IDs exactly once in `review-security-report.md`. Validate each row against narrative `design.md#secure-development-design`, omitted-category analysis, `test-design.md`, completed tasks/apply evidence, changed-file context, and `review-report.md`. Rows MUST cite corporate section, PCI alignment, compact `SEC-*` mappings, applicability/compliance status, lifecycle status, evidence type, evidence location, finding, owner phase, and route. Detailed observations and `N/A` justification belong in focused follow-up sections so the 155-row matrix stays reviewable. A row MUST NOT pass merely because it is listed or because design omitted it. |
-| Boundary | Follow `skills/_shared/sdd-post-apply-gates.md` and `skills/_shared/sdd-security-contract.md`: do not replace `sdd-review`, do not duplicate the 96-control matrix, and keep exhaustive compact/source matrices owned only by `review-security-report.md`. |
-| Active validation | New-change security review parses narrative design rules and validates report rows against artifact evidence directly; it does not require design YAML/schema/matrices, `scripts/validate_security_design.ps1`, or separate standalone security artifacts. |
-| Operational evidence leakage | Consume operational refs/gaps from `review-report.md`, `design.md#Operational Considerations` or equivalent design evidence, apply evidence, and changed files when present. Block restricted operational identifiers, secrets, raw logs/payloads, full ID lists, generated bytes, final-document-only backfill, and invented operational details in ordinary SDD evidence. |
-| Placeholder safety | Exact `Pendiente de confirmar:` and exact `No aplica.` are safe placeholders and MUST NOT require real operational values to pass, but they do not replace safe proof that leakage boundaries were checked. |
-| Safe evidence | Follow `skills/_shared/sdd-post-apply-gates.md` and `skills/_shared/sdd-security-contract.md`. |
+| Matrix ownership | Only this phase owns compact/source-row validation. Validate all required rows, but write the full Source ID matrix only when audit mode is explicitly requested; otherwise write coverage summaries and focused findings. Do not copy the general 96-control matrix. |
 | Success routing | Non-blocking verdict: `next_recommended: verify`. |
 | Failure routing | Missing mandatory evidence, incomplete exceptions, blocked rows, or security blockers: `next_recommended: apply` or `resolve-blockers` according to whether remediation is implementation work or artifact/config repair. |
 
@@ -46,59 +46,29 @@ Common post-apply gates, review-evidence consumption rules, safe-evidence rules,
 
 | Situation | Action |
 | --- | --- |
-| Common post-apply dependency, review-evidence, context, safe-evidence, or persistence gate fails | Follow `skills/_shared/sdd-post-apply-gates.md`; keep verify/archive unavailable until the blocker is resolved. |
-| A new-change review attempts to require `scripts/validate_security_design.ps1` or a standalone security artifact | Treat that requirement as invalid for the active flow; validate against the catalog, embedded rows, and persisted artifact evidence instead. |
-| A new active design attempts to satisfy review-security by embedding YAML, schema fields, compact matrices, Source ID matrices, machine-readable applicability fields, or all-row `N/A` bookkeeping | Treat it as stale/legacy-shaped evidence; route upstream contract repair to `apply` or `resolve-blockers` unless it is explicitly historical compatibility data. |
-| Proposal, specs, changed files, apply evidence, test-design, or review evidence show an omitted compact control or Source ID was applicable | Persist a blocking report, mark the row as missed applicable control with `No` / `blocked`, and return `next_recommended: apply` when remediation is file, prompt, contract, or task evidence work; otherwise route to `resolve-blockers`. |
-| The produced compact-control matrix omits, duplicates, or invents compact guideline IDs | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` because `review-security-report.md` failed exhaustive compact materialization. |
-| Source-row coverage has missing, duplicate, or unknown Source IDs | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` because the source-row inventory or report shape must be repaired. |
-| A source row has malformed schema, unsupported allowed values, or missing/unknown compact `SEC-*` mappings | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers`. |
-| Source-row evidence contains unsafe sensitive values | Follow the safe-evidence rejection rules in `skills/_shared/sdd-post-apply-gates.md` and `skills/_shared/sdd-security-contract.md`; route to `resolve-blockers` unless remediation is implementation work. |
-| Operational evidence leaks restricted operational data, final-document-only values, raw logs/payloads, generated bytes, secrets, or invented operational details | Persist a blocking report and route to `apply` or `resolve-blockers` according to remediation ownership. |
-| A placeholder is exact but no non-leakage proof was performed for an applicable security obligation | Do not treat placeholder-only evidence as complete; require safe boundary evidence without demanding real operational values. |
-| Another active artifact is treated as the owner of the exhaustive compact-control or 155-row Source ID matrix | Treat that ownership as a contract violation under `skills/_shared/sdd-post-apply-gates.md`; keep exhaustive matrices in `review-security-report.md` only and route upstream repair as needed. |
-| Applicable mandatory guideline lacks implementation evidence and lacks a complete approved exception | Persist a blocking report, mark the row `No` and `blocked`, and return `next_recommended: apply`. |
-| Applicable source row lacks corroborating implementation/apply/changed-file evidence | Persist a blocking report, mark the row `No` and `blocker`, and return `next_recommended: apply` when remediation is file, prompt, or contract work. |
-| N/A row lacks rationale/evidence proving irrelevance | Persist a blocking report and return `next_recommended: resolve-blockers` unless implementation remediation is required. |
-| Approved exception is incomplete | Mark blocking and return `next_recommended: apply` or `resolve-blockers`. |
-| Only non-blocking warnings exist | Persist `PASS WITH WARNINGS` and return `next_recommended: verify`. |
-
-## Source-Row Review Rules
-
-Use the source-row layer as operational security evidence below the compact `SEC-*` layer. Do not promote Source IDs into new compact controls.
-
-| Rule | Requirement |
-| --- | --- |
-| Report-only compact expansion | Expand the catalog compact guideline set during review-security and write every compact guideline exactly once in `review-security-report.md`. Design/test-design may remain narrative and MUST NOT be repaired by copying an exhaustive compact matrix into those artifacts. |
-| Omission validation | Treat omitted design controls as reviewable decisions. Correlate proposal/specs/changed files/apply/test-design/review evidence to decide whether the omitted compact guideline or Source ID is truly irrelevant. Missed applicable omissions are blockers. |
-| Exact-once coverage | Expand catalog ranges before validation and require all 155 expected Source IDs exactly once in `review-security-report.md`. Missing, duplicate, or unknown IDs are blockers routed to `resolve-blockers`. |
-| Evidence correlation | Compare each row to narrative design expectations, test-design checks, completed tasks/apply evidence, changed files, and relevant `review-report.md` citations. A listed-only row fails. |
-| Compact mapping | Each row must map to one or more known compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. Missing or unknown mappings route to `resolve-blockers`. |
-| PCI alignment | Each row must preserve the PCI alignment inherited from its catalog corporate section, or `N/A` when the catalog section has no PCI alignment. |
-| Reviewable table shape | Keep the main 155-row matrix compact. Use the matrix for exact-once coverage and status, then add focused sections for blockers, warnings, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward. |
-| Matrix ownership | `review-security-report.md` is the only produced artifact that may contain the exhaustive 155-row Source ID matrix. Other phase artifacts may provide catalog refs, summaries, and evidence links only. |
-| Safe evidence | Evidence locations, summaries, and detail sections cite paths, section refs, changed-file refs, command summaries, sanitized summaries, or redacted placeholders only. Unsafe evidence routes to `resolve-blockers` unless implementation remediation is required. |
-| Operational placeholders | Exact `Pendiente de confirmar:` and exact `No aplica.` are safe marker states; validate them as placeholders and separately prove no restricted operational data leaked. |
-| Evidence typing | Each row must classify evidence as `implementation-reference`, `static-inspection`, `test-evidence`, `approved-exception`, or `n/a-evidence` so reviewers can distinguish proof from rationale. |
-| N/A evidence | `N/A` rows require evidence and `naJustification` proving irrelevance by category, platform, API, data class, or workflow. Unsupported `N/A` routes to `resolve-blockers`. |
-| Owner phase | Each row must state the owner phase responsible for remediation or carry-forward: `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, or `archive`. |
-| Implementation gaps | Applicable rows that lack implementation evidence route to `apply` when the fix is code, skill, prompt, contract, or task evidence work. |
-| Warnings-only progression | Warning rows may proceed to `verify` only when mandatory source-row evidence is complete, safe, mapped, and non-blocking. |
+| Shared post-apply, safe-evidence, dependency, or persistence gate fails | Follow `skills/_shared/sdd-post-apply-gates.md`; keep verify/archive unavailable. |
+| Embedded `design.md#secure-development-design` is missing | Return `blocked` with `next_recommended: resolve-blockers`. |
+| `review-report.md` is missing, unreadable, ambiguous, or blocking | Return `blocked`/route per `sdd-post-apply-gates.md`; do not recreate general review. |
+| New-change evidence requires YAML/schema/matrices in design or all-row design `N/A` bookkeeping | Treat as invalid for the active flow; validate from narrative design, catalog, and artifact evidence. |
+| Compact or Source ID rows are missing, duplicated, unknown, malformed, unmapped, unsafe, unsupported, or unsupported `N/A` | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` unless remediation clearly belongs to `apply`. |
+| Proposal/specs/changed files/apply/test-design/review evidence prove an omitted security control applies | Persist a blocking report; route to `apply` for file/prompt/contract/task evidence remediation, otherwise `resolve-blockers`. |
+| Applicable mandatory security evidence is absent and no complete approved exception exists | Mark `No` / blocked and route to `apply` when implementation/evidence work is needed. |
+| Operational evidence leaks restricted identifiers, secrets, raw logs/payloads, full ID lists, generated bytes, final-document-only values, or invented details | Persist a blocking report and route by remediation owner. |
+| Exact `Pendiente de confirmar:` or `No aplica.` appears | Treat as safe placeholder text, but still require safe non-leakage proof when a security obligation applies. |
+| Only non-blocking warnings remain with complete mandatory safe evidence | Persist `PASS WITH WARNINGS` and return `next_recommended: verify`. |
 
 ## Execution Steps
 
-1. Load supplemental skills according to `skills/_shared/skill-resolver.md` and the shared SDD Section A executor minimum.
-2. Apply `skills/_shared/sdd-post-apply-gates.md`, then resolve and read mandatory inputs from the selected backend or `contextFiles`.
-3. Confirm `design.md#secure-development-design` exists before evaluating evidence. If it is missing, stop with a blocking result and route to `resolve-blockers`.
-4. Confirm `review-report.md` is non-blocking and cite its verdict, blocking summary, and relevant evidence without copying its full matrix.
-5. Parse narrative `design.md#secure-development-design` changed-surface classification, applicable category rules, evidence expectations, exceptions, carried risks, and archive gates; do not require or expect design YAML/schema/matrix fields.
-6. Expand the complete compact guideline catalog, compare it with narrative design and changed-file evidence, and materialize every compact guideline exactly once in `review-security-report.md`; report omitted rows as `N/A`, `No`, or missed-applicable blockers based on corroborated evidence.
-7. When source-row validation applies, build the expected expanded Source ID universe from the catalog operational inventory, confirm the expected count is 155, then materialize and validate that exact universe in `review-security-report.md` with known compact mappings and allowed schema values.
-8. Compare compact and source rows against changed files, tasks/apply evidence, test-design coverage, and general review handoff evidence. Mark applicable mandatory rows with missing implementation evidence or incomplete exceptions as `No` and lifecycle `blocked`; mark missed applicable omitted controls as blockers; mark source rows with missing corroboration as `blocker`; justify every `N/A` row with evidence proving irrelevance.
-8a. Validate operational evidence leakage boundaries from the review handoff and changed files when operational evidence exists: restricted production identifiers, secrets, raw logs/payloads, full ID lists, generated bytes, final-document-only values, and invented operational data are blocking in ordinary SDD evidence. Preserve exact placeholders as safe marker states while requiring safe non-leakage proof for applicable evidence.
-9. Produce `review-security-report.md` using `references/report-template.md`, with report metadata, verdict, compact row validation matrix, the only exhaustive source-row validation matrix when applicable, implementation evidence, focused findings sections, safe observations, blockers/non-blockers, exceptions, unavailable tooling when relevant, and artifact metadata `nextRecommended: verify|apply|resolve-blockers`.
-10. Validate report shape, compact exact-once coverage, source-row exact-once coverage, PCI alignment preservation, guideline refs, evidence types, owner phases, applies/complies/lifecycle consistency, omission decisions, safe evidence, vocabulary, complete N/A rationale, complete exception fields, and routing consistency. Do not invoke or require `scripts/validate_security_design.ps1` for this validation.
-11. Persist and read back the report before returning.
+1. Load supplemental skills via `skills/_shared/skill-resolver.md` and `sdd-phase-common.md` Section A.
+2. Apply common post-apply gates; resolve/read required inputs from the selected backend or explicit `contextFiles`.
+3. Confirm embedded secure design exists and `review-report.md` is non-blocking.
+4. Load `references/validation-rules.md` after readiness passes, then parse narrative secure-design classification, applicable category rules, evidence expectations, exceptions, residual risks, safe-evidence policy, and omitted categories. Do not require design YAML/schema/matrices.
+5. Validate compact `SEC-*` coverage and omissions against proposal/specs, changed files, tasks/apply evidence, `test-design.md`, and `review-report.md` using the detailed validation reference.
+6. When corporate Source ID validation applies, expand the catalog inventory and validate/report the expected universe according to the catalog, report template, and detailed validation reference.
+7. Validate operational evidence leakage boundaries when operational evidence exists; preserve exact safe placeholders while rejecting unsafe evidence.
+8. Write `review-security-report.md` with report metadata, verdict, compact/source validation summary, focused blockers/warnings/`N/A` justifications, safe evidence, exceptions, unavailable tooling, and artifact metadata `nextRecommended`.
+9. Validate report shape, vocabulary, exact-once requirements, mappings, evidence types, owner phases, lifecycle/status consistency, safe evidence, complete `N/A` rationale, complete exception fields, and routing consistency.
+10. Persist and read back the report before returning.
 
 ## Output Contract
 
@@ -106,29 +76,20 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 ## Routing Contract
 
-- Non-blocking report verdict `PASS` or `PASS WITH WARNINGS` -> return phase envelope `next_recommended: verify`.
-- Persisted report verdict `FAIL` caused by implementation/security evidence gaps -> return phase envelope `next_recommended: apply`.
-- Missing, ambiguous, unreadable, duplicate, malformed, unsafe, or conflicting upstream context -> follow `skills/_shared/sdd-post-apply-gates.md` and return phase envelope `status: blocked` with `next_recommended: resolve-blockers`.
-- Missed applicable controls discovered from narrative design omissions -> return phase envelope `next_recommended: apply` when remediation is implementation, skill, prompt, contract, or task evidence work; otherwise `resolve-blockers`.
-- Missing/duplicate/unknown Source IDs, malformed source-row schema, missing mappings, missing PCI alignment, invalid evidence type, invalid owner phase, unsafe evidence, invalid applies/complies/lifecycle combination, or unsupported `N/A` -> return phase envelope `status: blocked` and `next_recommended: resolve-blockers`.
-- Applicable source rows missing implementation evidence -> return phase envelope `next_recommended: apply` when remediation is file, prompt, contract, or task evidence work.
-- Warnings-only source-row findings with complete mandatory evidence -> return phase envelope `next_recommended: verify`.
-- Persistence failure after producing a useful report -> return phase envelope `status: partial` with `next_recommended: resolve-blockers` and include the report in `detailed_report` when safe.
+- `PASS` or `PASS WITH WARNINGS` with no blockers -> `status: success`, `next_recommended: verify`.
+- Implementation/security evidence gaps -> persist `FAIL`, route `next_recommended: apply` when remediation is file, prompt, contract, task, or apply-evidence work.
+- Missing/malformed/unsafe/conflicting context, catalog/schema repair, backend repair, unsupported `N/A`, missing mappings, or unsafe evidence cleanup -> `status: blocked`, `next_recommended: resolve-blockers` unless remediation clearly belongs to `apply`.
+- Persistence failure after a useful report -> `status: partial`, `next_recommended: resolve-blockers`, include safe recovery details.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for artifact/status/state metadata only.
 
 ## Rules
 
 - ALWAYS run after non-blocking `sdd-review` and before `sdd-verify` for new changes.
-- ALWAYS require narrative `design.md#secure-development-design`; no-impact rationale is prose, while report-level `N/A` rows are produced and justified by review-security.
-- Validate new-change security evidence through narrative design rules, catalog vocabulary, and artifact evidence; do not require design YAML/schema/matrices, `scripts/validate_security_design.ps1`, or standalone security artifacts.
-- For new narrative designs, expand all compact controls in `review-security-report.md`, validate omitted compact categories against proposal/specs/changed files/apply/test-design/review evidence, and block missed applicable omissions.
-- For corporate source-row changes, validate every expanded Source ID exactly once against design, test-design, apply evidence, changed files, and `review-report.md` citations.
-- For corporate source-row changes, materialize all 155 expected Source IDs exactly once in `review-security-report.md` and nowhere else in the active new-change artifact set.
-- NEVER require design or test-design to materialize all compact controls, all Source IDs, or all N/A rows for new narrative changes.
-- Source-row rows must be corroborated by safe evidence; row presence alone is not compliance evidence.
-- Source-row rows must preserve PCI alignment, guideline refs, evidence type, owner phase, and applies/complies/lifecycle consistency so reviewers can audit quickly without reconstructing the catalog.
-- Follow `skills/_shared/sdd-post-apply-gates.md` for matrix ownership boundaries, safe evidence, unavailable tooling, common routing, and persistence/read-back expectations.
-- Return `next_recommended: verify` only for non-blocking security review verdicts.
+- ALWAYS require narrative `design.md#secure-development-design` for active new changes.
+- NEVER require design/test-design to materialize compact controls, Source IDs, schema fields, YAML/JSON, or exhaustive `N/A` rows.
+- NEVER duplicate the 96-control general review matrix.
+- Source-row presence alone is not compliance evidence; each row needs safe corroborating evidence, justified `N/A`, or complete approved exception.
+- Return `next_recommended: verify` only for non-blocking security-review verdicts.
 
 ## References
 
@@ -137,5 +98,6 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 - `../_shared/persistence-contract.md` — artifact keys, backend behavior, hybrid conflict policy, and read-back verification.
 - `references/security-guideline-catalog.md` — authoritative compact SEC guideline IDs, taxonomy, corporate Source ID inventory, compact mappings, PCI alignment, and catalog snapshot.
 - `references/report-template.md` — required `review-security-report.md` contract/template.
+- `references/validation-rules.md` — detailed compact/source-row validation, safe-evidence, routing, and report validation rules loaded after readiness passes.
 - `../_shared/sdd-security-contract.md` — narrative secure-design and review-security report schema contracts.
 - `../_shared/sdd-post-apply-gates.md` — common post-apply gates, review evidence consumption, routing defaults, safe evidence, and matrix ownership boundaries.

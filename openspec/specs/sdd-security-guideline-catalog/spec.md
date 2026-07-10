@@ -8,7 +8,7 @@ Define the in-repo corporate security guideline snapshot, compact taxonomy, matr
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by narrative secure development design in `design.md#secure-development-design` and exhaustive `review-security-report.md` validation until an official external versioned source replaces it.
+The repository MUST maintain the corporate security guideline catalog as an in-repo snapshot based on the user-provided text. The catalog MUST preserve source text, identifiers, version metadata, and matrix vocabulary needed by narrative secure development design in `design.md#secure-development-design` and exhaustive `review-security-report.md` validation until an official external versioned source replaces it. Full source-row matrix output is audit-only unless explicitly requested.
 
 #### Scenario: Catalog snapshot is available
 
@@ -84,7 +84,7 @@ The catalog SHOULD identify evidence types suitable for review rows, including i
 
 ### Requirement: Catalog Boundary Preservation
 
-The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, compact-control inventory, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive `review-security-report.md` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions.
+The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, compact-control inventory, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive `review-security-report.md` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions, and MUST NOT require full source-row matrix output unless audit/full-matrix mode is requested.
 
 #### Scenario: Catalog authority is preserved
 
@@ -160,7 +160,7 @@ The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecyc
 
 ### Requirement: Corporate Source Row Inventory
 
-The catalog MUST own the authoritative exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference applicable category guidance; review-security MUST expand the inventory exhaustively.
+The catalog MUST own the authoritative exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference applicable category guidance; review-security MUST expand and validate the inventory exhaustively, while full 155-row report materialization remains audit-only unless explicitly requested.
 
 #### Scenario: Ranges expand before coverage
 
@@ -181,7 +181,7 @@ The catalog MUST own the authoritative exhaustive corporate source-row inventory
 - GIVEN design or test-design needs source-row context
 - WHEN it records coverage obligations
 - THEN it MUST cite catalog snapshot/context and applicable category guidance instead of copying all 155 rows
-- AND review-security MUST use the catalog to expand the exhaustive matrix.
+- AND review-security MUST use the catalog to expand the exhaustive validation universe.
 
 ### Requirement: Compact SEC Mapping Coverage
 
@@ -221,7 +221,7 @@ Source-row evidence MUST be review-safe. Evidence locations and observations MUS
 
 ### Requirement: Shared Security Contract Source Row Schema
 
-`skills/_shared/sdd-security-contract.md` MUST define the review-security report schema, allowed values, traceability, artifact boundary, narrative design obligations, exhaustive review-security obligations, safe-evidence policy, and routing. It MUST state that catalog owns inventory, design owns narrative category rules, test-design owns planned checks, review-security owns schema/matrix validation, and verify/archive preserve evidence without design YAML.
+`skills/_shared/sdd-security-contract.md` MUST define the review-security report schema, allowed values, traceability, artifact boundary, narrative design obligations, exhaustive review-security obligations, safe-evidence policy, and routing. It MUST state that catalog owns inventory, design owns narrative category rules, test-design owns planned checks, review-security owns validation and coverage reporting, full matrix output is audit-only unless requested, and verify/archive preserve evidence without design YAML.
 
 #### Scenario: Contract consumers share schema
 

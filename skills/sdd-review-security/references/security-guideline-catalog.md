@@ -105,7 +105,7 @@ Required checks:
 
 The compact `SEC-*` checklist records remain the authoritative eight-control security taxonomy. The operational inventory below adds exhaustive corporate Source ID coverage for row-level validation without replacing those compact controls.
 
-This section is the authoritative inventory for the 155 concrete Source IDs derived from the preserved `Full Corporate Guideline Snapshot`. Design and test-design artifacts MUST reference this inventory by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. `review-security-report.md` is the only active new-change artifact expected to materialize the exhaustive row matrix.
+This section is the authoritative inventory for the 155 concrete Source IDs derived from the preserved `Full Corporate Guideline Snapshot`. Design and test-design artifacts MUST reference this inventory by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. `review-security-report.md` validates the full source universe and reports coverage; it materializes the full 155-row matrix only in explicit audit/full-matrix mode.
 
 Validation MUST expand source ranges before checking coverage. Compressed ranges MAY appear in human summaries, but validation matrices and review-security rows MUST reason over concrete Source IDs. Verify and archive preserve source-row summaries, warnings, exceptions, report links, catalog identity, and expected count without redefining this inventory.
 
@@ -117,20 +117,21 @@ Validation MUST expand source ranges before checking coverage. Compressed ranges
 | Expected universe | Exactly 155 concrete Source IDs from sections 1-15 below. |
 | Expansion owner | The catalog owns expanded ranges; review-security consumes them for exact-once validation. |
 | Slim artifact boundary | Design/test-design/apply/verify/archive cite catalog refs, groups, counts, mappings, and links; they do not duplicate the exhaustive inventory. |
-| Full matrix owner | `review-security-report.md` materializes and validates every expected Source ID exactly once. |
+| Validation owner | `review-security-report.md` validates every expected Source ID exactly once and reports coverage metadata. |
+| Full matrix owner | `review-security-report.md` may materialize every expected Source ID exactly once only in audit/full-matrix mode. |
 | Compact mapping vocabulary | Only `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, and `SEC-LOG-001` are valid compact mappings. |
 
 ### Source row validation rules
 
 | Rule | Requirement |
 | --- | --- |
-| Exact source universe | The preserved snapshot contains 155 concrete Source IDs. Every validation matrix MUST include each expected Source ID exactly once. |
+| Exact source universe | The preserved snapshot contains 155 concrete Source IDs. Review-security MUST validate each expected Source ID exactly once and report expected/validated counts. Full row materialization is required only in audit/full-matrix mode. |
 | Range expansion | Expand dotted numeric ranges such as `1.1-1.10` into existing snapshot IDs before validation. Do not synthesize IDs that are absent from the snapshot. |
 | PCI alignment | Every expanded row inherits the PCI alignment from its corporate section heading; rows with no heading alignment MUST use `N/A`. |
 | Compact mapping | Every expanded Source ID MUST map to one or more existing compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. |
 | Blocking failures | Missing Source IDs, duplicate Source IDs, unknown Source IDs, missing compact mappings, malformed rows, missing evidence for applicable rows, unsupported `N/A`, or unsafe evidence MUST block with the route defined by `skills/_shared/sdd-security-contract.md`. |
 | Safe evidence | Evidence and observations cite paths, sections, changed-file references, command summaries, sanitized summaries, or redacted placeholders only. They MUST NOT contain secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. |
-| Reviewable output shape | `review-security-report.md` should keep the exhaustive 155-row matrix compact by including row identity, PCI alignment, compact mappings, status, evidence type/location, finding, owner phase, and route in the table, then place detailed observations, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward in focused sections. |
+| Reviewable output shape | `review-security-report.md` should default to coverage metadata, section-level summaries, and focused details for blockers, warnings, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward. In audit/full-matrix mode, the 155-row matrix includes row identity, PCI alignment, compact mappings, status, evidence type/location, finding, owner phase, and route. |
 
 ### Expanded source inventory and compact mappings
 

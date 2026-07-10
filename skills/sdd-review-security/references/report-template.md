@@ -15,7 +15,11 @@ verdict: PASS | PASS WITH WARNINGS | FAIL
 sourceSecureDesign: {path-or-topic}#secure-development-design
 sourceReviewReport: {path-or-topic}
 sourceRowExpectedCount: 155
-sourceRowMatrixOwner: review-security-report.md
+sourceRowValidatedCount: 155
+sourceRowCoverage: complete | incomplete
+sourceRowReportMode: summary | full-matrix
+sourceRowFullMatrix: omitted-audit-only | included
+sourceRowMatrixOwner: review-security-report.md when sourceRowReportMode=full-matrix
 nextRecommended: verify | apply | resolve-blockers
 ```
 
@@ -33,13 +37,27 @@ This section is report-only exhaustive compact materialization. It validates all
 
 ## Corporate Source Row Validation
 
-Expected Source ID count: `155`. This section is the only active new-change artifact that materializes the exhaustive Source ID matrix; every expected Source ID from the catalog MUST appear exactly once.
+Expected Source ID count: `155`. Security review MUST validate every expected Source ID exactly once. The default report shape is summary mode: prove full validation coverage without printing the full 155-row matrix. Use full-matrix mode only when an explicit audit/export requires every row inline.
+
+### Coverage Summary
+
+| Corporate Section | Expected | Validated | Blockers | Warnings | N/A | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `1. Authentication` | 10 | 10 | 0 | 0 | 10 | Safe summary |
+
+### Focused Source Row Details
+
+Include rows that need reviewer attention: blockers, warnings, approved exceptions, missing evidence, unsafe evidence rejections, and `N/A` decisions requiring explicit justification. Do not bury actionable findings in a full table.
 
 | Source ID | Corporate Section | PCI Alignment | Guideline Ref | Compact Mapping | Applies | Complies | Lifecycle Status | Evidence Type | Evidence Location | Finding | Owner Phase | Route |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `1.1` | `1. Authentication` | `PCI Req 6.5.8, 6.5.10` | `skills/sdd-review-security/references/security-guideline-catalog.md#full-corporate-guideline-snapshot (Source ID 1.1)` | `SEC-AUTH-001` | Yes/No/N/A | Yes/No/N/A | `implemented`/... | `implementation-reference`/... | `path#section` | none/blocker/warning | apply/review-security/verify | verify/apply/resolve-blockers |
 
-The source-row matrix is security-specific and bounded to the corporate Source ID inventory. It MUST NOT copy the general 96-control `sdd-review` matrix, and other phase artifacts MUST NOT copy this exhaustive 155-row matrix.
+### Full Source Row Matrix — Audit Mode Only
+
+When `sourceRowReportMode: full-matrix`, include every expected Source ID exactly once using the same columns as Focused Source Row Details. Otherwise state: `Omitted in summary mode; sourceRowValidatedCount proves complete validation coverage.`
+
+The source-row validation is security-specific and bounded to the corporate Source ID inventory. It MUST NOT copy the general 96-control `sdd-review` matrix, and other phase artifacts MUST NOT copy the full 155-row matrix.
 
 ## Source Row Findings
 
@@ -55,7 +73,7 @@ Group actionable source-row findings instead of burying them inside the 155-row 
 
 ### N/A Justifications
 
-{Every row with `Applies = N/A` or `Complies = N/A` must appear here with Source ID, evidence location, and `naJustification` proving irrelevance by category, platform, API, data class, or workflow. Use "None" only when there are no `N/A` rows.}
+{Every `N/A` decision must be justified. In summary mode, rows with the same rationale MAY be grouped by corporate section, Source ID range/list, category, platform, API, data class, or workflow, with expected/validated counts and one safe evidence location. In full-matrix mode, every `N/A` row must appear individually. Use "None" only when there are no `N/A` decisions.}
 
 ### Missing Evidence Rows
 
@@ -88,8 +106,10 @@ Group actionable source-row findings instead of burying them inside the 155-row 
 
 ## Matrix Rules
 
-- Expand every compact guideline from `references/security-guideline-catalog.md` exactly once in `## Security Row Validation`.
-- When corporate source-row validation applies, expand every expected Source ID from `references/security-guideline-catalog.md` exactly once in `## Corporate Source Row Validation`.
+- Validate every compact guideline from `references/security-guideline-catalog.md` exactly once in `## Security Row Validation`.
+- When corporate source-row validation applies, validate every expected Source ID from `references/security-guideline-catalog.md` exactly once and report `sourceRowExpectedCount`, `sourceRowValidatedCount`, and `sourceRowCoverage`.
+- In summary mode, include section-level coverage plus focused source-row details only for rows that need review attention.
+- In full-matrix mode, include every expected Source ID exactly once.
 - `Applies` and `Complies` values are limited to `Yes`, `No`, or `N/A` unless the security contract explicitly allows a planning value for a non-report artifact.
-- `N/A` rows require focused justification with evidence proving irrelevance.
+- `N/A` decisions require focused justification with evidence proving irrelevance; summary mode may group equivalent decisions, full-matrix mode lists each row individually.
 - Evidence must be review-safe: cite paths, sections, summaries, command outcomes, or redacted placeholders only.

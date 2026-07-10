@@ -44,7 +44,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
 | Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, general review verdict/blocking state, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. |
-| Source-row preservation | When corporate source-row validation applies, preserve source-row coverage summary, catalog snapshot identity/path, exact Source ID count, compact `SEC-*` mappings, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, and review-security/verify verdict links. Archive MUST NOT require legacy standalone `security-design.md` or `scripts/validate_security_design.ps1` for active new changes, and MUST NOT copy the full review-security source-row matrix into archive summaries. |
+| Source-row preservation | When corporate source-row validation applies, preserve source-row coverage summary, catalog snapshot identity/path, exact Source ID count, compact `SEC-*` mappings, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, and review-security/verify verdict links. Archive MUST NOT copy the full review-security source-row matrix into archive summaries unless audit/full-matrix mode was explicitly requested. |
 | Operational evidence preservation | Preserve operational evidence/status, refs, exact `Pendiente de confirmar:` gaps, exact `No aplica.` states, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries when present. Archive MUST NOT require absent readiness categories or `sdd-operational-doc` execution. |
 | Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
 | Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
@@ -169,7 +169,7 @@ Before persistence, validate the archive report includes:
 - `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
 - `review-report` artifact ref/path and confirmation that review verdict is non-blocking
 - `review-security-report` artifact ref/path and confirmation that security review verdict is non-blocking
-- Mandatory `design.md#secure-development-design` ref/path, including no-impact changed-surface rationale when applicable; exhaustive `N/A` rows belong to `review-security-report.md`
+- Mandatory `design.md#secure-development-design` ref/path, including no-impact changed-surface rationale when applicable; source-row validation coverage and `N/A` decisions belong to `review-security-report.md`
 - Embedded secure-design validation metadata or static/manual notes: source section, status, catalog snapshot identity, lifecycle vocabulary, and validation notes
 - Mandatory security evidence status and complete approved exception details for any accepted gaps
 - Archive evidence fields for applicable controls: guideline IDs, taxonomy categories, source refs, operational severity, expected evidence status, residual risks, and exception state
@@ -179,7 +179,7 @@ Before persistence, validate the archive report includes:
 - Runtime test runner/linter/typechecker/formatter/coverage availability from verify evidence; unavailable tools must be recorded explicitly rather than treated as passing evidence
 - Corporate source-row audit trail when applicable: catalog snapshot identity/path, expected expanded Source ID count, exact-once coverage status, compact `SEC-*` mappings, safe evidence refs, `N/A` evidence/justification status, warning-only findings, complete exceptions, review-security source-row verdict, verify source-row consumption, report links, and confirmation that no source-row blockers remain
 - Operational evidence audit trail when applicable: operational status, evidence refs, unresolved `Pendiente de confirmar:` gaps, `No aplica.` states, warning carry-forward, unavailable-tooling notes, complete exceptions if any, and manual-document handoff boundary confirming `sdd-operational-doc` remains manual post-archive
-- Confirmation that no legacy standalone `security-design.md` artifact or `scripts/validate_security_design.ps1` execution is required for active new-change archive readiness
+- Confirmation that active new-change archive readiness uses embedded secure design, review-security, verify, and safe audit references
 - Specs synced by domain with created/updated/removed/renamed counts
 - Archive destination or inline-only closure reason
 - Any intentional-with-warnings approval text and reason
@@ -241,4 +241,4 @@ Ready for the next change.
 - The archive is an AUDIT TRAIL — never delete or modify archived changes
 - If `openspec/changes/archive/` doesn't exist, create it
 - Apply any `rules.archive` from `openspec/config.yaml`
-- Do not require legacy standalone security artifacts or `scripts/validate_security_design.ps1` for active new-change archive gates; embedded design, review-security, verify, and safe audit references are authoritative.
+- Use embedded design, review-security, verify, and safe audit references as the authoritative active new-change archive gates.
