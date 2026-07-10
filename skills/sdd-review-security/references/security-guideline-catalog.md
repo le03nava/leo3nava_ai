@@ -2,7 +2,7 @@
 
 Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `test-design.md`, `review-security-report.md`, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
 
-> Automation source: use `security-guideline-catalog.operational.json` for scripts, Excel exports, and machine validation. This Markdown file remains the human-readable/auditable snapshot and preserves the full corporate guideline text.
+> Canonical source: `security-guideline-catalog.operational.json` owns the structured catalog, compact controls, corporate Source ID inventory, mappings, counts, and source guideline text. This Markdown file is a human-readable/auditable view derived from that JSON.
 
 ## Snapshot Metadata
 
@@ -11,16 +11,16 @@ Operational security checklist for embedded SDD secure development design in `de
 | Snapshot ID | `security-guidelines-initial-user-snapshot-2026-06-30` |
 | Catalog version | `1` |
 | Taxonomy version | `1` |
-| Source | Initial in-repo snapshot from user-provided corporate security guideline text |
+| Source | Derived human-readable view from `security-guideline-catalog.operational.json`, which contains the initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
 | Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, grouped source-row coverage, evidence planning, `review-security-report.md`, verification, and archive gates |
-| Inventory authority | `security-guideline-catalog.operational.json` is the machine-readable authoritative inventory for the 155 concrete corporate Source IDs used by SDD source-row validation; this Markdown preserves the human snapshot. |
+| Inventory authority | `security-guideline-catalog.operational.json` is the canonical authoritative inventory for the 155 concrete corporate Source IDs used by SDD source-row validation; this Markdown is a derived human/audit view. |
 | Expected Source ID count | `155` |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
 | Operational severity vocabulary | `blocking`, `conditional`, `advisory` |
 | Matrix vocabulary | `Yes`, `No`, `N/A` |
 | Lifecycle status vocabulary | `not-started`, `planned`, `implemented`, `verified`, `not-applicable`, `exception-approved`, `blocked` |
-| Migration note | This file can later migrate to an official external versioned source. Preserve this snapshot ID and guideline IDs in archived evidence for audit continuity. |
+| Migration note | The JSON catalog can later migrate to an official external versioned source. Preserve this snapshot ID and guideline IDs in archived evidence for audit continuity. Regenerate this Markdown view from the canonical JSON when catalog content changes. |
 
 ## Checklist Usage
 
@@ -32,7 +32,7 @@ Use this catalog as a checklist for every new `design.md#secure-development-desi
 | Evidence Hint | Concrete artifact, file, function, test, command result, manual inspection note, or approved exception that proves the answer. Do not write generic values like "reviewed" without a location. |
 | Notes | Short reviewer note for context, risk, exception rationale, or follow-up. Use `None` when there is nothing material to add. |
 
-The compact records below are the authoritative eight-control checklist rows for SDD phases. The corporate source-row operational inventory below is the authoritative 155 Source ID inventory for row-level validation. The full corporate snapshot remains source fidelity and should not be rewritten as evidence.
+The compact records below are rendered from the canonical JSON eight-control checklist rows for SDD phases. The corporate source-row operational inventory below is rendered from the canonical JSON 155 Source ID inventory for row-level validation. The full corporate snapshot section is a human/audit view and should not be edited directly as source evidence.
 
 Matrix rows MUST use `Yes`, `No`, or `N/A`:
 
@@ -107,7 +107,7 @@ Required checks:
 
 The compact `SEC-*` checklist records remain the authoritative eight-control security taxonomy. The operational inventory below adds exhaustive corporate Source ID coverage for row-level validation without replacing those compact controls.
 
-This section is the authoritative inventory for the 155 concrete Source IDs derived from the preserved `Full Corporate Guideline Snapshot`. Design and test-design artifacts MUST reference this inventory by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. `review-security-report.md` validates the full source universe and reports coverage; it materializes the full 155-row matrix only in explicit audit/full-matrix mode.
+This section is a derived human/audit view of the canonical JSON inventory for the 155 concrete Source IDs. Design and test-design artifacts MUST reference the canonical catalog by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. `review-security-report.md` validates the full source universe from the JSON catalog and reports coverage; it materializes the full 155-row matrix only in explicit audit/full-matrix mode.
 
 Validation MUST expand source ranges before checking coverage. Compressed ranges MAY appear in human summaries, but validation matrices and review-security rows MUST reason over concrete Source IDs. Verify and archive preserve source-row summaries, warnings, exceptions, report links, catalog identity, and expected count without redefining this inventory.
 
@@ -186,7 +186,7 @@ Do not add `Default Complies`, `Evidence Hint`, or `Notes` to the preserved sour
 
 ## Full Corporate Guideline Snapshot
 
-This section preserves the initial user-provided corporate guideline text for audit fidelity. Keep the stable source IDs when mapping applicability, controls, evidence, verification, and archive blockers.
+This section is generated from `security-guideline-catalog.operational.json.sourceRows` for audit readability. The JSON is the canonical source of every Source ID, section, PCI alignment, compact mapping, and guideline text. Keep the stable source IDs when mapping applicability, controls, evidence, verification, and archive blockers.
 
 ### 1. Authentication — aligned to PCI Req 6.5.8, 6.5.10
 

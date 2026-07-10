@@ -4,7 +4,7 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 
 ## Active Flow Boundary
 
-- Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, `review-report.md`, the machine-readable operational catalog JSON, the human snapshot Markdown when guideline text is needed, and shared security contracts.
+- Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, `review-report.md`, the canonical operational catalog JSON, the derived human/audit Markdown view when reviewer readability is needed, and shared security contracts.
 - Design and test-design remain narrative/selective inputs. Do not repair them by copying compact matrices, Source IDs, schema blocks, machine-readable applicability fields, or exhaustive `N/A` bookkeeping into those artifacts.
 - `review-security-report.md` is the only active artifact that may report compact/source validation results. Source-row validation is exhaustive, but full 155-row materialization is audit-only by default.
 - Do not duplicate or recreate the general 96-control `sdd-review` matrix; cite `review-report.md` as supporting evidence only.

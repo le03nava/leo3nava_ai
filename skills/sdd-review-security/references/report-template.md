@@ -18,7 +18,7 @@ sourceRowExpectedCount: 155
 sourceRowValidatedCount: 155
 sourceRowCoverage: complete | incomplete
 catalogOperationalSource: skills/sdd-review-security/references/security-guideline-catalog.operational.json
-catalogHumanSnapshot: skills/sdd-review-security/references/security-guideline-catalog.md
+catalogHumanView: skills/sdd-review-security/references/security-guideline-catalog.md
 sourceRowReportMode: summary | full-matrix
 sourceRowFullMatrix: omitted-audit-only | included
 sourceRowMatrixOwner: review-security-report.md when sourceRowReportMode=full-matrix
@@ -53,7 +53,7 @@ Include rows that need reviewer attention: blockers, warnings, approved exceptio
 
 | Source ID | Corporate Section | PCI Alignment | Guideline Ref | Compact Mapping | Applies | Complies | Lifecycle Status | Evidence Type | Evidence Location | Finding | Owner Phase | Route |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `1.1` | `1. Authentication` | `PCI Req 6.5.8, 6.5.10` | `skills/sdd-review-security/references/security-guideline-catalog.md#full-corporate-guideline-snapshot (Source ID 1.1)` | `SEC-AUTH-001` | Yes/No/N/A | Yes/No/N/A | `implemented`/... | `implementation-reference`/... | `path#section` | none/blocker/warning | apply/review-security/verify | verify/apply/resolve-blockers |
+| `1.1` | `1. Authentication` | `PCI Req 6.5.8, 6.5.10` | `skills/sdd-review-security/references/security-guideline-catalog.operational.json#sourceRows (Source ID 1.1); human view: skills/sdd-review-security/references/security-guideline-catalog.md#full-corporate-guideline-snapshot` | `SEC-AUTH-001` | Yes/No/N/A | Yes/No/N/A | `implemented`/... | `implementation-reference`/... | `path#section` | none/blocker/warning | apply/review-security/verify | verify/apply/resolve-blockers |
 
 ### Full Source Row Matrix — Audit Mode Only
 

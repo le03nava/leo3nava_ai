@@ -8,20 +8,21 @@ Define the in-repo corporate security guideline snapshot, compact taxonomy, matr
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the corporate security guideline catalog as an in-repo human snapshot based on the user-provided text plus a machine-readable operational JSON catalog for automation. The human snapshot MUST preserve source text, identifiers, version metadata, and audit readability. The operational JSON MUST preserve identifiers, vocabulary, taxonomy, compact controls, Source ID inventory, PCI alignment, compact mappings, expected counts, and report-mode defaults needed by narrative secure development design, `review-security-report.md` validation, and downstream scripts such as Excel/document generators. Full source-row matrix output is audit-only unless explicitly requested.
+The repository MUST maintain the corporate security guideline catalog as an in-repo canonical operational JSON catalog based on the user-provided text plus a derived human-readable/auditable Markdown view. The operational JSON MUST preserve source text, identifiers, vocabulary, taxonomy, compact controls, Source ID inventory, PCI alignment, compact mappings, expected counts, and report-mode defaults needed by narrative secure development design, `review-security-report.md` validation, and downstream scripts such as Excel/document generators. The Markdown view MUST preserve audit readability without becoming a second editable source of truth. Full source-row matrix output is audit-only unless explicitly requested.
 
 #### Scenario: Catalog snapshot is available
 
 - GIVEN an SDD design or security review phase needs guideline context
 - WHEN it reads the catalog
-- THEN it MUST find guideline identifiers, source snapshot metadata, and applicable summaries in the Markdown snapshot
+- THEN it MUST find guideline identifiers, source snapshot metadata, applicable summaries, and source text in the canonical JSON catalog
+- AND it MAY use the Markdown view for human/audit readability
 - AND it MUST support narrative secure design and security-review matrices.
 
 #### Scenario: Operational JSON is available
 
 - GIVEN a script or phase needs row expansion, mappings, counts, or export data
 - WHEN it reads `skills/sdd-review-security/references/security-guideline-catalog.operational.json`
-- THEN it MUST find schema metadata, vocabularies, taxonomy, compact guidelines, source sections, expanded Source IDs, PCI alignment, compact mappings, and expected Source ID count
+- THEN it MUST find schema metadata, vocabularies, taxonomy, compact guidelines, source sections, expanded Source IDs, source guideline text, PCI alignment, compact mappings, and expected Source ID count
 - AND it MUST be able to generate review-security coverage summaries, full audit matrices, Excel exports, or other documents without parsing Markdown tables.
 
 #### Scenario: Catalog source changes later
@@ -167,7 +168,7 @@ The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecyc
 
 ### Requirement: Corporate Source Row Inventory
 
-The catalog MUST own the authoritative exhaustive corporate source-row inventory derived from `Full Corporate Guideline Snapshot`. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference applicable category guidance; review-security MUST expand and validate the inventory exhaustively, while full 155-row report materialization remains audit-only unless explicitly requested.
+The canonical JSON catalog MUST own the authoritative exhaustive corporate source-row inventory and expose a derived `Full Corporate Guideline Snapshot` Markdown view for audit readability. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference applicable category guidance; review-security MUST expand and validate the inventory exhaustively, while full 155-row report materialization remains audit-only unless explicitly requested.
 
 #### Scenario: Ranges expand before coverage
 
