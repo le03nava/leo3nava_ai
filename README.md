@@ -61,7 +61,7 @@ Manual post-archive utilities:
 
 For new changes, `sdd-design` owns secure development design inside `design.md#secure-development-design`. Standalone `security-design.md` and `security-applicability.md` are legacy/archive compatibility data only and MUST NOT gate new-change routing. Previous standalone security validators have been removed from active workflow contracts; security review validates embedded rows against the shared catalog and artifact evidence.
 
-The review phase writes `openspec/changes/{change-name}/review-report.md` in OpenSpec mode, or `sdd/{change-name}/review` in Engram/hybrid mode. Non-blocking general review routes to `sdd-review-security`, which writes `review-security-report.md` before verification. Verification consumes both non-blocking review artifacts without owning their matrices, and archive requires both review reports plus passing verification.
+The review phase writes canonical `review-report.json` plus a derived Markdown compatibility view: OpenSpec uses `openspec/changes/{change-name}/review-report.json` and `review-report.md`; Engram/hybrid uses `sdd/{change-name}/review-report.json` and `sdd/{change-name}/review`. Non-blocking general review routes to `sdd-review-security`, which writes canonical `review-security-report.json` plus derived Markdown before verification. Downstream phases may read derived Markdown for compatibility, but canonical review JSON and security-review JSON are authoritative when present; verification and archive consume review summaries without owning their matrices.
 
 Shared contracts live under `skills/_shared/` and define persistence, status, security, language-domain, and executor-boundary rules used by the SDD agents.
 

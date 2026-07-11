@@ -208,8 +208,8 @@ Skills (appear in autocomplete):
 - `/sdd-explore <topic>` -> investigate an idea; reads codebase, compares approaches; no files created
 - `/sdd-status [change]` -> read-only structured status for active change, artifacts, tasks, and next action
 - `/sdd-apply [change]` -> implement tasks in batches; checks off items as it goes
-- `/sdd-review [change]` -> review applied changes and persist `review-report.md` before verification
-- `/sdd-review-security [change]` -> validate embedded secure development evidence and persist `review-security-report.md` before verification
+- `/sdd-review [change]` -> review applied changes and persist canonical `review-report.json` plus derived Markdown before verification
+- `/sdd-review-security [change]` -> validate embedded secure development evidence and persist canonical `review-security-report.json` plus derived Markdown before verification
 - `/sdd-verify [change]` -> validate implementation against specs; reports CRITICAL / WARNING / SUGGESTION
 - `/sdd-archive [change]` -> close a change and persist final state in the active artifact store
 - `/sdd-onboard` -> guided end-to-end walkthrough of SDD using your real codebase
@@ -270,7 +270,7 @@ Route only by the locally normalized `nextRecommended` and dependency states; ne
 If `blockedReasons` is non-empty, do not proceed to apply, archive, or terminal work.
 If `nextRecommended` is `review`, launch `sdd-review` before verification;
 if `nextRecommended` is `review-security`, launch `sdd-review-security` before verification;
-if `nextRecommended` is `verify`, verification/remediation may run only after non-blocking `review-report.md` and `review-security-report.md` evidence exists or to refresh evidence for blockers;
+if `nextRecommended` is `verify`, verification/remediation may run only after non-blocking general review evidence and security-review evidence exist, preferring canonical JSON reports when present, or to refresh evidence for blockers;
 if `nextRecommended` is `resolve-blockers`, report `blockedReasons` and stop;
 if `nextRecommended` is a planning token (`propose`, `spec`, `design`, `test-design`, or `tasks`), launch the corresponding planning phase.
 If the binary is unavailable, fall back to the existing prompt contract and manual status schema.
@@ -569,7 +569,7 @@ No-skip rules:
 - Do not jump from design to test-design unless `design.md` includes `## Secure Development Design`.
 - Do not jump from design to tasks; `sdd-test-design` must run and pass first.
 - Do not jump from apply to verify or archive; `sdd-review` and `sdd-review-security` must run and produce non-blocking reports first.
-- Do not jump from review to verify or archive; `sdd-review-security` must run and produce a non-blocking review-security-report first.
+- Do not jump from review to verify or archive; `sdd-review-security` must run and produce a non-blocking security-review report first, with canonical JSON authoritative when present.
 - Do not jump from review-security to archive; `sdd-verify` must run and produce a passing verify-report first.
 - Do not treat `apply-progress` alone as archive readiness; archive readiness follows `skills/_shared/sdd-post-apply-gates.md#archive-readiness`.
 

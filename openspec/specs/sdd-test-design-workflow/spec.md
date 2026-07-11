@@ -181,7 +181,7 @@ The workflow MUST remain compatible with native dispatcher and status-token hand
 
 ### Requirement: Source Row N/A and Warning Evidence
 
-`sdd-test-design` MUST preserve evidence expectations for applicable narrative rules, warning-only coverage, residual risks, and exceptions from design. It MUST NOT create or require exhaustive `N/A` evidence for every non-applicable compact control or Source ID. Exhaustive `N/A` decisions, compact/Source ID matrices, and missed-applicable validation MUST remain owned by `review-security-report.md`.
+`sdd-test-design` MUST preserve evidence expectations for applicable narrative rules, warning-only coverage, residual risks, and exceptions from design. It MUST NOT create or require exhaustive `N/A` evidence for every non-applicable compact control or Source ID. Exhaustive `N/A` decisions, compact/Source ID matrices, and missed-applicable validation MUST remain owned by canonical `review-security-report.json`, with Markdown as a derived compatibility view.
 
 #### Scenario: Omitted coverage remains reviewable
 

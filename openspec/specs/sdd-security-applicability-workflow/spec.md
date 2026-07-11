@@ -69,7 +69,7 @@ New changes MUST NOT produce `security-applicability.md`. The canonical classifi
 
 ### Requirement: Narrative Design Classification and Review-Security Matrix Ownership
 
-For new changes, `design.md#secure-development-design` MUST record changed-surface classification and applicable category rules as narrative Markdown. The exhaustive category/guideline matrix, Source ID expansion, lifecycle row status, and `N/A` decisions MUST be produced only by `review-security-report.md`. Legacy applicability matrices MAY be parsed for archive readability only.
+For new changes, `design.md#secure-development-design` MUST record changed-surface classification and applicable category rules as narrative Markdown. The exhaustive category/guideline matrix, Source ID expansion, lifecycle row status, and `N/A` decisions MUST be produced only by canonical `review-security-report.json`. Legacy applicability matrices MAY be parsed for archive readability only.
 
 #### Scenario: Applicable categories are narrated
 
@@ -88,7 +88,7 @@ For new changes, `design.md#secure-development-design` MUST record changed-surfa
 
 ### Requirement: Explicit No-Impact Rationale
 
-No-impact proof for new changes MUST be recorded as narrative changed-surface rationale in `design.md#secure-development-design`; absence of standalone `security-design.md` MUST NOT prove or disprove impact. Exhaustive `not-applicable` / `N/A` matrix rows belong to `review-security-report.md`. Legacy no-impact proof remains readable only for old artifacts.
+No-impact proof for new changes MUST be recorded as narrative changed-surface rationale in `design.md#secure-development-design`; absence of standalone `security-design.md` MUST NOT prove or disprove impact. Exhaustive `not-applicable` / `N/A` matrix rows belong to canonical `review-security-report.json`. Legacy no-impact proof remains readable only for old artifacts.
 
 #### Scenario: Valid no-impact artifact
 

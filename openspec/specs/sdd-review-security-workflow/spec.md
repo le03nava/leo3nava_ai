@@ -12,7 +12,7 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 #### Scenario: General review routes to security review
 
-- GIVEN `review-report.md` has no blocking findings
+- GIVEN canonical `review-report.json` has no blocking findings and derived `review-report.md` is readable or not required by the selected backend
 - WHEN routing is computed
 - THEN the next required phase MUST be `sdd-review-security`
 - AND `sdd-verify` MUST remain blocked until security review evidence exists.
@@ -26,14 +26,15 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 ### Requirement: Security Review Artifact
 
-`sdd-review-security` MUST persist `review-security-report.md`. The report MUST own the machine-readable schema, exhaustive compact and Source ID validation results, `Yes`/`No`/`N/A` decisions, evidence, blockers, exceptions, missed-category validation, coverage metadata, and next recommendation. It MAY parse narrative category rules from design, but MUST NOT require design YAML, schema, matrices, or machine-readable fields. Source-row validation MUST cover all expected Source IDs; full 155-row materialization is required only when audit/full-matrix mode is explicitly requested.
+`sdd-review-security` MUST persist canonical `review-security-report.json` as the source of truth and derived `review-security-report.md` / `sdd/{change-name}/review-security` as a compatibility view generated from that JSON. The canonical JSON MUST own the machine-readable schema, exhaustive compact and Source ID validation results, `Yes`/`No`/`N/A` decisions, evidence, blockers, exceptions, missed-category validation, coverage metadata, artifact parity/read-back metadata, and next recommendation. It MAY parse narrative category rules from design, but MUST NOT require design YAML, schema, matrices, or machine-readable fields. Source-row validation MUST cover all expected Source IDs; full 155-row materialization is required only when audit/full-matrix mode is explicitly requested.
 
 #### Scenario: Report is persisted
 
-- GIVEN `design.md` and `review-report.md` are readable
+- GIVEN `design.md` and canonical `review-report.json` are readable
 - WHEN security review completes
-- THEN `review-security-report.md` MUST be written and read back
-- AND it MUST state a verdict using its own report schema.
+- THEN `review-security-report.json` MUST be written and read back first
+- AND derived `review-security-report.md` MUST be generated from JSON, written, read back, and parity-checked
+- AND both artifacts MUST state the same verdict, with JSON authoritative on conflict.
 
 #### Scenario: Embedded secure design is required
 
@@ -76,31 +77,31 @@ Security review MUST NOT replace `sdd-review` or duplicate the 96-control matrix
 - GIVEN a review row supports a security guideline
 - WHEN security review records evidence
 - THEN it MAY cite that review row
-- AND it MUST keep the security verdict in `review-security-report.md`.
+- AND it MUST keep the security verdict in canonical `review-security-report.json`.
 
 ### Requirement: Exhaustive Source Row Security Review
 
-`sdd-review-security` MUST be the only active phase that validates the exhaustive corporate source-row universe for a new change. It MUST expand every expected Source ID exactly once and validate rows against catalog inventory, narrative design rules, `test-design.md`, apply evidence, changed files, and `review-report.md`. By default, it MUST write coverage metadata, section-level summaries, focused findings, `N/A` justifications, warnings, exceptions, and blockers in `review-security-report.md` without duplicating the 96-control matrix. It MUST write the full 155-row matrix only when audit/full-matrix mode is explicitly requested.
+`sdd-review-security` MUST be the only active phase that validates the exhaustive corporate source-row universe for a new change. It MUST expand every expected Source ID exactly once and validate rows against catalog inventory, narrative design rules, `test-design.md`, apply evidence, changed files, and canonical `review-report.json`. By default, it MUST write coverage metadata, section-level summaries, focused findings, `N/A` justifications, warnings, exceptions, and blockers in canonical `review-security-report.json` and render Markdown summaries from JSON without duplicating the 96-control matrix. It MUST write the full 155-row matrix only when audit/full-matrix mode is explicitly requested.
 
 #### Scenario: Complete validation is summarized
 
 - GIVEN design, test-design, apply evidence, changed files, and review report are readable
 - WHEN security review succeeds
-- THEN `review-security-report.md` MUST state `sourceRowExpectedCount`, `sourceRowValidatedCount`, coverage status, catalog snapshot, and section-level coverage
+- THEN canonical `review-security-report.json` MUST state `sourceRowExpectedCount`, `sourceRowValidatedCount`, coverage status, catalog snapshot, and section-level coverage
 - AND focused details MUST include blockers, warnings, exceptions, missing evidence, unsafe evidence, and `N/A` justifications that need reviewer attention.
 
 #### Scenario: Full matrix is audit-only
 
 - GIVEN audit/full-matrix mode is explicitly requested
 - WHEN security review writes source-row evidence
-- THEN `review-security-report.md` MUST include every expected Source ID exactly once
+- THEN canonical `review-security-report.json` MUST validate every expected Source ID exactly once and derived Markdown MUST include every row only when generated in audit/full-matrix mode
 - AND each row MUST show mapping, status, evidence, observations, and finding.
 
 #### Scenario: Design remains selective
 
 - GIVEN design contains narrative changed-surface rationale and applicable category rules
 - WHEN security review expands source rows
-- THEN source-row validation results MUST be written only in `review-security-report.md`
+- THEN source-row validation results MUST be written only in canonical `review-security-report.json` and its derived Markdown view
 - AND missed applicable design categories MUST block as contract evidence gaps.
 
 #### Scenario: General review is cited, not duplicated

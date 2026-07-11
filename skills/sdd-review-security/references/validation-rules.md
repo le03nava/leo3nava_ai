@@ -4,10 +4,11 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 
 ## Active Flow Boundary
 
-- Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, `review-report.md`, the canonical operational catalog JSON, the derived human/audit Markdown view when reviewer readability is needed, and shared security contracts.
+- Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, canonical `review-report.json` as general-review authority, derived `review-report.md` / `sdd/{change-name}/review` only as compatibility evidence, the canonical operational catalog JSON, the derived human/audit Markdown catalog view when reviewer readability is needed, and shared security contracts.
 - Design and test-design remain narrative/selective inputs. Do not repair them by copying compact matrices, Source IDs, schema blocks, machine-readable applicability fields, or exhaustive `N/A` bookkeeping into those artifacts.
-- `review-security-report.md` is the only active artifact that may report compact/source validation results. Source-row validation is exhaustive, but full 155-row materialization is audit-only by default.
-- Do not duplicate or recreate the general 96-control `sdd-review` matrix; cite `review-report.md` as supporting evidence only.
+- `review-security-report.json` is the canonical active artifact that reports compact/source validation results. `review-security-report.md` / `sdd/{change-name}/review-security` is a derived compatibility view generated from that JSON. Source-row validation is exhaustive, but full 155-row materialization is audit-only by default.
+- Do not duplicate, recreate, or re-score the general 96-control `sdd-review` matrix; cite canonical `review-report.json` handoff summaries and use Markdown as supporting compatibility evidence only.
+- If canonical security-review JSON and derived Markdown disagree, JSON wins. Mark Markdown stale/parity-failed and route to `resolve-blockers`; downstream phases must not consume stale Markdown as current evidence.
 
 ## Compact Control Validation
 
@@ -55,8 +56,10 @@ Use this layer as operational security evidence below the compact `SEC-*` layer.
 
 Before returning success, verify:
 
-- Report schema metadata is present and uses `nextRecommended` only inside artifact metadata.
+- Canonical JSON schema metadata is present and uses `nextRecommended` only inside artifact metadata.
 - Phase envelope uses snake_case `next_recommended`.
+- Canonical `review-security-report.json` includes schema identity, `changeName`, status/verdict, `nextRecommended`, source refs, general review handoff, compact validation, source-row expected/validated counts, coverage status, blockers, warnings, unsafe evidence rejections, warning carry-forward, and artifact parity/read-back metadata.
+- Derived Markdown is rendered from the canonical JSON, read back, and parity-checked. State/status artifact refs list JSON first with `authority: canonical` and Markdown second with `authority: derived` where authority metadata is supported.
 - Compact coverage is exact once.
 - Source-row validation coverage is exact once when applicable, even when the full matrix is not printed.
 - Summary mode includes expected count, validated count, coverage status, catalog snapshot, section-level coverage, and focused findings.

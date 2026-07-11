@@ -8,7 +8,7 @@ Define the in-repo corporate security guideline snapshot, compact taxonomy, matr
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the corporate security guideline catalog as an in-repo canonical operational JSON catalog based on the user-provided text plus a derived human-readable/auditable Markdown view. The operational JSON MUST preserve source text, identifiers, vocabulary, taxonomy, compact controls, Source ID inventory, PCI alignment, compact mappings, expected counts, and report-mode defaults needed by narrative secure development design, `review-security-report.md` validation, and downstream scripts such as Excel/document generators. The Markdown view MUST preserve audit readability without becoming a second editable source of truth. Full source-row matrix output is audit-only unless explicitly requested.
+The repository MUST maintain the corporate security guideline catalog as an in-repo canonical operational JSON catalog based on the user-provided text plus a derived human-readable/auditable Markdown view. The operational JSON MUST preserve source text, identifiers, vocabulary, taxonomy, compact controls, Source ID inventory, PCI alignment, compact mappings, expected counts, and report-mode defaults needed by narrative secure development design, canonical `review-security-report.json` validation, and downstream scripts such as Excel/document generators. The Markdown view MUST preserve audit readability without becoming a second editable source of truth. Full source-row matrix output is audit-only unless explicitly requested.
 
 #### Scenario: Catalog snapshot is available
 
@@ -92,7 +92,7 @@ The catalog SHOULD identify evidence types suitable for review rows, including i
 
 ### Requirement: Catalog Boundary Preservation
 
-The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, compact-control inventory, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive `review-security-report.md` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions, and MUST NOT require full source-row matrix output unless audit/full-matrix mode is requested.
+The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, compact-control inventory, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive canonical `review-security-report.json` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions, and MUST NOT require full source-row matrix output unless audit/full-matrix mode is requested.
 
 #### Scenario: Catalog authority is preserved
 
@@ -139,7 +139,7 @@ The catalog MUST define operational applicability severity with only `blocking`,
 
 ### Requirement: Catalog Validator Contract
 
-The catalog MUST support static validation of guideline IDs, taxonomy categories, Source IDs, severity values, lifecycle statuses, matrix values, mandatory evidence fields, and exception fields used by narrative `design.md` secure development rules and `review-security-report.md`. Validation MUST compare artifact references against the same catalog snapshot identity recorded in the artifact.
+The catalog MUST support static validation of guideline IDs, taxonomy categories, Source IDs, severity values, lifecycle statuses, matrix values, mandatory evidence fields, and exception fields used by narrative `design.md` secure development rules and canonical `review-security-report.json`. Validation MUST compare artifact references against the same catalog snapshot identity recorded in the artifact.
 
 #### Scenario: Artifact references current catalog snapshot
 
@@ -211,7 +211,7 @@ Every corporate source row MUST map to one or more existing compact `SEC-*` guid
 
 ### Requirement: Safe Source Row Evidence
 
-Source-row evidence MUST be review-safe. Evidence locations and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. Design MUST state safe-evidence policy for applicable category rules. `review-security-report.md` MUST justify every `N/A` row.
+Source-row evidence MUST be review-safe. Evidence locations and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. Design MUST state safe-evidence policy for applicable category rules. Canonical `review-security-report.json` MUST justify every `N/A` row.
 
 #### Scenario: Applicable row lacks safe evidence
 

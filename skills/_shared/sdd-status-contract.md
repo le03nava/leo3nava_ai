@@ -90,7 +90,7 @@ artifactRefs:
   tasks: [<topic keys, file paths, or inline refs>]
   applyProgress: [<topic keys, file paths, or inline refs>]
   reviewReport: [<topic keys, file paths, or inline refs>]
-  securityReviewReport: [<topic keys, file paths, or inline refs>]
+  securityReviewReport: [<topic keys, file paths, or inline refs; canonical JSON first when present, derived Markdown second>]
   verifyReport: [<topic keys, file paths, or inline refs>]
   state: [<topic keys, file paths, or inline refs>]
 artifactPaths:
@@ -104,7 +104,7 @@ artifactPaths:
   tasks: [<absolute path>]
   applyProgress: [<absolute path>]
   reviewReport: [<absolute path>]
-  securityReviewReport: [<absolute path>]
+  securityReviewReport: [<absolute path; canonical JSON first when present, derived Markdown second>]
   verifyReport: [<absolute path>]
   state: [<absolute path>]
 contextFiles:
@@ -118,7 +118,7 @@ contextFiles:
   tasks: [<absolute readable files>]
   applyProgress: [<absolute readable files>]
   reviewReport: [<absolute readable files>]
-  securityReviewReport: [<absolute readable files>]
+  securityReviewReport: [<absolute readable files; canonical JSON first when present, derived Markdown second>]
   verifyReport: [<absolute readable files>]
   state: [<absolute readable files>]
 artifacts:
@@ -201,7 +201,7 @@ Native status JSON is advisory when available. If native currently emits only `a
 - `apply` is `ready` only when specs, design with `## Secure Development Design` narrative rules, test design, and tasks are available and task progress is not all done.
 - `review` is `ready` when tasks exist, test design is available, embedded design security evidence is available, and either apply-progress exists or the tasks artifact shows all intended implementation work complete. Incomplete tasks remain blockers for full review.
 - `reviewSecurity` is `ready` when `design.md#secure-development-design` exists, all intended implementation work is complete, and `reviewReport` exists with a non-blocking verdict. Missing, blocking, or unreadable general review evidence blocks security review.
-- `verify` is `ready` when tasks exist, test design is available, embedded design security evidence is available, all intended implementation work is complete, `reviewReport` exists with a non-blocking verdict, and `securityReviewReport` exists with a non-blocking verdict. Missing or blocking review evidence blocks full verification.
+- `verify` is `ready` when tasks exist, test design is available, embedded design security evidence is available, all intended implementation work is complete, `reviewReport` exists with a non-blocking verdict, and `securityReviewReport` exists with a non-blocking verdict. When canonical security-review JSON exists or is expected for current contracts, it is authoritative and derived Markdown must not be stale/parity-failed. Missing or blocking review evidence blocks full verification.
 - `archive` is `ready` only when the Archive Readiness contract in `skills/_shared/sdd-post-apply-gates.md#archive-readiness` passes. Status evaluation MUST still confirm the required non-blocking review reports, passing verify report, completed task evidence, mandatory artifacts, security evidence or approved exceptions, and absence of blocker/negation signals before setting archive ready.
 
 ## Phase Routing Order

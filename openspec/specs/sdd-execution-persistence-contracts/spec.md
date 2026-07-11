@@ -48,7 +48,7 @@ Each phase skill MUST keep a compact artifact contract that states required inpu
 
 ### Requirement: Conflict and Ambiguity Resolution
 
-When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preserve current behavior unless an approved spec change explicitly redesigns DAG, artifact, routing, status, or persistence semantics. Explicit redesigns MUST define compatibility rules for old artifacts and MUST NOT silently invalidate archives. Historical exhaustive secure-design matrices MAY remain readable as archives, but new changes MUST treat narrative `design.md#secure-development-design` plus machine-readable `review-security-report.md` as the active boundary. Status tokens, resolver rows, and persisted refs MAY preserve historical `security-applicability` data for read/display behavior, but MUST NOT normalize it into a runnable phase, launchable agent, active security authority, or required new-change successor.
+When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preserve current behavior unless an approved spec change explicitly redesigns DAG, artifact, routing, status, or persistence semantics. Explicit redesigns MUST define compatibility rules for old artifacts and MUST NOT silently invalidate archives. Historical exhaustive secure-design matrices MAY remain readable as archives, but new changes MUST treat narrative `design.md#secure-development-design` plus canonical `review-security-report.json` as the active boundary. Status tokens, resolver rows, and persisted refs MAY preserve historical `security-applicability` data for read/display behavior, but MUST NOT normalize it into a runnable phase, launchable agent, active security authority, or required new-change successor.
 
 #### Scenario: Explicit DAG redesign is applied
 
@@ -72,20 +72,20 @@ When SDD rules are duplicated, ambiguous, or conflicting, the system MUST preser
 
 ### Requirement: Review Phase Artifact Contract
 
-The SDD contract set MUST define `review-report.md` as the first review artifact after apply and before `sdd-review-security`. OpenSpec mode MUST store it at `openspec/changes/{change-name}/review-report.md`; Engram or hybrid modes MUST use the stable artifact key `sdd/{change-name}/review`. State and status contracts MUST expose review refs, verdict, blocking-failure state, and routing to security review when non-blocking.
+The SDD contract set MUST define canonical `review-report.json` plus derived `review-report.md` as the first review artifact identity after apply and before `sdd-review-security`. OpenSpec mode MUST store them at `openspec/changes/{change-name}/review-report.json` and `review-report.md`; Engram or hybrid modes MUST use canonical key `sdd/{change-name}/review-report.json` plus stable derived key `sdd/{change-name}/review`. State and status contracts MUST expose review refs, verdict, blocking-failure state, and routing to security review when non-blocking.
 
 #### Scenario: Review artifact is resolved
 
 - GIVEN a downstream phase needs review evidence
 - WHEN it resolves artifacts for a change
-- THEN it MUST find `review-report.md` or the matching backend artifact key
+- THEN it MUST find canonical `review-report.json` when present plus the matching derived backend artifact key
 - AND missing review evidence MUST block verify or archive.
 
 #### Scenario: Security review resolves review artifact
 
 - GIVEN `sdd-review-security` needs review evidence
 - WHEN it resolves artifacts for a change
-- THEN it MUST find `review-report.md` or the matching backend key
+- THEN it MUST find canonical `review-report.json` when present plus the matching derived backend key
 - AND missing review evidence MUST block security review, verify, and archive.
 
 ### Requirement: Apply Review Verify Routing
@@ -122,7 +122,7 @@ The SDD DAG for new changes MUST route `design -> test-design -> tasks -> apply 
 
 ### Requirement: Verify and Archive Review Consumption
 
-Verify MUST consume both `review-report.md` and `review-security-report.md` as evidence and MUST NOT own either review matrix. Archive MUST require passing verification plus non-blocking general and security review reports for new changes.
+Verify MUST consume both general-review and security-review evidence, preferring canonical `review-report.json` and canonical `review-security-report.json` when present, and MUST NOT own either review matrix. Archive MUST require passing verification plus non-blocking general and security review reports for new changes.
 
 #### Scenario: Verify consumes review evidence
 
@@ -147,7 +147,7 @@ Verify MUST consume both `review-report.md` and `review-security-report.md` as e
 
 ### Requirement: Mandatory Security Artifacts and Status
 
-For new changes, persistence and status contracts MUST include `design.md` with narrative secure development rules and `review-security-report.md` refs, dependency states, `review-security` token, and archive gates. Design MUST persist classification rationale, changed-surface inventory, applicable category rules, evidence owners, residual risks, exceptions, and safe-evidence policy. It MUST NOT require YAML, schemas, compact matrices, Source ID matrices, exhaustive applicability, or `N/A` rows. Those machine-readable artifacts MUST persist in `review-security-report.md`. `security-design.md` and `security-applicability.md` MAY appear only as historical refs.
+For new changes, persistence and status contracts MUST include `design.md` with narrative secure development rules and `review-security-report.json` refs, dependency states, `review-security` token, and archive gates. Design MUST persist classification rationale, changed-surface inventory, applicable category rules, evidence owners, residual risks, exceptions, and safe-evidence policy. It MUST NOT require YAML, schemas, compact matrices, Source ID matrices, exhaustive applicability, or `N/A` rows. Those machine-readable artifacts MUST persist in canonical `review-security-report.json`; Markdown is a derived compatibility view. `security-design.md` and `security-applicability.md` MAY appear only as historical refs.
 
 #### Scenario: New state exposes security refs
 
@@ -182,7 +182,7 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 - GIVEN a change runs in OpenSpec mode
 - WHEN source-row artifacts are persisted
-- THEN coverage metadata, section summaries, focused findings, and audit-mode full rows when requested MUST be stored in `review-security-report.md`
+- THEN coverage metadata, section summaries, focused findings, and audit-mode full rows when requested MUST be stored in canonical `review-security-report.json`, with Markdown generated from JSON
 - AND downstream phases MUST read that report as source-row evidence.
 
 #### Scenario: Engram or hybrid mode preserves rows
@@ -201,7 +201,7 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 ### Requirement: Verify Source Row Consumption
 
-`sdd-verify` MUST consume non-blocking `review-security-report.md` source-row evidence and validate that no source-row blockers remain. Verify MUST cite the security review verdict, catalog snapshot/count, compact mappings, warnings, exceptions, and evidence references without owning or duplicating the full source-row matrix.
+`sdd-verify` MUST consume non-blocking canonical `review-security-report.json` source-row evidence when present and validate that no source-row blockers remain. Verify MUST cite the security review verdict, catalog snapshot/count, compact mappings, warnings, exceptions, and evidence references without owning or duplicating the full source-row matrix.
 
 #### Scenario: Security source blocker remains
 
@@ -244,14 +244,14 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 #### Scenario: Archive avoids matrix duplication
 
-- GIVEN `review-security-report.md` contains the exhaustive source-row matrix
+- GIVEN derived `review-security-report.md` contains the exhaustive source-row matrix generated from canonical JSON
 - WHEN archive writes final records
 - THEN it MUST link or summarize the matrix instead of duplicating it
 - AND archived evidence MUST remain readable through embedded secure design and review-security evidence.
 
 #### Scenario: Archive consumes summary-mode source evidence
 
-- GIVEN `review-security-report.md` uses summary mode with complete source-row validation coverage
+- GIVEN canonical `review-security-report.json` uses summary mode with complete source-row validation coverage
 - WHEN archive writes final records
 - THEN it MUST preserve coverage metadata, section summaries, focused findings, warnings, exceptions, and report links
 - AND it MUST NOT require the full 155-row matrix unless audit/full-matrix mode was explicitly requested.

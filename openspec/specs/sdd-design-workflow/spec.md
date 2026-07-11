@@ -54,14 +54,14 @@ For new changes, successful `sdd-design` MUST route directly to `sdd-test-design
 
 ### Requirement: Secure Design Source ID Coverage
 
-`sdd-design` MUST use catalog context only as human-readable category guidance. It MAY cite catalog snapshot identity/path and category names, but MUST NOT copy, expand, validate, or require Source IDs, per-Source-ID coverage, compact mappings, lifecycle fields, or `N/A` evidence. Exhaustive compact-control, Source ID, applicability, and `N/A` validation belong to `review-security-report.md`.
+`sdd-design` MUST use catalog context only as human-readable category guidance. It MAY cite catalog snapshot identity/path and category names, but MUST NOT copy, expand, validate, or require Source IDs, per-Source-ID coverage, compact mappings, lifecycle fields, or `N/A` evidence. Exhaustive compact-control, Source ID, applicability, and `N/A` validation belong to canonical `review-security-report.json`, with Markdown as a derived compatibility view.
 
 #### Scenario: Source IDs are not planned in design
 
 - GIVEN proposal and specs require security validation
 - WHEN `sdd-design` succeeds
 - THEN design completion MUST NOT require Source ID rows, Source ID coverage, or per-row `N/A` evidence
-- AND exhaustive validation ownership MUST point to `review-security-report.md`.
+- AND exhaustive validation ownership MUST point to canonical `review-security-report.json`.
 
 ### Requirement: Design Preserves Compact Summary
 

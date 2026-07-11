@@ -99,8 +99,8 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
-| Review report | `sdd/{change-name}/review` | `openspec/changes/{change-name}/review-report.md` | Both | Inline phase result only |
-| Security review report | `sdd/{change-name}/review-security` | `openspec/changes/{change-name}/review-security-report.md` | Both | Inline phase result only |
+| Review report | Canonical JSON: `sdd/{change-name}/review-report.json`; derived Markdown compatibility view: `sdd/{change-name}/review` | Canonical JSON: `openspec/changes/{change-name}/review-report.json`; derived Markdown compatibility file: `openspec/changes/{change-name}/review-report.md` | Both canonical JSON refs plus both derived Markdown refs; apply Hybrid Conflict Policy | Inline phase result only; include canonical JSON facts and derived Markdown view when needed for human/downstream compatibility |
+| Security review report | Canonical JSON: `sdd/{change-name}/review-security-report.json`; derived Markdown compatibility view: `sdd/{change-name}/review-security` | Canonical JSON: `openspec/changes/{change-name}/review-security-report.json`; derived Markdown compatibility file: `openspec/changes/{change-name}/review-security-report.md` | Both canonical JSON refs plus both derived Markdown refs; apply Hybrid Conflict Policy | Inline phase result only; include canonical JSON facts and derived Markdown view when needed for human/downstream compatibility |
 | Verify report | `sdd/{change-name}/verify-report` | `openspec/changes/{change-name}/verify-report.md` | Both | Inline phase result only |
 | Archive report | `sdd/{change-name}/archive-report` | `openspec/changes/archive/YYYY-MM-DD-{change-name}/` | Both | Inline final summary only |
 
@@ -117,7 +117,11 @@ Resolver verification:
 - In `openspec`, read artifacts from the paths in `openspec-convention.md` or the structured status artifact paths. Do not infer alternate paths.
 - In `hybrid`, compare both backends when both refs exist before launching dependent work. Apply the Hybrid Conflict Policy when material content or routing metadata differs.
 - In `none`, report blocked when a required dependency is missing from current context; do not reconstruct artifacts from memory or local guesses.
-- For review evidence, downstream phases MUST resolve exactly one backend identity for each required review report: general review uses Engram/hybrid key `sdd/{change-name}/review` or OpenSpec path `openspec/changes/{change-name}/review-report.md`; security review uses Engram/hybrid key `sdd/{change-name}/review-security` or OpenSpec path `openspec/changes/{change-name}/review-security-report.md`. Missing, ambiguous, blocking, or unreadable review evidence MUST block verify/archive and route to `resolve-blockers`.
+- For review evidence, downstream phases MUST resolve exactly one selected-backend identity for each required review report. General review and security review each have two coordinated artifacts: canonical JSON and derived Markdown. General review uses canonical JSON `openspec/changes/{change-name}/review-report.json` or `sdd/{change-name}/review-report.json`, plus derived Markdown `openspec/changes/{change-name}/review-report.md` or `sdd/{change-name}/review`. Security review uses canonical JSON `openspec/changes/{change-name}/review-security-report.json` or `sdd/{change-name}/review-security-report.json`, plus derived Markdown `openspec/changes/{change-name}/review-security-report.md` or `sdd/{change-name}/review-security`. In hybrid, both OpenSpec paths and both Engram keys are expected and must describe the same report; apply the Hybrid Conflict Policy when they materially disagree. In `none`, the phase result must include inline canonical JSON facts and may include an inline Markdown view. Missing, ambiguous, blocking, stale, parity-failed, or unreadable review evidence MUST block verify/archive and route to `resolve-blockers`.
+- Canonical general-review JSON wins over derived Markdown whenever both are present. Downstream phases MAY read `review-report.md` / `sdd/{change-name}/review` for compatibility, human review, section anchors, summaries, and handoff text, but they MUST NOT treat derived Markdown as authoritative for verdict, counts, routing, matrix facts, catalog identity, or validation state when canonical JSON is available.
+- Canonical security-review JSON wins over derived Markdown whenever both are present. Downstream phases MUST consume `review-security-report.json` as authoritative for verdict/status, `nextRecommended`, compact/source-row validation, expected/validated counts, coverage status, blockers, warnings, unsafe evidence rejections, warning carry-forward, artifact parity/read-back metadata, and source refs. Markdown is compatibility only; stale/parity-failed Markdown routes to `resolve-blockers`.
+- Derived Markdown references MUST use backend-appropriate naming. Do not describe all derived Markdown as an OpenSpec-only `review-report.md`: Engram and hybrid consumers use `sdd/{change-name}/review` for the Markdown compatibility view, while canonical Engram JSON remains `sdd/{change-name}/review-report.json`.
+- Security-review derived Markdown references also use backend-appropriate naming: OpenSpec uses `review-security-report.md`, Engram/hybrid uses the stable legacy key `sdd/{change-name}/review-security`, while canonical Engram JSON remains `sdd/{change-name}/review-security-report.json`.
 - The review phase MUST route to `resolve-blockers` when required artifacts, changed-file context, safe workspace context, or review-report persistence evidence are missing.
 
 ## State Persistence (Orchestrator)
@@ -153,7 +157,7 @@ changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
 currentPhase: explore | propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | blocked | complete
 completedPhases: []
-artifactRefs:
+  artifactRefs:
   explore: []
   proposal: []
   specs: []
@@ -164,7 +168,7 @@ artifactRefs:
   tasks: []
   applyProgress: []
   reviewReport: []
-  securityReviewReport: []
+  securityReviewReport: [] # list canonical JSON first with authority: canonical when structured refs are supported, then derived Markdown with authority: derived
   verifyReport: []
   archiveReport: []
   state: []
@@ -195,6 +199,13 @@ Read-back verification:
 - Verify `changeName`, `artifactStore`, `currentPhase`, `completedPhases`, `nextRecommended`, `artifactRefs`, `blockedReasons`, `stateRevision`, and `updatedAt` match the intended transition.
 - In `hybrid`, read both backends. If one write is missing, stale, or materially different, mark state persistence as failed and stop before dependent work.
 - If read-back fails, do not trust the write result. Report the backend, expected state, observed state if any, and safest recovery action.
+
+Security-review state refs:
+
+- After `sdd-review-security`, `artifactRefs.securityReviewReport` MUST register both security-review artifacts in this order: canonical JSON first, derived Markdown second.
+- When structured refs are supported, use entries shaped like `{ ref: ".../review-security-report.json", authority: canonical, readable: true }` followed by `{ ref: ".../review-security-report.md" | "sdd/{change-name}/review-security", authority: derived, readable: true }`.
+- When a legacy string-only state writer is still in use, preserve the same order and rely on the resolver contract to infer JSON as canonical and Markdown/topic view as derived.
+- Downstream phases MUST treat missing canonical JSON, stale derived Markdown, or parity-failed derived Markdown as blocking evidence and route to `resolve-blockers` unless the selected mode is `none` and the canonical JSON facts are inline.
 
 Failure handling:
 
@@ -263,7 +274,8 @@ Verification rules:
 
 - Do not report `success` for persistent modes if the artifact cannot be read back from the selected backend.
 - For `sdd-apply`, completed work MUST be visible in the selected task/progress artifact before returning success or partial completion.
-- For `sdd-review`, `review-report.md` or `sdd/{change-name}/review` MUST be readable after persistence and MUST state verdict, blocking summary, evidence summary, and next recommendation before downstream phases treat review evidence as present.
+- For `sdd-review`, canonical `review-report.json` (`openspec/changes/{change-name}/review-report.json` or `sdd/{change-name}/review-report.json`) and derived Markdown (`openspec/changes/{change-name}/review-report.md` or `sdd/{change-name}/review`) MUST be readable after persistence in persistent modes. Canonical JSON MUST state schema identity, catalog refs, verdict, blocking summary/counts, evidence summary, next recommendation, validation metadata, and the 96-row matrix. Derived Markdown MUST be generated from that JSON and state verdict, blocking summary, evidence summary, matrix presentation, and next recommendation before downstream phases treat review evidence as present.
+- For `sdd-review-security`, canonical `review-security-report.json` (`openspec/changes/{change-name}/review-security-report.json` or `sdd/{change-name}/review-security-report.json`) and derived Markdown (`openspec/changes/{change-name}/review-security-report.md` or `sdd/{change-name}/review-security`) MUST be readable after persistence in persistent modes. Canonical JSON MUST state schema identity, `changeName`, status/verdict, `nextRecommended`, source refs, general review handoff, compact validation, source-row expected/validated counts, coverage status, blockers, warnings, unsafe evidence rejections, warning carry-forward, and artifact parity/read-back metadata. Derived Markdown MUST be generated from that JSON and state verdict, source refs, general review handoff, compact/source-row summaries, blocker/warning summaries, parity metadata, and next recommendation before downstream phases treat security-review evidence as present.
 - For `sdd-archive`, archive movement and spec synchronization MUST be verified from the filesystem and/or Engram topic keys selected by mode.
 - If read-back verification fails after a useful artifact or mutation was attempted, return `partial` or `blocked` with the backend, expected reference, observed result, and safest recovery action.
 

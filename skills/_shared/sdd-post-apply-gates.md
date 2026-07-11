@@ -8,9 +8,9 @@ This contract centralizes common dependency gates, review-evidence handling, arc
 
 | Phase | Owns | Consumes | Must not own |
 | --- | --- | --- | --- |
-| `sdd-review` | General applied-change review and the 96-control `review-report.md` matrix. | Status, design/test-design/tasks/apply evidence, changed-file context. | Security-review row verdicts, exhaustive compact security matrix, exhaustive Source ID matrix, final runtime verification. |
-| `sdd-review-security` | Security review, compact `SEC-*` validation, exhaustive Source ID validation, `review-security-report.md`. | Non-blocking `review-report.md`, narrative secure design, test-design, tasks/apply evidence, changed-file context. | The general 96-control review matrix, final runtime verification, archive readiness. |
-| `sdd-verify` | Final implementation/spec/test-design/security evidence verification and `verify-report.md`. | Non-blocking `review-report.md` and `review-security-report.md`, implementation evidence, runtime/static command evidence. | Reproducing or re-scoring either review matrix, owning exhaustive Source ID rows, fixing implementation. |
+| `sdd-review` | General applied-change review, canonical `review-report.json`, and derived 96-control `review-report.md` compatibility matrix. | Status, design/test-design/tasks/apply evidence, changed-file context. | Security-review row verdicts, exhaustive compact security matrix, exhaustive Source ID matrix, final runtime verification, Excel/Python/workbook generation. |
+| `sdd-review-security` | Security review, canonical `review-security-report.json`, derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view, compact `SEC-*` validation, and exhaustive Source ID validation. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` for compatibility, narrative secure design, test-design, tasks/apply evidence, changed-file context. | The general 96-control review matrix, final runtime verification, archive readiness. |
+| `sdd-verify` | Final implementation/spec/test-design/security evidence verification and `verify-report.md`. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review`, non-blocking security-review evidence with canonical `review-security-report.json` when present plus derived Markdown compatibility view, implementation evidence, runtime/static command evidence. | Reproducing or re-scoring either review matrix, owning exhaustive Source ID rows, fixing implementation. |
 | `sdd-archive` | Final source-of-truth sync, archive move/report, and audit-trail preservation. | Passing `verify-report`, non-blocking review reports, completed tasks/apply evidence, mandatory security evidence, status/action context. | Re-scoring reviews, re-running verification, fixing implementation, or owning review matrices. |
 
 Operational evidence is design-driven. Post-apply phases consume operational considerations, gaps, warnings, unavailable-tooling notes, evidence refs, exact `Pendiente de confirmar:` markers, exact `No aplica.` markers, and archive/manual-document handoff boundaries only when those items are present or planned in design/test-design/tasks/apply/review/archive artifacts.
@@ -37,8 +37,8 @@ Additional phase-specific inputs:
 | Phase | Additional required input |
 | --- | --- |
 | `sdd-review` | Proposal/specs when available, 96-control review catalog. |
-| `sdd-review-security` | Non-blocking `review-report.md`, security guideline catalog, security contract. |
-| `sdd-verify` | Non-blocking `review-report.md`, non-blocking `review-security-report.md`, testing capabilities/config. |
+| `sdd-review-security` | Non-blocking general review evidence: canonical `review-report.json` when present and derived `review-report.md` / `sdd/{change-name}/review` compatibility view, security guideline catalog, security contract. |
+| `sdd-verify` | Non-blocking general review evidence: canonical `review-report.json` when present and derived `review-report.md` / `sdd/{change-name}/review`, non-blocking security-review evidence with canonical `review-security-report.json` when present and derived `review-security-report.md` / `sdd/{change-name}/review-security`, testing capabilities/config. |
 | `sdd-archive` | Passing `verify-report`, complete task state, state artifact, archive destination context, and any explicit partial/stale-checkbox reconciliation approval. |
 
 ## Common Blocking Rules
@@ -77,11 +77,14 @@ Phase envelopes use snake_case `next_recommended`. Persisted status/state uses c
 
 ## Review Evidence Consumption
 
-- `sdd-review-security` MUST consume `review-report.md` as supporting evidence only. It MUST NOT duplicate or recreate the 96-control matrix.
-- `sdd-verify` MUST consume exactly one non-blocking general review report and one non-blocking security review report from the selected backend.
-- `sdd-archive` MUST consume exactly one non-blocking general review report and one non-blocking security review report from the selected backend, plus a passing verify report.
+- `sdd-review-security` MUST consume canonical `review-report.json` as authoritative general-review evidence when present and MAY read derived `review-report.md` / `sdd/{change-name}/review` as supporting compatibility evidence only. It MUST NOT duplicate, recreate, or re-score the 96-control matrix.
+- `sdd-review-security` MUST produce canonical `review-security-report.json` first and derived Markdown second. The canonical JSON owns security-review verdict/status, routing, compact/source-row counts, coverage, blocker/warning summaries, unsafe evidence rejections, warning carry-forward, and artifact parity/read-back metadata.
+- `sdd-verify` MUST consume exactly one non-blocking general review report identity from the selected backend, including canonical JSON when present plus the derived Markdown compatibility view, and exactly one non-blocking security review report identity from the selected backend, including canonical `review-security-report.json` when present plus derived Markdown compatibility view.
+- `sdd-archive` MUST consume exactly one non-blocking general review report identity from the selected backend, including canonical JSON when present plus the derived Markdown compatibility view, and exactly one non-blocking security review report identity from the selected backend, including canonical `review-security-report.json` when present plus derived Markdown compatibility view, plus a passing verify report.
 - Missing, ambiguous, unreadable, or blocking review evidence blocks dependent phases.
-- Downstream phases cite report verdicts, blocker summaries, warning summaries, evidence summaries, catalog identity/counts, exceptions, and report links. They do not copy full matrices.
+- Downstream phases cite report verdicts, blocker summaries, warning summaries, evidence summaries, catalog identity/counts, validation/parity status, exceptions, and report links. They do not copy full matrices.
+- When canonical JSON and derived Markdown disagree for either review report, canonical JSON wins and downstream phases MUST route stale/parity-failed Markdown to `resolve-blockers` rather than re-score or repair the matrix themselves.
+- These gates do not introduce Excel, Python, script, spreadsheet, or workbook generation. Presentation metadata in JSON may be consumed as evidence, but generating workbooks remains outside this contract.
 
 Operational evidence consumption:
 
@@ -98,7 +101,7 @@ Operational evidence consumption:
 
 Archive may proceed only when all required evidence is readable in the selected backend:
 
-- proposal, specs, design with `## Secure Development Design`, test-design, tasks, apply-progress or completed task evidence, state, non-blocking `review-report`, non-blocking `review-security-report`, and passing `verify-report`
+- proposal, specs, design with `## Secure Development Design`, test-design, tasks, apply-progress or completed task evidence, state, non-blocking general review report, non-blocking security review report with canonical JSON when present, and passing `verify-report`
 - all implementation tasks are complete in the persisted task artifact, unless explicit stale-checkbox reconciliation is approved and backed by apply-progress plus verify-report proof
 - mandatory applicable security evidence is complete or covered by complete approved exceptions
 - applicable operational evidence, unresolved gaps, warning carry-forward, unavailable-tooling notes, and manual-document handoff boundaries that exist are preserved without requiring absent readiness categories or `sdd-operational-doc` execution
@@ -117,7 +120,7 @@ Archive MUST block on:
 | --- | --- |
 | Missing/unreadable/ambiguous `review-report` | `review` |
 | Blocking general review finding or verdict | `apply` |
-| Missing/unreadable/ambiguous `review-security-report` | `review-security` |
+| Missing/unreadable/ambiguous `review-security-report`, missing canonical `review-security-report.json` when expected, or stale/parity-failed derived security Markdown | `review-security` or `resolve-blockers` according to artifact ownership |
 | Blocking security review finding, unresolved source-row blocker, unsafe evidence, unsupported `N/A`, missing mandatory source-row evidence, malformed source-row schema, or missing compact mapping | `apply` or `resolve-blockers` according to remediation ownership |
 | Missing `verify-report` | `verify` |
 | Verify verdict `FAIL`, CRITICAL issue, or non-passing report | `apply` |

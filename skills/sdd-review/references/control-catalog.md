@@ -1,12 +1,16 @@
 # SDD Review Control Catalog
 
-Stable 96-control corporate code-review checklist used by `sdd-review`. The matrix in `review-report.md` uses the `Item ID` as its `Item` value. The `Source Item` column preserves one-to-one mapping to the user's checklist items 1 through 96 and must not be added as an extra report matrix column.
+> **Derived/reference-only view**: `skills/sdd-review/references/review-control-catalog.json` is the canonical source of truth for the stable 96-control corporate code-review checklist. This Markdown file is a human-readable reference view only.
+>
+> If this Markdown differs from `review-control-catalog.json`, JSON wins. Treat the mismatch as a derived-view repair issue: repair or regenerate this Markdown view from the JSON catalog instead of changing control semantics here.
+
+The matrix in `review-report.md` uses the JSON control `id` as its `Item` value. The `Source Item` column preserves one-to-one mapping to the user's checklist items 1 through 96 and must not be added as an extra report matrix column.
 
 ## Manual Catalog Evidence
 
 | Evidence | Result |
 | --- | --- |
-| Catalog source | User-provided 96-item corporate code-review checklist source items `1` through `96`. |
+| Catalog source | Canonical JSON: `skills/sdd-review/references/review-control-catalog.json`, based on user-provided 96-item corporate code-review checklist source items `1` through `96`. |
 | Total controls | 96 rows. |
 | Unique Item IDs | 96 unique IDs: `REV-CORP-001..REV-CORP-096`. |
 | Source mapping | Each `REV-CORP-NNN` maps one-to-one to source item `N`. |
@@ -14,6 +18,7 @@ Stable 96-control corporate code-review checklist used by `sdd-review`. The matr
 | Default complies vocabulary | Every control uses `Yes`, `No`, or `N/A` to match the review report contract. |
 | Report compatibility | Catalog fields map to the required report matrix columns without adding extra report columns. |
 | Security authority | `Standard` may cite secure-coding sources, but this catalog does not replace security applicability/design authority. |
+| Conflict policy | JSON wins; repair this Markdown view when it drifts. |
 
 ## Catalog
 

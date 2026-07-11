@@ -37,13 +37,13 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, tasks, non-blocking `review-report.md` / `sdd/{change-name}/review`, non-blocking `review-security-report.md` / `sdd/{change-name}/review-security`, and passing `verify-report` from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, tasks, non-blocking general review evidence from the selected backend (canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` compatibility view), non-blocking security-review evidence from the selected backend (canonical `review-security-report.json` when present plus derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view), and passing `verify-report`. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | Archive report as `sdd/{change-name}/archive-report`; in OpenSpec, the archive audit-trail reference is `openspec/changes/archive/YYYY-MM-DD-{change-name}/`. |
 | Mutates | OpenSpec/hybrid source specs under `openspec/specs/{domain}/spec.md`; OpenSpec/hybrid change folder location from active change to dated archive; Engram/hybrid archive report lineage. |
 | Spec sync semantics | Merge delta specs before moving the change folder. Preserve unrelated requirements; create missing main specs from full new specs; require explicit reason/migration for removals and explicit old/new names for renames. |
 | Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
-| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, general review verdict/blocking state, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. |
+| Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, canonical general-review JSON ref when present, derived Markdown compatibility ref, general review verdict/blocking state, canonical security-review JSON ref when present, derived security Markdown compatibility ref, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. Canonical general-review and security-review JSON artifacts are authoritative over derived Markdown on conflict. |
 | Source-row preservation | When corporate source-row validation applies, preserve source-row coverage summary, catalog snapshot identity/path, exact Source ID count, compact `SEC-*` mappings, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, and review-security/verify verdict links. Archive MUST NOT copy the full review-security source-row matrix into archive summaries unless audit/full-matrix mode was explicitly requested. |
 | Operational evidence preservation | Preserve operational evidence/status, refs, exact `Pendiente de confirmar:` gaps, exact `No aplica.` states, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries when present. Archive MUST NOT require absent readiness categories or `sdd-operational-doc` execution. |
 | Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
@@ -146,8 +146,8 @@ If the destination already exists, STOP and return `blocked` with the existing d
 - [ ] Archive contains all artifacts (proposal, specs, design, test-design, tasks)
 - [ ] Archive contains design artifact with mandatory `## Secure Development Design`
 - [ ] Embedded secure-design validation metadata or static/manual notes are preserved and non-failing, or archive stops with a blocker
-- [ ] Archive contains `review-report.md` / review artifact with a non-blocking verdict
-- [ ] Archive contains `review-security-report.md` / security review artifact with a non-blocking verdict
+- [ ] Archive contains canonical `review-report.json` when present plus derived `review-report.md` / review compatibility artifact with a non-blocking verdict; JSON wins on conflict
+- [ ] Archive contains canonical `review-security-report.json` when present plus derived `review-security-report.md` / security review compatibility artifact with a non-blocking verdict; JSON wins on conflict
 - [ ] Missing `test-design.md` is blocked unless an explicit partial archive exception is provided and recorded in the archive report
 - [ ] Mandatory applicable security evidence is verified or covered by complete approved exceptions recorded in the audit trail
 - [ ] Applicable operational status, evidence refs, unresolved gaps, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries are preserved without requiring absent readiness categories or `sdd-operational-doc` execution
@@ -167,9 +167,9 @@ Before persistence, validate the archive report includes:
 - Change name and artifact store mode
 - Observation IDs for Engram artifacts, or concrete OpenSpec paths for filesystem artifacts
 - `test-design` artifact ref/path, or explicit partial archive exception text when intentionally omitted
-- `review-report` artifact ref/path and confirmation that review verdict is non-blocking
-- `review-security-report` artifact ref/path and confirmation that security review verdict is non-blocking
-- Mandatory `design.md#secure-development-design` ref/path, including no-impact changed-surface rationale when applicable; source-row validation coverage and `N/A` decisions belong to `review-security-report.md`
+- canonical `review-report.json` ref/path when present, derived Markdown compatibility ref/path, and confirmation that the authoritative review verdict is non-blocking
+- canonical `review-security-report.json` ref/path when present, derived Markdown compatibility ref/path, and confirmation that the authoritative security-review verdict is non-blocking
+- Mandatory `design.md#secure-development-design` ref/path, including no-impact changed-surface rationale when applicable; source-row validation coverage and `N/A` decisions belong to canonical `review-security-report.json` and are presented through derived Markdown compatibility
 - Embedded secure-design validation metadata or static/manual notes: source section, status, catalog snapshot identity, lifecycle vocabulary, and validation notes
 - Mandatory security evidence status and complete approved exception details for any accepted gaps
 - Archive evidence fields for applicable controls: guideline IDs, taxonomy categories, source refs, operational severity, expected evidence status, residual risks, and exception state
@@ -211,8 +211,8 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 - design.md ✅
 - design.md#secure-development-design ✅
 - test-design.md ✅
-- review-report.md ✅ (non-blocking)
-- review-security-report.md ✅ (non-blocking)
+- review-report.json ✅ when present; derived review-report.md / review compatibility view ✅ (non-blocking; JSON authoritative)
+- review-security-report.json ✅ when present; derived review-security-report.md / security review compatibility view ✅ (non-blocking; JSON authoritative)
 - operational evidence ✅ when applicable (status, refs, gaps, warnings, unavailable tooling, manual-doc handoff)
 - tasks.md ✅ ({N}/{N} tasks complete)
 

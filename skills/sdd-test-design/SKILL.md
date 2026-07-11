@@ -107,7 +107,7 @@ When runtime test runner, coverage, linter, type checker, or formatter commands 
 
 Operational checks MUST include static/documentary/manual validation for exact `Pendiente de confirmar:` and `No aplica.` markers, evidence traceability, non-SQL-only monitoring mechanisms, restricted operational data absence, separation of ordinary SDD evidence from final operational document inputs, and unavailable-tooling carry-forward when the design makes those concerns applicable.
 
-Mandatory narrative-rule evidence blockers MUST stay visible: unsafe evidence or missing evidence for an applicable mandatory category rule blocks test-design. Exhaustive omitted-row and `N/A` validation belongs to `review-security-report.md`; warning-only coverage remains tracked as warnings and may route forward only when mandatory evidence is complete.
+Mandatory narrative-rule evidence blockers MUST stay visible: unsafe evidence or missing evidence for an applicable mandatory category rule blocks test-design. Exhaustive omitted-row and `N/A` validation belongs to canonical `review-security-report.json`; warning-only coverage remains tracked as warnings and may route forward only when mandatory evidence is complete.
 
 If there is no behavior or testability impact, write a concise no-impact assessment instead of inventing checks.
 
@@ -175,9 +175,9 @@ openspec/changes/{change-name}/
 - Mandatory cases require implementation, execution, static/manual evidence, or a justified skip.
 - Non-mandatory cases should be reported as warnings when uncovered, but they do not block verification by themselves.
 - Security validation evidence should cite embedded `design.md` narrative rules, owner phase, and planned static/manual evidence.
-- Applicable narrative category rules require planned safe evidence. Exhaustive source-row validation coverage, `N/A` decisions, and missed-applicable validation remain owned by `review-security-report.md`.
+- Applicable narrative category rules require planned safe evidence. Exhaustive source-row validation coverage, `N/A` decisions, and missed-applicable validation remain owned by canonical `review-security-report.json`.
 - Warning-only source coverage must be preserved with expected observation evidence and may proceed only when mandatory evidence is complete.
-- Test-design consumes narrative design rules only and MUST NOT require design YAML, schema fields, compact matrices, Source ID matrices, machine-readable applicability fields, or the full 155-row Source ID matrix; exhaustive validation coverage belongs to `review-security-report.md`, while full matrix output is audit-only unless explicitly requested.
+- Test-design consumes narrative design rules only and MUST NOT require design YAML, schema fields, compact matrices, Source ID matrices, machine-readable applicability fields, or the full 155-row Source ID matrix; exhaustive validation coverage belongs to canonical `review-security-report.json`, while full matrix output is audit-only unless explicitly requested.
 - No-impact routing is valid only when justified by changed-surface classification inside mandatory `design.md#secure-development-design`; absence of standalone `security-design.md` is not a blocker for new changes.
 - Runtime tests, build commands, linters, type checkers, formatters, and coverage commands that are unavailable must be reported as unavailable evidence, not treated as passed checks.
 

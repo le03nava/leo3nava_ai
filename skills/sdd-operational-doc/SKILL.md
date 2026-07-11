@@ -40,7 +40,7 @@ Archived operational evidence is useful input when present, but it is not requir
 | `hybrid` | Resolve both and follow the Hybrid Conflict Policy before choosing authority |
 | `none` | Only current conversation/context; label the document as non-recoverable draft |
 
-When reading an OpenSpec archive, inspect available `proposal.md`, `specs/**/spec.md`, `design.md`, `test-design.md`, `tasks.md`, `review-report.md`, `review-security-report.md`, `verify-report.md`, and any archive report/evidence files.
+When reading an OpenSpec archive, inspect available `proposal.md`, `specs/**/spec.md`, `design.md`, `test-design.md`, `tasks.md`, canonical `review-report.json` plus derived `review-report.md`, canonical `review-security-report.json` plus derived `review-security-report.md`, `verify-report.md`, and any archive report/evidence files.
 
 ## Operational Evidence Boundary
 

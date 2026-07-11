@@ -1,6 +1,6 @@
 # Security Guideline Catalog
 
-Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `test-design.md`, `review-security-report.md`, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
+Operational security checklist for embedded SDD secure development design in `design.md#secure-development-design`, `test-design.md`, canonical `review-security-report.json` plus derived Markdown compatibility, verification evidence, and archive gates. Stable guideline IDs are preserved for audit continuity.
 
 > Canonical source: `security-guideline-catalog.operational.json` owns the structured catalog, compact controls, corporate Source ID inventory, mappings, counts, and source guideline text. This Markdown file is a human-readable/auditable view derived from that JSON.
 
@@ -13,7 +13,7 @@ Operational security checklist for embedded SDD secure development design in `de
 | Taxonomy version | `1` |
 | Source | Derived human-readable view from `security-guideline-catalog.operational.json`, which contains the initial in-repo snapshot from user-provided corporate security guideline text |
 | Status | Operational checklist catalog for SDD workflow automation |
-| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, grouped source-row coverage, evidence planning, `review-security-report.md`, verification, and archive gates |
+| Scope | Security-impact classification inside `design.md#secure-development-design`, control mapping, grouped source-row coverage, evidence planning, canonical `review-security-report.json` with derived Markdown compatibility, verification, and archive gates |
 | Inventory authority | `security-guideline-catalog.operational.json` is the canonical authoritative inventory for the 155 concrete corporate Source IDs used by SDD source-row validation; this Markdown is a derived human/audit view. |
 | Expected Source ID count | `155` |
 | Source ID pattern | Stable dotted numeric IDs from the preserved snapshot tables, for example `1.1`, `7.13`, or range notation such as `2.1-2.23` only when every ID in the range exists in the snapshot. |
@@ -24,7 +24,7 @@ Operational security checklist for embedded SDD secure development design in `de
 
 ## Checklist Usage
 
-Use this catalog as a checklist for every new `design.md#secure-development-design` section and `review-security-report.md`. New changes classify security through embedded secure development design and validate it through security review.
+Use this catalog as a checklist for every new `design.md#secure-development-design` section and canonical `review-security-report.json`. New changes classify security through embedded secure development design and validate it through security review.
 
 | Column | Required value |
 | --- | --- |
@@ -44,7 +44,7 @@ Lifecycle status MUST be one of `not-started`, `planned`, `implemented`, `verifi
 
 ## Taxonomy
 
-Use these compact category IDs in `design.md#secure-development-design`, `review-security-report.md`, task/apply evidence, verification reports, and archive blockers.
+Use these compact category IDs in `design.md#secure-development-design`, canonical `review-security-report.json`, task/apply evidence, verification reports, and archive blockers.
 
 | Category ID | Category | Applies when a change touches |
 | --- | --- | --- |
@@ -86,7 +86,7 @@ Do not use review finding labels for security routing, catalog blocking behavior
 
 ## Catalog Consistency Contract
 
-Static/manual consistency checks for new security evidence must target `design.md#secure-development-design` and `review-security-report.md` using the snapshot metadata and compact records above. No separate validation artifact or script may block new-change routing.
+Static/manual consistency checks for new security evidence must target `design.md#secure-development-design` and canonical `review-security-report.json` using the snapshot metadata and compact records above. No separate validation artifact or script may block new-change routing.
 
 Required checks:
 
@@ -107,7 +107,7 @@ Required checks:
 
 The compact `SEC-*` checklist records remain the authoritative eight-control security taxonomy. The operational inventory below adds exhaustive corporate Source ID coverage for row-level validation without replacing those compact controls.
 
-This section is a derived human/audit view of the canonical JSON inventory for the 155 concrete Source IDs. Design and test-design artifacts MUST reference the canonical catalog by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. `review-security-report.md` validates the full source universe from the JSON catalog and reports coverage; it materializes the full 155-row matrix only in explicit audit/full-matrix mode.
+This section is a derived human/audit view of the canonical JSON inventory for the 155 concrete Source IDs. Design and test-design artifacts MUST reference the canonical catalog by snapshot metadata, expected count, compact mapping, group, or section instead of copying all rows. Canonical `review-security-report.json` validates the full source universe from the JSON catalog and reports coverage; derived Markdown materializes the full 155-row matrix only in explicit audit/full-matrix mode.
 
 Validation MUST expand source ranges before checking coverage. Compressed ranges MAY appear in human summaries, but validation matrices and review-security rows MUST reason over concrete Source IDs. Verify and archive preserve source-row summaries, warnings, exceptions, report links, catalog identity, and expected count without redefining this inventory.
 
@@ -119,8 +119,8 @@ Validation MUST expand source ranges before checking coverage. Compressed ranges
 | Expected universe | Exactly 155 concrete Source IDs from sections 1-15 below. |
 | Expansion owner | The catalog owns expanded ranges; review-security consumes them for exact-once validation. |
 | Slim artifact boundary | Design/test-design/apply/verify/archive cite catalog refs, groups, counts, mappings, and links; they do not duplicate the exhaustive inventory. |
-| Validation owner | `review-security-report.md` validates every expected Source ID exactly once and reports coverage metadata. |
-| Full matrix owner | `review-security-report.md` may materialize every expected Source ID exactly once only in audit/full-matrix mode. |
+| Validation owner | Canonical `review-security-report.json` validates every expected Source ID exactly once and reports coverage metadata. |
+| Full matrix owner | Derived `review-security-report.md` may materialize every expected Source ID exactly once only when generated from JSON in audit/full-matrix mode. |
 | Compact mapping vocabulary | Only `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, and `SEC-LOG-001` are valid compact mappings. |
 
 ### Source row validation rules
@@ -133,7 +133,7 @@ Validation MUST expand source ranges before checking coverage. Compressed ranges
 | Compact mapping | Every expanded Source ID MUST map to one or more existing compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. |
 | Blocking failures | Missing Source IDs, duplicate Source IDs, unknown Source IDs, missing compact mappings, malformed rows, missing evidence for applicable rows, unsupported `N/A`, or unsafe evidence MUST block with the route defined by `skills/_shared/sdd-security-contract.md`. |
 | Safe evidence | Evidence and observations cite paths, sections, changed-file references, command summaries, sanitized summaries, or redacted placeholders only. They MUST NOT contain secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. |
-| Reviewable output shape | `review-security-report.md` should default to coverage metadata, section-level summaries, and focused details for blockers, warnings, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward. In audit/full-matrix mode, the 155-row matrix includes row identity, PCI alignment, compact mappings, status, evidence type/location, finding, owner phase, and route. |
+| Reviewable output shape | Canonical `review-security-report.json` should default to coverage metadata, section-level summaries, and focused details for blockers, warnings, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward. In audit/full-matrix mode, derived Markdown generated from JSON may include the 155-row matrix with row identity, PCI alignment, compact mappings, status, evidence type/location, finding, owner phase, and route. |
 
 ### Expanded source inventory and compact mappings
 
@@ -426,14 +426,14 @@ Embedded secure development design should turn each applicable guideline into on
 - `implementation-reference`: file, function, config, or prompt change where the control is implemented.
 - `test-design-check`: planned automated, static, or manual check in `test-design.md`.
 - `verification-evidence`: result recorded by `sdd-verify`.
-- `security-review-evidence`: row-level implementation validation recorded by `sdd-review-security` in `review-security-report.md`.
+- `security-review-evidence`: row-level implementation validation recorded by `sdd-review-security` in canonical `review-security-report.json`.
 - `approved-exception`: explicit risk acceptance when mandatory evidence cannot be produced.
 
 Mandatory applicable guidelines block archive unless evidence is complete or an approved exception follows `skills/_shared/sdd-security-contract.md`.
 
 ## Review-Phase Cross-Reference Guidance
 
-`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Embedded `design.md#secure-development-design` and `review-security-report.md` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions.
+`sdd-review` may cite this catalog in `review-report.md`, but it must not duplicate, rename, or redefine guideline authority. Embedded `design.md#secure-development-design` and canonical `review-security-report.json` remain authoritative for taxonomy applicability, mandatory controls, expected evidence, row-level validation, and approved exceptions.
 
 Review-safe evidence types for security-related review rows:
 
@@ -452,4 +452,4 @@ Safe-evidence rules for mandatory controls:
 - `SEC-ACCESS-001`: cite workflow gates, status examples, phase routing, and blocker evidence proving denial-by-default progression.
 - `SEC-LOG-001`: cite report templates, observations, redaction rules, and audit evidence locations without raw sensitive payloads.
 
-When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `design.md#secure-development-design` or `review-security-report.md`, downstream phases must resolve the conflict in favor of those security authorities and report the review row as a finding rather than treating it as new authority.
+When review maps a row to a security concern, the `Standard` cell should cite stable IDs such as `SEC-AUTH-001` or source IDs such as `Source 1.4`. If review evidence conflicts with `design.md#secure-development-design` or canonical `review-security-report.json`, downstream phases must resolve the conflict in favor of those security authorities and report the review row as a finding rather than treating it as new authority.

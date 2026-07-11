@@ -224,7 +224,7 @@ Secure development design content rules:
 - Include only applicable narrative security category rules for new active designs. Do not require all security controls, all Source IDs, or per-row `N/A` rationale for omitted rows.
 - Treat `## Secure Development Design` as the active design-time security planning authority for changed-surface classification, applicable category rules, evidence owners, residual risks, exceptions, and safe-evidence policy.
 - Do NOT emit security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, all-row `N/A` bookkeeping, the general 96-control `sdd-review` matrix, or the exhaustive 155-row Source ID matrix in design.
-- Omitted categories are reviewable omissions. `review-security-report.md` owns compact and Source ID validation coverage, `Yes`/`No`/`N/A` decisions, non-applicable evidence, missed-applicable blockers, and exact-once Source ID expansion/validation.
+- Omitted categories are reviewable omissions. Canonical `review-security-report.json` owns compact and Source ID validation coverage, `Yes`/`No`/`N/A` decisions, non-applicable evidence, missed-applicable blockers, and exact-once Source ID expansion/validation; derived Markdown presents those JSON facts for compatibility.
 - Applicable category rules MUST identify secure design decisions/controls, downstream evidence owners, expected evidence, residual risks, and archive expectations in prose.
 - No-impact designs MUST still record changed-surface rationale, touched/untouched runtime surfaces, and why no security category applies. They MUST NOT use all-row `N/A` bookkeeping to prove no-impact status.
 - Exceptions MUST include approver, approvedAt, accepted-risk rationale, mitigation/follow-up, and evidence gap. Incomplete exceptions do not satisfy archive readiness.
@@ -247,8 +247,8 @@ Secure design shape checks:
 - `## Secure Development Design` is present.
 - The section records changed-surface classification and applicable category rules in narrative form.
 - The section does not include security YAML, JSON, schema blocks, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, all-row `N/A` bookkeeping, the general 96-control review matrix, or the exhaustive 155-row Source ID matrix.
-- When corporate source-row review applies downstream, the secure design cites only high-level category context in prose and leaves exact-once compact/Source ID validation plus `N/A` decisions to `review-security-report.md`.
-- Omitted categories are clearly treated as reviewable omissions for `review-security-report.md`, not as passing design-time `N/A` rows.
+- When corporate source-row review applies downstream, the secure design cites only high-level category context in prose and leaves exact-once compact/Source ID validation plus `N/A` decisions to canonical `review-security-report.json`.
+- Omitted categories are clearly treated as reviewable omissions for canonical `review-security-report.json`, not as passing design-time `N/A` rows.
 
 Classification and evidence checks:
 

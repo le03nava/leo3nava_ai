@@ -234,8 +234,8 @@ Here's what we built together:
 - design.md — the HOW
 - test-design.md — the EVIDENCE PLAN
 - tasks.md — the STEPS
-- review-report.md — the GENERAL REVIEW EVIDENCE
-- review-security-report.md — the SECURITY REVIEW EVIDENCE
+- review-report.json + derived review-report.md — the GENERAL REVIEW EVIDENCE
+- review-security-report.json + derived review-security-report.md — the SECURITY REVIEW EVIDENCE
 
 **Code changed**:
 - {list of files}

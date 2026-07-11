@@ -26,8 +26,10 @@ openspec/
         ├── security-design.md <- legacy/read-only; old or archived changes only
         ├── test-design.md   <- from sdd-test-design
         ├── tasks.md         <- from sdd-tasks (updated by sdd-apply)
-        ├── review-report.md <- from sdd-review
-        ├── review-security-report.md <- from sdd-review-security
+        ├── review-report.json <- canonical from sdd-review
+        ├── review-report.md <- derived compatibility view from sdd-review
+        ├── review-security-report.json <- canonical from sdd-review-security
+        ├── review-security-report.md <- derived compatibility view from sdd-review-security
         └── verify-report.md <- from sdd-verify
 ```
 
@@ -46,8 +48,8 @@ openspec/
 | sdd-test-design | Creates | `openspec/changes/{change-name}/test-design.md` |
 | sdd-tasks | Creates | `openspec/changes/{change-name}/tasks.md` |
 | sdd-apply | Updates | `openspec/changes/{change-name}/tasks.md` (marks `[x]`) |
-| sdd-review | Creates | `openspec/changes/{change-name}/review-report.md` |
-| sdd-review-security | Creates | `openspec/changes/{change-name}/review-security-report.md` |
+| sdd-review | Creates | `openspec/changes/{change-name}/review-report.json` canonical plus `openspec/changes/{change-name}/review-report.md` derived |
+| sdd-review-security | Creates | `openspec/changes/{change-name}/review-security-report.json` canonical plus `openspec/changes/{change-name}/review-security-report.md` derived |
 | sdd-verify | Creates | `openspec/changes/{change-name}/verify-report.md` |
 | sdd-archive | Moves | `openspec/changes/{change-name}/` → `openspec/changes/archive/YYYY-MM-DD-{change-name}/` |
 | sdd-archive | Updates | `openspec/specs/{domain}/spec.md` (merges deltas into main specs, including review workflow deltas such as `sdd-review-workflow`, `sdd-execution-persistence-contracts`, and `sdd-security-guideline-catalog`) |
@@ -62,8 +64,8 @@ Design:     openspec/changes/{change-name}/design.md
 Security design: openspec/changes/{change-name}/design.md#secure-development-design (new changes); openspec/changes/{change-name}/security-design.md is legacy/read-only for old or archived changes
 Test design: openspec/changes/{change-name}/test-design.md
 Tasks:      openspec/changes/{change-name}/tasks.md
-Review:     openspec/changes/{change-name}/review-report.md
-Security review: openspec/changes/{change-name}/review-security-report.md
+Review:     openspec/changes/{change-name}/review-report.json (canonical), openspec/changes/{change-name}/review-report.md (derived compatibility)
+Security review: openspec/changes/{change-name}/review-security-report.json (canonical), openspec/changes/{change-name}/review-security-report.md (derived compatibility)
 Verify:     openspec/changes/{change-name}/verify-report.md
 Config:     openspec/config.yaml
 Main specs: openspec/specs/{domain}/spec.md
