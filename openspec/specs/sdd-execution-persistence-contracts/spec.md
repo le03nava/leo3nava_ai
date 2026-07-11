@@ -122,14 +122,14 @@ The SDD DAG for new changes MUST route `design -> test-design -> tasks -> apply 
 
 ### Requirement: Verify and Archive Review Consumption
 
-Verify MUST consume both general-review and security-review evidence, preferring canonical `review-report.json` and canonical `review-security-report.json` when present, and MUST NOT own either review matrix. Archive MUST require passing verification plus non-blocking general and security review reports for new changes.
+Verify MUST consume canonical `review-report.json` and canonical `review-security-report.json` when present. Security-review JSON MUST be authoritative for verdict, routing, blockers, warnings, artifact parity, and `sourceRowValidation.rows` exact-once coverage. Verify and archive MUST NOT consume derived Markdown or compact `SEC-*` data as validation authority.
 
 #### Scenario: Verify consumes review evidence
 
-- GIVEN review produced a non-blocking report
+- GIVEN review and security-review reports are non-blocking
 - WHEN verify runs
-- THEN it MUST cite the review report as evidence
-- AND it MUST NOT duplicate the full review matrix.
+- THEN it MUST cite both canonical JSON reports
+- AND it MUST NOT duplicate or reinterpret their matrices.
 
 #### Scenario: Verify consumes both review artifacts
 
@@ -137,6 +137,12 @@ Verify MUST consume both general-review and security-review evidence, preferring
 - WHEN verify runs
 - THEN it MUST cite both reports as evidence
 - AND it MUST NOT duplicate their full matrices.
+
+#### Scenario: Compact report data is ignored
+
+- GIVEN a security-review artifact contains legacy compact `SEC-*` report data
+- WHEN verify or archive evaluates a new change
+- THEN that compact data MUST NOT satisfy active security validation.
 
 #### Scenario: Archive checks review readiness
 
@@ -176,14 +182,14 @@ New-change contracts MUST use catalog and artifact evidence for security validat
 
 ### Requirement: Source Row Persistence Compatibility
 
-The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, Engram, hybrid, and none modes according to the shared persistence contract. Backend behavior MUST NOT redefine source-row semantics. Source-row artifacts MUST remain recoverable through established review-security, verify, and archive keys/paths. Persistence MUST allow narrative designs and archived exhaustive designs to coexist without migration; verify/archive MUST require narrative design evidence plus the review-security report schema, not design YAML. New reports may persist summary-mode coverage metadata plus focused findings instead of the full 155-row matrix unless audit/full-matrix mode is explicitly requested.
+The SDD contracts MUST preserve source-row-first security evidence across OpenSpec, Engram, hybrid, and none modes. Active security-review artifacts MUST persist `sourceRowValidation.rows` with exactly 155 unique rows and required row fields. Derived Markdown MUST remain a generated compatibility view with lean navigation/summary plus the full row matrix at the end. Backend behavior MUST NOT redefine row semantics.
 
 #### Scenario: OpenSpec mode preserves rows
 
 - GIVEN a change runs in OpenSpec mode
 - WHEN source-row artifacts are persisted
-- THEN coverage metadata, section summaries, focused findings, and audit-mode full rows when requested MUST be stored in canonical `review-security-report.json`, with Markdown generated from JSON
-- AND downstream phases MUST read that report as source-row evidence.
+- THEN canonical JSON MUST contain all 155 source rows
+- AND Markdown MUST be regenerated from JSON.
 
 #### Scenario: Engram or hybrid mode preserves rows
 
@@ -201,7 +207,7 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 
 ### Requirement: Verify Source Row Consumption
 
-`sdd-verify` MUST consume non-blocking canonical `review-security-report.json` source-row evidence when present and validate that no source-row blockers remain. Verify MUST cite the security review verdict, catalog snapshot/count, compact mappings, warnings, exceptions, and evidence references without owning or duplicating the full source-row matrix.
+`sdd-verify` MUST validate that non-blocking `review-security-report.json` has complete `sourceRowValidation.rows` coverage and no row-level blockers. It MUST cite catalog snapshot/count, warnings, exceptions, and evidence refs without owning validation logic or compact-control summaries.
 
 #### Scenario: Security source blocker remains
 
@@ -210,37 +216,30 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 - THEN verification MUST block
 - AND it MUST route to apply or resolve-blockers according to the blocker cause.
 
-#### Scenario: Warnings only after security review
+#### Scenario: Complete source rows continue
 
-- GIVEN review-security is non-blocking with warnings only
+- GIVEN all 155 rows are present and non-blocking
 - WHEN verify records evidence
-- THEN it MUST preserve the warnings
-- AND verification MAY proceed if all mandatory evidence is complete.
-
-#### Scenario: Verify preserves boundary evidence
-
-- GIVEN review-security is non-blocking and cites narrative design coverage
-- WHEN verify records final evidence
-- THEN it MUST preserve catalog identity, expected count, compact mappings, and report links
-- AND it MUST rely on embedded secure design plus review-security evidence.
+- THEN it MAY proceed
+- AND it MUST preserve warning and exception refs.
 
 ### Requirement: Archive Source Row Preservation
 
-`sdd-archive` MUST require passing verification plus non-blocking source-row security review for new changes. Archive MUST preserve source-row coverage summaries, catalog snapshot identity/path, expected count, compact `SEC-*` mappings, warnings, exceptions, and evidence references without copying the full review-security matrix into design/archive summaries unless audit/full-matrix mode was explicitly requested.
+`sdd-archive` MUST require passing verification plus non-blocking source-row security review for new changes. Archive MUST preserve canonical JSON and generated Markdown refs, catalog snapshot identity/path, expected and validated counts, warnings, exceptions, and evidence references. Archive summaries MUST NOT use compact `SEC-*` validation, navigation, summaries, or `N/A` grouping.
 
-#### Scenario: Archive checks no source blockers remain
+#### Scenario: Archive checks row completeness
 
 - GIVEN verification passes
 - WHEN archive evaluates readiness
-- THEN it MUST confirm no source-row blockers remain
+- THEN it MUST confirm 155 expected and validated rows with no blockers
 - AND missing mandatory source-row evidence MUST prevent archive.
 
-#### Scenario: Archive preserves audit trail
+#### Scenario: Archive preserves generated matrix
 
-- GIVEN archive completes
-- WHEN future readers inspect the archived change
-- THEN source-row coverage summaries and evidence references MUST remain understandable
-- AND compact `SEC-*` mappings MUST still be traceable.
+- GIVEN derived Markdown contains the full source-row matrix at the end
+- WHEN archive completes
+- THEN the matrix ref MUST remain readable
+- AND archive MUST not create a second validation source.
 
 #### Scenario: Archive avoids matrix duplication
 
@@ -248,13 +247,6 @@ The SDD contracts MUST preserve corporate source-row evidence across OpenSpec, E
 - WHEN archive writes final records
 - THEN it MUST link or summarize the matrix instead of duplicating it
 - AND archived evidence MUST remain readable through embedded secure design and review-security evidence.
-
-#### Scenario: Archive consumes summary-mode source evidence
-
-- GIVEN canonical `review-security-report.json` uses summary mode with complete source-row validation coverage
-- WHEN archive writes final records
-- THEN it MUST preserve coverage metadata, section summaries, focused findings, warnings, exceptions, and report links
-- AND it MUST NOT require the full 155-row matrix unless audit/full-matrix mode was explicitly requested.
 
 ### Requirement: Operational Readiness Evidence Persistence
 

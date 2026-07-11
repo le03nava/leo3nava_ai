@@ -23,3 +23,9 @@ If the orchestrator injected a `## Skills to load before work` block, also read 
 Follow that skill as the source of truth.
 
 The phase skill and its shared references are the source of truth for review evidence consumption, source-row consumption, unavailable tooling, matrix ownership, and routing. Do not duplicate those rules from this agent wrapper.
+
+Canonical source-row consumption reminder:
+
+- Consume canonical `review-security-report.json` summaries, counts, warnings, exceptions, evidence refs, and parity metadata.
+- Treat derived Markdown as compatibility/presentation only.
+- Do not copy, reproduce, or re-score the full security source-row matrix.

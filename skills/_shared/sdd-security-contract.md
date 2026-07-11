@@ -1,6 +1,6 @@
 # SDD Security Contract
 
-Shared cross-phase contract for narrative secure design, downstream security evidence, routing boundaries, approved exceptions, and review-safe evidence. This file defines what every SDD phase may rely on. Machine-readable operational catalog inventory, compact `SEC-*` rows, Source ID expansion, PCI mappings, and report matrix schemas belong to `skills/sdd-review-security/references/`; the Markdown catalog remains the human/audit snapshot.
+Shared cross-phase contract for narrative secure design, downstream security evidence, routing boundaries, approved exceptions, and review-safe evidence. This file defines what every SDD phase may rely on. Machine-readable operational catalog inventory, Source ID expansion, PCI mappings, source-row validation, and report matrix schemas belong to `skills/sdd-review-security/references/`; the Markdown catalog remains the human/audit snapshot.
 
 ## Phase Ownership Boundary
 
@@ -9,15 +9,15 @@ Shared cross-phase contract for narrative secure design, downstream security evi
 | `design.md#secure-development-design` | Human-readable changed-surface classification, applicable security category rules, evidence owners, residual risks, exceptions, and safe-evidence policy. | YAML/JSON schemas, control tables, compact matrices, Source ID matrices, machine-readable applicability fields, exhaustive `N/A` bookkeeping, or the 96-control general review matrix. |
 | `test-design.md` | Evidence plan for applicable narrative category rules and changed-surface risks, including static/manual/automated coverage expectations and unavailable-tooling substitutions. | Security catalog expansion, design schema parsing, compact/source matrices, or exhaustive `N/A` planning. |
 | `apply` evidence | Changed-file references and implementation/static/manual proof for the narrative rules and planned evidence. | Security-review verdicts, Source ID validation results, or exception approval. |
-| `review-report.json` + derived `review-report.md` | General applied-change review and security handoff context. Canonical JSON is authoritative; Markdown is compatibility. | Security row verdicts, compact/source-row validation results, full source matrices, or final verification. |
-| `review-security-report.json` + derived `review-security-report.md` | Security review verdicts, compact-control validation, Source ID validation when applicable, row-level evidence, `N/A` decisions, missed-applicable blockers, unsafe-evidence blockers, warning carry-forward, and artifact parity/read-back metadata. Canonical JSON is authoritative; Markdown is compatibility. | Redefining shared phase boundaries or duplicating/re-scoring the general 96-control review matrix. |
+| `review-report.json` + derived `review-report.md` | General applied-change review and security handoff context. Canonical JSON is authoritative; Markdown is compatibility. | Security row verdicts, source-row validation results, full source matrices, or final verification. |
+| `review-security-report.json` + derived `review-security-report.md` | Security review verdicts, `sourceRowValidation.rows` exact-once coverage, source-row counts, row-level evidence, `N/A` decisions, missed-applicable blockers, unsafe-evidence blockers, warning carry-forward, exceptions, evidence refs, and artifact parity/read-back metadata. Canonical JSON is authoritative; Markdown is compatibility. | Redefining shared phase boundaries, creating a second matrix authority, or duplicating/re-scoring the general 96-control review matrix. |
 | `verify` / `archive` | Consume and preserve non-blocking review/security-review verdicts, warnings, exceptions, evidence refs, and report links. | Re-scoring review matrices, copying full Source ID matrices, or fixing implementation. |
 
 Boundary rules:
 
 - Design is narrative: it plans applicable category rules; it does not prove all omitted categories.
 - Omitted categories are reviewable omissions. Canonical `review-security-report.json` validates omissions and blocks missed applicable controls; derived Markdown presents the JSON facts for compatibility.
-- Exhaustive compact-control and Source ID validation belongs to canonical `review-security-report.json`; full Source ID matrix materialization is audit-only unless explicitly requested.
+- Exhaustive Source ID validation belongs to canonical `review-security-report.json`; downstream phases consume summaries, counts, warnings, exceptions, and evidence refs without copying or re-scoring the source-row matrix.
 - Warning-only evidence may route forward only when mandatory evidence is complete and warnings stay visible to verify/archive.
 - Missing, malformed, unsafe, unsupported, or conflicting security evidence blocks downstream phases until routed to `apply` or `resolve-blockers`.
 
@@ -54,7 +54,7 @@ Operational evidence is design-driven. When `design.md`, `test-design.md`, tasks
 | Final-document-only values | Production operational values explicitly provided by the user for the final manual operational document. | Use only in the final manual document; never backfill into design, tasks, apply, review, verify, archive, examples, tests, or fixtures. |
 | Future exception evidence | Any planned exception to mandatory security evidence or applicable operational evidence. | Require approver, approval date, accepted-risk rationale, mitigation/follow-up, and exact evidence gap before archive readiness. |
 
-Operational placeholders are safer than invented data. Exact `Pendiente de confirmar:` and exact `No aplica.` MUST NOT be treated as leakage by themselves, but placeholder-only evidence cannot hide a missing non-leakage check when operational evidence exists. `sdd-review-security` owns the final leakage verdict, compact/source-row expansion, omitted-row validation, and `N/A` decisions.
+Operational placeholders are safer than invented data. Exact `Pendiente de confirmar:` and exact `No aplica.` MUST NOT be treated as leakage by themselves, but placeholder-only evidence cannot hide a missing non-leakage check when operational evidence exists. `sdd-review-security` owns the final leakage verdict, source-row expansion, omitted-row validation, and `N/A` decisions.
 
 ## Narrative Secure Design Contract
 
@@ -82,7 +82,7 @@ Rules:
 Rules:
 
 - It validates narrative design rules, test-design coverage, apply evidence, changed files, and review-report handoff evidence.
-- It validates exhaustive compact rows and Source ID rows in canonical `review-security-report.json` when applicable; the full Source ID matrix is materialized only in audit/full-matrix mode. Derived Markdown is generated from JSON and must not become authority.
+- It validates canonical `sourceRowValidation.rows` in `review-security-report.json` with exact-once Source ID coverage. Derived Markdown is generated from JSON and must not become authority.
 - It consumes canonical `review-report.json` as general-review handoff evidence and MUST NOT duplicate, recreate, or re-score the general 96-control review matrix.
 - If canonical security-review JSON and derived Markdown disagree, JSON wins and stale/parity-failed Markdown routes to `resolve-blockers`.
 - Row presence alone is not compliance evidence; rows require review-safe corroborating evidence or complete `N/A` justification.
@@ -98,7 +98,8 @@ Required fields:
 ```yaml
 exception:
   status: exception-approved
-  guidelineId: SEC-...
+  sourceId: <source-row-id-or-n/a>
+  guidelineRef: <catalog-ref-or-category>
   approver: <human-or-authoritative-role>
   approvedAt: <iso-8601-or-date>
   acceptedRiskRationale: <why risk is accepted>

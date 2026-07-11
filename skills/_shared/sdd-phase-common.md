@@ -185,7 +185,7 @@ Phase-specific minimum details:
 | `sdd-tasks` | Task list refs plus Review Workload Forecast, estimated changed lines, chain/exception recommendation, and test-design traceability. |
 | `sdd-apply` | Apply-progress ref, completed/pending task summary, files changed, verification run or reason not run, next slice boundary if chained. |
 | `sdd-review` | Final review verdict, blocking/non-blocking summary, matrix validation summary, review-report ref, and next remediation or verification route. |
-| `sdd-review-security` | Final security review verdict, blocking/non-blocking summary, compact/source-row validation summary, canonical `review-security-report.json` ref, derived Markdown ref, artifact parity/read-back metadata, and next remediation or verification route. |
+| `sdd-review-security` | Final security review verdict, blocking/non-blocking summary, source-row validation summary, canonical `review-security-report.json` ref, derived Markdown ref, artifact parity/read-back metadata, and next remediation or verification route. |
 | `sdd-verify` | Final verdict `PASS`, `PASS WITH WARNINGS`, or `FAIL`; evidence table; CRITICAL/WARNING/SUGGESTION issues; verify-report ref. |
 | `sdd-archive` | Archive destination/ref, included artifacts, final status, recovery path if partial. |
 

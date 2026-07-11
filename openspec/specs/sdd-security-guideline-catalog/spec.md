@@ -2,28 +2,34 @@
 
 ## Purpose
 
-Define the in-repo corporate security guideline snapshot, compact taxonomy, matrix vocabulary, and evidence model used by narrative secure development design, security review, verification, and archive checks.
+Define the in-repo corporate security guideline source-row snapshot, matrix vocabulary, and evidence model used by narrative secure development design, security review, verification, and archive checks.
 
 ## Requirements
 
 ### Requirement: In-Repo Guideline Snapshot
 
-The repository MUST maintain the corporate security guideline catalog as an in-repo canonical operational JSON catalog based on the user-provided text plus a derived human-readable/auditable Markdown view. The operational JSON MUST preserve source text, identifiers, vocabulary, taxonomy, compact controls, Source ID inventory, PCI alignment, compact mappings, expected counts, and report-mode defaults needed by narrative secure development design, canonical `review-security-report.json` validation, and downstream scripts such as Excel/document generators. The Markdown view MUST preserve audit readability without becoming a second editable source of truth. Full source-row matrix output is audit-only unless explicitly requested.
+The repository MUST maintain a canonical source-row catalog snapshot for security review. The operational JSON MUST preserve 155 expanded Source IDs, source text or refs, corporate section, PCI alignment, control domain, repo/runtime/data applicability surfaces, evidence expectations, lifecycle vocabulary, owner phase, and route metadata. Compact `SEC-*` identifiers MUST NOT be required for active report validation, navigation, summaries, or grouped `N/A`. The Markdown view MUST preserve audit readability without becoming a second editable source of truth.
 
 #### Scenario: Catalog snapshot is available
 
 - GIVEN an SDD design or security review phase needs guideline context
 - WHEN it reads the catalog
-- THEN it MUST find guideline identifiers, source snapshot metadata, applicable summaries, and source text in the canonical JSON catalog
+- THEN it MUST find all 155 source rows and grouping metadata in the canonical JSON catalog
 - AND it MAY use the Markdown view for human/audit readability
-- AND it MUST support narrative secure design and security-review matrices.
+- AND active report generation MUST NOT require compact `SEC-*` controls.
 
 #### Scenario: Operational JSON is available
 
 - GIVEN a script or phase needs row expansion, mappings, counts, or export data
 - WHEN it reads `skills/sdd-review-security/references/security-guideline-catalog.operational.json`
-- THEN it MUST find schema metadata, vocabularies, taxonomy, compact guidelines, source sections, expanded Source IDs, source guideline text, PCI alignment, compact mappings, and expected Source ID count
+- THEN it MUST find schema metadata, vocabularies, source sections, expanded Source IDs, source guideline text or refs, PCI alignment, grouping metadata, applicability surfaces, evidence expectations, and expected Source ID count
 - AND it MUST be able to generate review-security coverage summaries, full audit matrices, Excel exports, or other documents without parsing Markdown tables.
+
+#### Scenario: Source row vocabulary exists
+
+- GIVEN a source row is expanded
+- WHEN validation builds a report row
+- THEN required row fields and allowed values MUST be resolvable from catalog vocabulary.
 
 #### Scenario: Catalog source changes later
 
@@ -92,7 +98,7 @@ The catalog SHOULD identify evidence types suitable for review rows, including i
 
 ### Requirement: Catalog Boundary Preservation
 
-The catalog MUST remain the source for security guideline identifiers, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, compact-control inventory, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive canonical `review-security-report.json` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions, and MUST NOT require full source-row matrix output unless audit/full-matrix mode is requested.
+The catalog MUST remain the source for security source rows, taxonomy, mandatory evidence expectations, exception fields, lifecycle statuses, matrix vocabulary, Source ID inventory, and safe-evidence policy. `sdd-review` MAY reference catalog entries but MUST NOT duplicate, redefine, or replace guideline text. Active authority MUST remain split between narrative design rules and exhaustive canonical `review-security-report.json` validation. The catalog MUST NOT require design YAML, schema, matrices, exhaustive applicability, or `N/A` decisions outside canonical review-security evidence.
 
 #### Scenario: Catalog authority is preserved
 
@@ -100,24 +106,6 @@ The catalog MUST remain the source for security guideline identifiers, taxonomy,
 - WHEN downstream verification compares evidence
 - THEN catalog identifiers and statuses MUST remain consistent
 - AND conflicts MUST resolve through narrative design context plus exhaustive review-security results.
-
-### Requirement: Formal Source Coverage Mapping
-
-Each compact `SEC-*` guideline MUST declare formal corporate source coverage through stable Source IDs from the in-repo snapshot. Source coverage MUST be treated as an audit obligation, not best-effort commentary, and each mapping MUST preserve catalog snapshot identity and version metadata.
-
-#### Scenario: Guideline maps to corporate sources
-
-- GIVEN a compact `SEC-*` guideline is listed in the catalog
-- WHEN review-security validates source coverage
-- THEN the guideline MUST expose one or more valid Source IDs
-- AND the report MUST be able to cite those IDs as evidence refs.
-
-#### Scenario: Source mapping is missing
-
-- GIVEN a compact guideline lacks Source IDs
-- WHEN catalog validation is performed
-- THEN validation MUST fail for strict source coverage
-- AND the missing mapping MUST be reported by guideline ID.
 
 ### Requirement: Operational Severity Vocabulary
 
@@ -168,7 +156,7 @@ The catalog MUST define matrix-facing values `Yes`, `No`, and `N/A` plus lifecyc
 
 ### Requirement: Corporate Source Row Inventory
 
-The canonical JSON catalog MUST own the authoritative exhaustive corporate source-row inventory and expose a derived `Full Corporate Guideline Snapshot` Markdown view for audit readability. The inventory MUST contain 155 expanded Source IDs, snapshot identity/version metadata, section grouping, guideline text, PCI alignment or `N/A`, mapped compact `SEC-*` guideline IDs, matrix vocabulary, and safe-evidence expectations. Range notation such as `1.1-1.10` MUST be expanded in the catalog before downstream validation. Design and test-design MUST reference applicable category guidance; review-security MUST expand and validate the inventory exhaustively, while full 155-row report materialization remains audit-only unless explicitly requested.
+The canonical JSON catalog MUST own the exhaustive 155-row corporate Source ID inventory. Range notation MUST be expanded before validation. Each row MUST preserve `sourceId`, `corporateSection`, `pciAlignment`, guideline text or refs, `controlDomain`, applicable surfaces, safe-evidence expectations, lifecycle values, owner phase, and route metadata. `controlDomain`, `corporateSection`, or equivalent source-row category fields MUST support report navigation and grouping.
 
 #### Scenario: Ranges expand before coverage
 
@@ -176,6 +164,12 @@ The canonical JSON catalog MUST own the authoritative exhaustive corporate sourc
 - WHEN catalog coverage is validated
 - THEN every concrete Source ID in the range MUST be represented exactly once
 - AND missing, duplicate, or unknown Source IDs MUST block.
+
+#### Scenario: Grouping fields are present
+
+- GIVEN a report needs navigation or `N/A` grouping
+- WHEN it reads source rows
+- THEN `controlDomain`, `corporateSection`, or another source-row category MUST be available.
 
 #### Scenario: PCI alignment is preserved
 
@@ -191,27 +185,9 @@ The canonical JSON catalog MUST own the authoritative exhaustive corporate sourc
 - THEN it MUST cite catalog snapshot/context and applicable category guidance instead of copying all 155 rows
 - AND review-security MUST use the catalog to expand the exhaustive validation universe.
 
-### Requirement: Compact SEC Mapping Coverage
-
-Every corporate source row MUST map to one or more existing compact `SEC-*` guideline IDs. The compact eight-control taxonomy MUST remain the architectural control layer and MUST NOT be replaced by per-source controls.
-
-#### Scenario: Source row maps to compact controls
-
-- GIVEN a Source ID is in the inventory
-- WHEN catalog validation runs
-- THEN it MUST resolve at least one valid compact `SEC-*` mapping
-- AND unknown or missing mappings MUST block.
-
-#### Scenario: Compact taxonomy is preserved
-
-- GIVEN source rows are validated
-- WHEN downstream phases consume the catalog
-- THEN they MUST trace Source ID to compact `SEC-*`
-- AND they MUST NOT create replacement compact controls.
-
 ### Requirement: Safe Source Row Evidence
 
-Source-row evidence MUST be review-safe. Evidence locations and observations MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values. Design MUST state safe-evidence policy for applicable category rules. Canonical `review-security-report.json` MUST justify every `N/A` row.
+Source-row evidence MUST be review-safe and row-preserving. Every `N/A` row MUST keep its own non-applicability decision, justification, evidence type/location, finding, owner phase, and route even when a generated report groups equivalent rows. Evidence MUST NOT include secrets, PII, PAN, tokens, connection strings, private keys, or confidential values.
 
 #### Scenario: Applicable row lacks safe evidence
 
@@ -226,6 +202,12 @@ Source-row evidence MUST be review-safe. Evidence locations and observations MUS
 - WHEN validation reviews the row
 - THEN evidence MUST prove irrelevance
 - AND missing justification MUST block.
+
+#### Scenario: Grouping cannot hide gaps
+
+- GIVEN a grouped `N/A` summary is rendered
+- WHEN any grouped row lacks equivalent justification
+- THEN validation MUST block or split the row from the group.
 
 ### Requirement: Shared Security Contract Source Row Schema
 

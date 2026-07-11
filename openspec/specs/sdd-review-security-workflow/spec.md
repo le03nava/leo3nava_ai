@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the mandatory post-review security evidence gate that parses narrative secure design and exhaustively validates compact controls and corporate Source IDs before verification, while reporting source-row evidence in summary mode by default and full-matrix mode only when explicitly requested for audit.
+Define the mandatory post-review security evidence gate that parses narrative secure design and validates the 155 corporate Source ID rows as the only active security-review matrix before verification.
 
 ## Requirements
 
@@ -26,7 +26,7 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 ### Requirement: Security Review Artifact
 
-`sdd-review-security` MUST persist canonical `review-security-report.json` as the source of truth and derived `review-security-report.md` / `sdd/{change-name}/review-security` as a compatibility view generated from that JSON. The canonical JSON MUST own the machine-readable schema, exhaustive compact and Source ID validation results, `Yes`/`No`/`N/A` decisions, evidence, blockers, exceptions, missed-category validation, coverage metadata, artifact parity/read-back metadata, and next recommendation. It MAY parse narrative category rules from design, but MUST NOT require design YAML, schema, matrices, or machine-readable fields. Source-row validation MUST cover all expected Source IDs; full 155-row materialization is required only when audit/full-matrix mode is explicitly requested.
+`sdd-review-security` MUST persist canonical `review-security-report.json` as the only source of truth and MUST generate derived Markdown from that JSON. The JSON MUST expose `sourceRowValidation.rows` with exactly 155 unique Source ID rows, exact-once coverage, verdict, routing, source refs, blockers, warnings, unsafe evidence rejections, warning carry-forward, and parity/read-back metadata. The active report contract MUST NOT expose compact `SEC-*` controls for validation, navigation, summaries, grouped `N/A`, or metadata.
 
 #### Scenario: Report is persisted
 
@@ -35,6 +35,19 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 - THEN `review-security-report.json` MUST be written and read back first
 - AND derived `review-security-report.md` MUST be generated from JSON, written, read back, and parity-checked
 - AND both artifacts MUST state the same verdict, with JSON authoritative on conflict.
+
+#### Scenario: Report is source-row authoritative
+
+- GIVEN required review inputs are readable
+- WHEN security review completes
+- THEN canonical JSON MUST contain exactly 155 unique `sourceRowValidation.rows`
+- AND derived Markdown MUST be generated from JSON and parity-checked.
+
+#### Scenario: Compact controls are absent
+
+- GIVEN an active security report is produced
+- WHEN validation inspects validation, navigation, summaries, and `N/A` groups
+- THEN no `SEC-*` compact-control contract data MUST be present.
 
 #### Scenario: Embedded secure design is required
 
@@ -45,7 +58,7 @@ The SDD workflow MUST run `sdd-review-security` after non-blocking `sdd-review` 
 
 ### Requirement: Security Matrix Validation
 
-Security review MUST expand the full compact security catalog and validate every compact control and Source ID using `Yes`, `No`, or `N/A`, evidence, observations, and lifecycle status. It MUST decide/report non-applicable rows, compare validation results against narrative design rules, validate missed categories, and block applicable omissions. The report MAY summarize validated Source IDs by section unless audit/full-matrix mode is requested.
+Security review MUST validate every corporate source row exactly once using row fields `sourceId`, `corporateSection`, `pciAlignment`, `guidelineText` or `guidelineRefs`, `controlDomain`, `repoProfiles`, `runtimeSurface`, `dataSurface`, `appliesWhen`, `applies`, `complies`, `lifecycleStatus`, `evidenceType`, `evidenceLocation`, `justification`, `finding`, `ownerPhase`, and `route`. Grouped `N/A` MAY be rendered only by source-row grouping fields and only when equivalent non-applicability remains preserved per row.
 
 #### Scenario: Mandatory evidence is missing
 
@@ -54,12 +67,26 @@ Security review MUST expand the full compact security catalog and validate every
 - THEN the report MUST mark the row `No` and `blocked`
 - AND verify/archive MUST be blocked.
 
+#### Scenario: Exact-once row validation
+
+- GIVEN the catalog defines 155 Source IDs
+- WHEN JSON validation runs
+- THEN missing, duplicate, or unknown Source IDs MUST block
+- AND every row MUST include the required field set.
+
 #### Scenario: Not applicable row is justified
 
 - GIVEN security review marks a guideline or Source ID `N/A`
 - WHEN it validates the row
 - THEN evidence MUST prove irrelevance
 - AND observations MUST explain the scope decision.
+
+#### Scenario: Grouped N/A preserves rows
+
+- GIVEN multiple rows share equivalent non-applicability
+- WHEN the report groups them for humans
+- THEN grouping MUST use `controlDomain`, `corporateSection`, or another source-row category
+- AND each row MUST retain its own `applies`, `justification`, and evidence fields.
 
 #### Scenario: Design omitted an applicable control
 
@@ -81,60 +108,20 @@ Security review MUST NOT replace `sdd-review` or duplicate the 96-control matrix
 
 ### Requirement: Exhaustive Source Row Security Review
 
-`sdd-review-security` MUST be the only active phase that validates the exhaustive corporate source-row universe for a new change. It MUST expand every expected Source ID exactly once and validate rows against catalog inventory, narrative design rules, `test-design.md`, apply evidence, changed files, and canonical `review-report.json`. By default, it MUST write coverage metadata, section-level summaries, focused findings, `N/A` justifications, warnings, exceptions, and blockers in canonical `review-security-report.json` and render Markdown summaries from JSON without duplicating the 96-control matrix. It MUST write the full 155-row matrix only when audit/full-matrix mode is explicitly requested.
+`sdd-review-security` MUST render lean Markdown from canonical JSON with verdict, handoff, navigation/summary by source-row categories, grouped `N/A` summaries, blockers/warnings, and the full 155-row matrix at the end. Markdown MUST NOT duplicate validation logic or reintroduce compact-control sections.
 
-#### Scenario: Complete validation is summarized
+#### Scenario: Lean generated Markdown
 
-- GIVEN design, test-design, apply evidence, changed files, and review report are readable
-- WHEN security review succeeds
-- THEN canonical `review-security-report.json` MUST state `sourceRowExpectedCount`, `sourceRowValidatedCount`, coverage status, catalog snapshot, and section-level coverage
-- AND focused details MUST include blockers, warnings, exceptions, missing evidence, unsafe evidence, and `N/A` justifications that need reviewer attention.
+- GIVEN canonical JSON validates successfully
+- WHEN Markdown is rendered
+- THEN it MUST contain summary/navigation first and the full source-row matrix last
+- AND it MUST NOT contain `## Compact Control Validation`.
 
-#### Scenario: Full matrix is audit-only
+#### Scenario: JSON wins
 
-- GIVEN audit/full-matrix mode is explicitly requested
-- WHEN security review writes source-row evidence
-- THEN canonical `review-security-report.json` MUST validate every expected Source ID exactly once and derived Markdown MUST include every row only when generated in audit/full-matrix mode
-- AND each row MUST show mapping, status, evidence, observations, and finding.
-
-#### Scenario: Design remains selective
-
-- GIVEN design contains narrative changed-surface rationale and applicable category rules
-- WHEN security review expands source rows
-- THEN source-row validation results MUST be written only in canonical `review-security-report.json` and its derived Markdown view
-- AND missed applicable design categories MUST block as contract evidence gaps.
-
-#### Scenario: General review is cited, not duplicated
-
-- GIVEN a general review finding supports a source row
-- WHEN security review records evidence
-- THEN it MAY cite the review-report row
-- AND it MUST NOT reproduce the full 96-control matrix.
-
-### Requirement: Source Row Blocking Rules
-
-Security review MUST block missing, duplicate, or unknown Source IDs during validation; missing compact mappings; malformed report schema; missing artifacts; unsafe evidence; missing `N/A` justification in report evidence; and missed applicable design categories/controls. Design MUST NOT be blocked for lacking YAML, schema, or matrix fields.
-
-#### Scenario: Coverage or schema blocker exists
-
-- GIVEN source-row coverage is incomplete or malformed
-- WHEN security review validates rows
-- THEN the verdict MUST be blocking
-- AND next recommendation MUST be `resolve-blockers`.
-
-#### Scenario: Implementation evidence is missing
-
-- GIVEN a source row applies and remediation requires code or instruction changes
-- WHEN review finds missing implementation evidence
-- THEN the row MUST be blocking
-- AND next recommendation MUST be `apply`.
-
-#### Scenario: Warnings only remain
-
-- GIVEN all mandatory rows have safe evidence and only warnings remain
-- WHEN security review computes routing
-- THEN the verdict MAY be non-blocking
-- AND next recommendation MUST be `verify`.
+- GIVEN Markdown and JSON disagree
+- WHEN downstream consumers resolve security evidence
+- THEN canonical JSON MUST be authoritative.
 
 ### Requirement: Source Row Evidence Correlation
 

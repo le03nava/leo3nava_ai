@@ -5,50 +5,65 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 ## Active Flow Boundary
 
 - Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, canonical `review-report.json` as general-review authority, derived `review-report.md` / `sdd/{change-name}/review` only as compatibility evidence, the canonical operational catalog JSON, the derived human/audit Markdown catalog view when reviewer readability is needed, and shared security contracts.
-- Design and test-design remain narrative/selective inputs. Do not repair them by copying compact matrices, Source IDs, schema blocks, machine-readable applicability fields, or exhaustive `N/A` bookkeeping into those artifacts.
-- `review-security-report.json` is the canonical active artifact that reports compact/source validation results. `review-security-report.md` / `sdd/{change-name}/review-security` is a derived compatibility view generated from that JSON. Source-row validation is exhaustive, but full 155-row materialization is audit-only by default.
+- Design and test-design remain narrative/selective inputs. Do not repair them by copying Source ID matrices, schema blocks, machine-readable applicability fields, or exhaustive non-applicability bookkeeping into those artifacts.
+- `review-security-report.json` is the canonical active artifact. `review-security-report.md` / `sdd/{change-name}/review-security` is a derived compatibility view generated from that JSON.
+- `sourceRowValidation.rows` is the only active security matrix and MUST contain exactly 155 rows.
+- Legacy compact-control data is forbidden in active validation, navigation, summaries, metadata, grouped non-applicability, and derived Markdown.
 - Do not duplicate, recreate, or re-score the general 96-control `sdd-review` matrix; cite canonical `review-report.json` handoff summaries and use Markdown as supporting compatibility evidence only.
 - If canonical security-review JSON and derived Markdown disagree, JSON wins. Mark Markdown stale/parity-failed and route to `resolve-blockers`; downstream phases must not consume stale Markdown as current evidence.
 
-## Compact Control Validation
+## Source Row Coverage Validation
 
 | Rule | Requirement |
 | --- | --- |
-| Exact compact coverage | Validate every compact `SEC-*` guideline from `security-guideline-catalog.operational.json` exactly once. Missing, duplicate, or unknown compact IDs are blocking. |
-| Omission validation | Treat omitted design controls as reviewable decisions. Correlate proposal/specs/changed files/apply/test-design/review evidence to decide whether an omitted category/control is truly irrelevant. Missed applicable omissions are blockers. |
-| Evidence correlation | A row passes only with safe evidence, justified `N/A`, or a complete approved exception. Row presence or design omission alone is not evidence. |
-| Mandatory evidence gaps | Applicable mandatory rows without implementation evidence or complete approved exception are `No` / blocked and route to `apply` when remediation is implementation, prompt, contract, task, or apply-evidence work. |
-| `N/A` decisions | `N/A` requires evidence and rationale proving irrelevance by category, platform, API, data class, workflow, or changed surface. Summary mode may group equivalent `N/A` decisions with counts and ranges/lists; full-matrix mode lists each row individually. Unsupported `N/A` routes to `resolve-blockers`. |
+| Exact source universe | Expand the catalog inventory and validate all 155 expected Source IDs exactly once. Missing, duplicate, or unknown IDs block. |
+| Exact report table | The report table path is `sourceRowValidation.rows`; no parallel security matrix is permitted. |
+| Count consistency | `sourceRowValidation.expectedCount` and `validatedCount` MUST both be `155` for non-blocking reports; `coverageStatus` MUST be `complete`; `exactOnce` MUST be `true`. |
+| Required row fields | Every row MUST include `sourceId`, `corporateSection`, `pciAlignment`, either `guidelineText` or `guidelineRefs`, `controlDomain`, `repoProfiles`, `runtimeSurface`, `dataSurface`, `appliesWhen`, `applies`, `complies`, `lifecycleStatus`, `evidenceType`, `evidenceLocation`, `justification`, `finding`, `ownerPhase`, and `route`. |
+| Source-row grouping | Navigation and grouped non-applicability MAY use only `controlDomain`, `corporateSection`, `repoProfiles`, `runtimeSurface`, or `dataSurface`. |
+| Row values | `applies` and `complies` MUST be `Yes`, `No`, or `N/A`; `finding` MUST be `none`, `blocker`, or `warning`; routes MUST be `verify`, `apply`, or `resolve-blockers`. |
+| Route consistency | Blocking rows route to the owner that can remediate them. A non-blocking report cannot contain unresolved blockers. |
 
-## Corporate Source Row Validation
+## Missing, Duplicate, and Unknown Source IDs
 
-Use this layer as operational security evidence below the compact `SEC-*` layer. Do not promote Source IDs into new compact controls.
+- Missing catalog Source IDs are blockers. The safe error MAY name missing IDs or counts, but MUST NOT echo row evidence payloads.
+- Duplicate Source IDs are blockers. The safe error MAY name the repeated `sourceId` and report exact-once failure.
+- Unknown Source IDs are blockers. Unknown rows never compensate for missing catalog rows.
+- Range notation is catalog-only presentation. Active report rows MUST use concrete dotted Source IDs.
+- Set equality against the catalog may require custom validation beyond JSON Schema; schema success alone is not sufficient evidence.
 
-| Rule | Requirement |
-| --- | --- |
-| Exact source universe | When source-row validation applies, expand the catalog inventory and validate all 155 expected Source IDs exactly once. Missing, duplicate, or unknown IDs block. |
-| Range expansion | Expand dotted ranges only from existing catalog inventory. Do not synthesize Source IDs absent from the snapshot. |
-| Compact mapping | Every Source ID must map to one or more known compact IDs: `SEC-AUTH-001`, `SEC-SESS-001`, `SEC-DATA-001`, `SEC-SECRET-001`, `SEC-ACCESS-001`, `SEC-FILE-001`, `SEC-DB-001`, or `SEC-LOG-001`. Missing or unknown mappings route to `resolve-blockers`. |
-| PCI alignment | Preserve PCI alignment inherited from the catalog corporate section; use `N/A` when the catalog section has no PCI alignment. |
-| Evidence typing | Each row must classify evidence as `implementation-reference`, `static-inspection`, `test-evidence`, `approved-exception`, or `n/a-evidence`. |
-| Owner phase | Each row must state the remediation/carry-forward owner: `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, or `archive`. |
-| Route | Each row route must be `verify`, `apply`, or `resolve-blockers` and must match the finding/remediation owner. |
-| Reviewable shape | Default report shape is summary-first: coverage metadata, section summary, compact controls, and focused details for blockers, warnings, `N/A` justifications, missing evidence, unsafe evidence rejections, and warning carry-forward. Include the full 155-row table only when audit/full-matrix mode is explicitly requested. |
+## Required Field and Vocabulary Validation
 
-## Safe Evidence And Leakage Rules
+- Missing row fields block unless the row carries a complete approved exception for the evidence gap.
+- A row with neither `guidelineText` nor `guidelineRefs` blocks.
+- Empty evidence locations, empty justifications, unknown lifecycle values, unknown evidence types, unknown owner phases, or unknown routes block.
+- Validation errors must cite JSON paths, row IDs, counts, and field names safely. They must not copy unsafe evidence values.
+
+## Safe Evidence and Leakage Rules
 
 - Evidence locations, observations, and summaries cite paths, section refs, changed-file refs, command summaries, sanitized summaries, exact safe placeholders, or redacted placeholders only.
-- Reject raw secrets, credentials, tokens, private keys, connection strings, PAN, PII, confidential values, raw logs/payloads, restricted production identifiers, full ID lists, generated bytes, final-document-only values, and invented operational details in ordinary SDD evidence.
+- Reject raw secrets, credentials, tokens, private keys, connection strings, PAN, PII, confidential values, raw logs/payloads, restricted production identifiers, generated bytes, final-document-only values, and invented operational details in ordinary SDD evidence.
+- Unsafe row evidence MUST be represented through `unsafeEvidenceRejections` plus a safe row finding; do not copy the unsafe value into blockers, warnings, Markdown, logs, or command output.
 - Exact `Pendiente de confirmar:` and exact `No aplica.` are safe marker states. They are not leakage, but they do not replace required safe non-leakage proof when an applicable security obligation exists.
 - Missing tools, missing runtime commands, or unavailable automation are not passing evidence. Report them as unavailable tooling and use allowed static/manual evidence only when the test design permits it.
 
-## Blocking And Routing Decisions
+## Row-Preserving Non-Applicability
+
+| Rule | Requirement |
+| --- | --- |
+| Row-level preservation | Every `N/A` row MUST retain its own `applies`, `complies`, `justification`, `evidenceType`, `evidenceLocation`, `finding`, `ownerPhase`, and `route`. |
+| Grouping fields | Grouped `N/A` summaries MAY group only by source-row fields: `controlDomain`, `corporateSection`, `repoProfiles`, `runtimeSurface`, or `dataSurface`. |
+| Equivalent rationale | Grouping is allowed only when every grouped row has equivalent safe justification and compatible owner/route. Otherwise split the group or block. |
+| No authority transfer | A grouped summary is presentation only and never replaces row-level JSON decisions. |
+| Unsupported `N/A` | Missing justification, unsafe evidence, inconsistent row decisions, or unsupported grouping routes to `resolve-blockers` unless remediation is clearly implementation/apply work. |
+
+## Blocking and Routing Decisions
 
 | Situation | Route |
 | --- | --- |
 | Implementation/security evidence gap requiring file, prompt, contract, task, or apply-evidence work | `next_recommended: apply` |
-| Missing/malformed/unsafe/conflicting context, catalog/schema repair, backend repair, unsupported `N/A`, missing mappings, or unsafe evidence cleanup | `status: blocked`, `next_recommended: resolve-blockers` |
-| Applicable omitted control discovered from narrative design omissions | `apply` when remediation is implementation/evidence work; otherwise `resolve-blockers` |
+| Missing/malformed/unsafe/conflicting context, catalog/schema repair, backend repair, unsupported non-applicability, or unsafe evidence cleanup | `status: blocked`, `next_recommended: resolve-blockers` |
+| Applicable omitted security concern discovered from narrative design omissions | `apply` when remediation is implementation/evidence work; otherwise `resolve-blockers` |
 | Only non-blocking warnings remain and mandatory safe evidence is complete | `status: success`, `next_recommended: verify` |
 | Persistence/read-back fails after producing useful report content | `status: partial`, `next_recommended: resolve-blockers`, with safe recovery details |
 
@@ -58,15 +73,14 @@ Before returning success, verify:
 
 - Canonical JSON schema metadata is present and uses `nextRecommended` only inside artifact metadata.
 - Phase envelope uses snake_case `next_recommended`.
-- Canonical `review-security-report.json` includes schema identity, `changeName`, status/verdict, `nextRecommended`, source refs, general review handoff, compact validation, source-row expected/validated counts, coverage status, blockers, warnings, unsafe evidence rejections, warning carry-forward, and artifact parity/read-back metadata.
-- Derived Markdown is rendered from the canonical JSON, read back, and parity-checked. State/status artifact refs list JSON first with `authority: canonical` and Markdown second with `authority: derived` where authority metadata is supported.
-- Compact coverage is exact once.
-- Source-row validation coverage is exact once when applicable, even when the full matrix is not printed.
-- Summary mode includes expected count, validated count, coverage status, catalog snapshot, section-level coverage, and focused findings.
-- Full matrix mode, when requested, includes every expected Source ID exactly once.
-- Guideline refs, Source IDs, PCI alignment, compact mappings, evidence types, owner phases, findings, routes, and lifecycle/status values use known vocabulary.
-- `Applies` / `Complies` / compact answer values are `Yes`, `No`, or `N/A`.
-- Every `N/A` row has focused justification and safe evidence.
+- Canonical `review-security-report.json` includes schema identity, `changeName`, status/verdict, `nextRecommended`, source refs, catalog refs, general review handoff, `sourceRowValidation.rows`, blockers, warnings, unsafe evidence rejections, warning carry-forward, exceptions, unavailable tooling, and artifact parity/read-back metadata.
+- `sourceRowValidation.rows` contains exactly 155 rows.
+- Source-row coverage is exact once: no missing, duplicate, or unknown Source IDs.
+- Source-row grouping fields only are used for navigation and grouped non-applicability.
+- Every row contains the required fields and vocabulary values.
+- Every `N/A` row has row-level justification and safe evidence.
+- Every grouped `N/A` summary preserves row IDs/counts and does not override row-level JSON.
 - Every exception has complete approved-exception fields from the shared security contract.
 - Safe-evidence rules were enforced.
+- Derived Markdown is rendered from canonical JSON, read back, parity-checked, and renders the full source-row matrix last.
 - Routing is consistent with blockers, warnings, persistence result, and remediation owner.

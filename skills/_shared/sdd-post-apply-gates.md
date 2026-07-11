@@ -9,7 +9,7 @@ This contract centralizes common dependency gates, review-evidence handling, arc
 | Phase | Owns | Consumes | Must not own |
 | --- | --- | --- | --- |
 | `sdd-review` | General applied-change review, canonical `review-report.json`, and derived 96-control `review-report.md` compatibility matrix. | Status, design/test-design/tasks/apply evidence, changed-file context. | Security-review row verdicts, exhaustive compact security matrix, exhaustive Source ID matrix, final runtime verification, Excel/Python/workbook generation. |
-| `sdd-review-security` | Security review, canonical `review-security-report.json`, derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view, compact `SEC-*` validation, and exhaustive Source ID validation. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` for compatibility, narrative secure design, test-design, tasks/apply evidence, changed-file context. | The general 96-control review matrix, final runtime verification, archive readiness. |
+| `sdd-review-security` | Security review, canonical `review-security-report.json`, derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view, and exhaustive `sourceRowValidation.rows` exact-once Source ID validation. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` for compatibility, narrative secure design, test-design, tasks/apply evidence, changed-file context. | The general 96-control review matrix, final runtime verification, archive readiness. |
 | `sdd-verify` | Final implementation/spec/test-design/security evidence verification and `verify-report.md`. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review`, non-blocking security-review evidence with canonical `review-security-report.json` when present plus derived Markdown compatibility view, implementation evidence, runtime/static command evidence. | Reproducing or re-scoring either review matrix, owning exhaustive Source ID rows, fixing implementation. |
 | `sdd-archive` | Final source-of-truth sync, archive move/report, and audit-trail preservation. | Passing `verify-report`, non-blocking review reports, completed tasks/apply evidence, mandatory security evidence, status/action context. | Re-scoring reviews, re-running verification, fixing implementation, or owning review matrices. |
 
@@ -78,7 +78,7 @@ Phase envelopes use snake_case `next_recommended`. Persisted status/state uses c
 ## Review Evidence Consumption
 
 - `sdd-review-security` MUST consume canonical `review-report.json` as authoritative general-review evidence when present and MAY read derived `review-report.md` / `sdd/{change-name}/review` as supporting compatibility evidence only. It MUST NOT duplicate, recreate, or re-score the 96-control matrix.
-- `sdd-review-security` MUST produce canonical `review-security-report.json` first and derived Markdown second. The canonical JSON owns security-review verdict/status, routing, compact/source-row counts, coverage, blocker/warning summaries, unsafe evidence rejections, warning carry-forward, and artifact parity/read-back metadata.
+- `sdd-review-security` MUST produce canonical `review-security-report.json` first and derived Markdown second. The canonical JSON owns security-review verdict/status, routing, source-row counts, exact-once coverage, blocker/warning summaries, unsafe evidence rejections, warning carry-forward, exceptions, evidence refs, and artifact parity/read-back metadata.
 - `sdd-verify` MUST consume exactly one non-blocking general review report identity from the selected backend, including canonical JSON when present plus the derived Markdown compatibility view, and exactly one non-blocking security review report identity from the selected backend, including canonical `review-security-report.json` when present plus derived Markdown compatibility view.
 - `sdd-archive` MUST consume exactly one non-blocking general review report identity from the selected backend, including canonical JSON when present plus the derived Markdown compatibility view, and exactly one non-blocking security review report identity from the selected backend, including canonical `review-security-report.json` when present plus derived Markdown compatibility view, plus a passing verify report.
 - Missing, ambiguous, unreadable, or blocking review evidence blocks dependent phases.
@@ -121,7 +121,7 @@ Archive MUST block on:
 | Missing/unreadable/ambiguous `review-report` | `review` |
 | Blocking general review finding or verdict | `apply` |
 | Missing/unreadable/ambiguous `review-security-report`, missing canonical `review-security-report.json` when expected, or stale/parity-failed derived security Markdown | `review-security` or `resolve-blockers` according to artifact ownership |
-| Blocking security review finding, unresolved source-row blocker, unsafe evidence, unsupported `N/A`, missing mandatory source-row evidence, malformed source-row schema, or missing compact mapping | `apply` or `resolve-blockers` according to remediation ownership |
+| Blocking security review finding, unresolved source-row blocker, unsafe evidence, unsupported `N/A`, missing mandatory source-row evidence, or malformed source-row schema | `apply` or `resolve-blockers` according to remediation ownership |
 | Missing `verify-report` | `verify` |
 | Verify verdict `FAIL`, CRITICAL issue, or non-passing report | `apply` |
 | Missing applicable operational refs, unresolved gaps not carried forward, missing unavailable-tooling notes, or final-document handoff boundary absent when an artifact made them applicable | `apply` or `verify` according to remediation ownership |
@@ -133,7 +133,7 @@ Archive MUST block on:
 ## Matrix Ownership Boundary
 
 - `sdd-review` is the only active owner of the general 96-control review matrix.
-- `sdd-review-security` is the only active owner of exhaustive compact `SEC-*` and 155 Source ID validation. Full Source ID matrix materialization is audit-only unless explicitly requested.
+- `sdd-review-security` is the only active owner of exhaustive 155 Source ID validation in canonical `sourceRowValidation.rows`.
 - `sdd-verify` validates that the review reports are present, non-blocking, internally credible, and consumed as prerequisites. It MUST NOT reproduce or re-score either matrix.
 - `sdd-archive` preserves links, verdicts, warning summaries, exceptions, and audit references only.
 
@@ -142,8 +142,8 @@ Archive MUST block on:
 For corporate source-row changes:
 
 - `sdd-review-security` expands and validates every expected Source ID exactly once, then reports coverage metadata and focused findings by default.
-- `sdd-verify` consumes the security-review source-row verdict, warning summary, catalog snapshot identity/path, expected Source ID count, compact mapping status, safe-evidence status, `N/A` justification status, exceptions, evidence references, blocker absence, and report links.
-- `sdd-archive` preserves source-row coverage summaries, catalog identity/path, exact-once coverage status, compact mappings, warnings, exceptions, safe evidence references, `N/A` evidence/justification status, review-security verdict, verify consumption, and report links.
+- `sdd-verify` consumes the security-review source-row verdict, warning summary, catalog snapshot identity/path, expected and validated Source ID counts, exact-once coverage status, safe-evidence status, `N/A` justification status, exceptions, evidence references, blocker absence, parity metadata, and report links.
+- `sdd-archive` preserves source-row coverage summaries, catalog identity/path, exact-once coverage status, expected and validated counts, warnings, exceptions, safe evidence references, `N/A` evidence/justification status, review-security verdict, verify consumption, parity metadata, and report links.
 - `sdd-verify` and `sdd-archive` block unresolved source-row blockers but do not duplicate the full Source ID matrix.
 - Source-row routing follows `skills/_shared/sdd-security-contract.md#routing-semantics`.
 
