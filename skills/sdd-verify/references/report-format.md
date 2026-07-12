@@ -47,14 +47,16 @@ Mandatory planned cases from `test-design.md` are verification-blocking: uncover
 
 **Compliance summary**: {N}/{total} scenarios compliant
 
-### Security Evidence Matrix
-| Control / Guideline | Expected Evidence | Observed Evidence | Result |
-|---------------------|-------------------|-------------------|--------|
-| `{guideline-id or control}` | {design-control / implementation-reference / test-design-check / verification-evidence / approved-exception} | {file, command, report row, or complete exception} | ✅ COMPLIANT |
-| `{mandatory guideline}` | {required evidence} | (none found) | ❌ UNTESTED |
-| `{guideline with exception}` | approved-exception | {approver, approvedAt, rationale, mitigation/follow-up, evidenceGap} | ✅ COMPLIANT |
+### Security Review Summary
 
-**Security evidence summary**: {N}/{mandatory_total} mandatory security controls covered; {M} complete approved exceptions; {K} blockers.
+Consumed from `review-security-report.md` / canonical `review-security-report.json`. Do not reproduce the full 155-row matrix.
+
+| Control Domain | Passing/Total | Blockers |
+| --- | --- | --- |
+| {control-domain} | {N}/{total} | {count or 0} |
+
+**Overall**: {totals.passing}/{totals.sourceRowCount} passing · {totals.blockers} blockers · {totals.warnings} warnings · {totals.exceptions} exceptions
+**Source**: `{review-security-report path}` — verdict: {PASS / PASS WITH WARNINGS / FAIL}
 
 ### Test-Design Coverage Matrix
 | Case ID | Source | Severity | Expected Evidence | Observed Evidence | Result |

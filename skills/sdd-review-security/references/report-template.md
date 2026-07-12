@@ -15,6 +15,7 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 | `## Unavailable Tooling` | `unavailableTooling[]` |
 | `## Exceptions` | `exceptions[]` |
 | `## Artifact Metadata` | `artifactMetadata` |
+| `## Security Review Summary` | `rows[]` grouped by catalog `controlDomain` (join by `sourceId`); `totals` |
 | `## Recommendation` | `verdict`, `nextRecommended`, `totals.blockers` |
 | `## Matrix` | `rows[]` joined with catalog `sourceRows[]` by `sourceId` |
 
@@ -75,6 +76,30 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 | JSON/Markdown parity | `{artifactMetadata.parityStatus}` |
 | JSON authority | canonical |
 | Markdown authority | derived |
+
+## Security Review Summary
+
+Summary by control domain. Derived from `rows[]` joined with catalog `controlDomain` by `sourceId`. Passing = rows where `complies: Yes` or `lifecycleStatus: not-applicable` or `lifecycleStatus: exception-approved`. Blockers = rows where `finding: blocker`.
+
+| Control Domain | Passing/Total | Blockers |
+| --- | --- | --- |
+| authorization-access-control | `{N}/{total}` | `{count or 0}` |
+| credential-secrets | `{N}/{total}` | `{count or 0}` |
+| cryptography-data-protection | `{N}/{total}` | `{count or 0}` |
+| database-access | `{N}/{total}` | `{count or 0}` |
+| file-handling | `{N}/{total}` | `{count or 0}` |
+| identity-authentication | `{N}/{total}` | `{count or 0}` |
+| input-validation | `{N}/{total}` | `{count or 0}` |
+| memory-safety | `{N}/{total}` | `{count or 0}` |
+| observability-logging | `{N}/{total}` | `{count or 0}` |
+| output-encoding | `{N}/{total}` | `{count or 0}` |
+| pan-test-data | `{N}/{total}` | `{count or 0}` |
+| safe-error-handling | `{N}/{total}` | `{count or 0}` |
+| secure-coding | `{N}/{total}` | `{count or 0}` |
+| sensitive-data-protection | `{N}/{total}` | `{count or 0}` |
+| session-management | `{N}/{total}` | `{count or 0}` |
+
+**Overall**: `{totals.passing}/{totals.sourceRowCount}` passing · `{totals.blockers}` blockers · `{totals.warnings}` warnings · `{totals.exceptions}` exceptions
 
 ## Recommendation
 

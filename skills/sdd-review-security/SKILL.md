@@ -1,6 +1,6 @@
 ---
 name: sdd-review-security
-description: "Validate embedded secure-design evidence and persist canonical source-row-first review-security-report.json plus derived Markdown. Trigger: orchestrator launches review-security in parallel with sdd-review, after sdd-apply."
+description: "Validate embedded secure-design evidence and persist canonical source-row-first review-security-report.json plus derived Markdown. Trigger: orchestrator launches review-security after non-blocking sdd-review."
 disable-model-invocation: true
 user-invocable: false
 license: MIT
@@ -19,7 +19,7 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 ## Activation Contract
 
-Run in parallel with `sdd-review`, after `sdd-apply` completes implementation work, and before `sdd-verify`. Validate narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, and changed-file context against the source-row catalog. Does not depend on or consume `sdd-review` output.
+Run after a non-blocking `sdd-review` and before `sdd-verify`. Validate narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, and general review evidence against the source-row catalog. General review evidence is canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` for compatibility; JSON is authoritative on conflict.
 
 Persist two coordinated owned artifacts: canonical `review-security-report.json` plus derived Markdown compatibility view `review-security-report.md` / `sdd/{change-name}/review-security`.
 
@@ -48,7 +48,7 @@ Follow the shared contracts instead of duplicating their rules:
 | JSON schema | `references/review-security-report.schema.json` is the canonical source-row-first per-change security-review report contract. |
 | Markdown presentation | `references/report-template.md` is the derived Markdown compatibility presentation generated from canonical JSON. |
 | Detailed validation rules | `references/validation-rules.md`; load only after readiness gates pass and row validation is needed. |
-| Required inputs | Structured status; narrative `design.md#secure-development-design`; tasks/apply evidence; changed-file context; `test-design.md`; security catalog; shared security contract. |
+| Required inputs | Structured status; narrative `design.md#secure-development-design`; non-blocking general review evidence from the selected backend; tasks/apply evidence; changed-file context; `test-design.md`; security catalog; shared security contract. |
 | Produced artifact | Canonical `sdd/{change-name}/review-security-report.json` plus derived `sdd/{change-name}/review-security` in Engram/hybrid mode, or canonical `openspec/changes/{change-name}/review-security-report.json` plus derived `openspec/changes/{change-name}/review-security-report.md` in OpenSpec mode. |
 | Mutates | None outside the produced security review report artifacts. |
 | JSON authority | Build, validate, persist, and read back canonical JSON first. Render Markdown only from that JSON; Markdown never wins on conflict. |
@@ -62,6 +62,7 @@ Follow the shared contracts instead of duplicating their rules:
 | --- | --- |
 | Shared post-apply, safe-evidence, dependency, or persistence gate fails | Follow `skills/_shared/sdd-post-apply-gates.md`; keep verify/archive unavailable. |
 | Embedded `design.md#secure-development-design` is missing | Return `blocked` with `next_recommended: resolve-blockers`. |
+| General review evidence is missing, unreadable, ambiguous, blocking, missing canonical JSON when expected, or has stale/parity-failed Markdown | Return `blocked`/route per `sdd-post-apply-gates.md`; do not recreate general review or treat Markdown as authoritative over JSON. |
 | Security-review JSON and Markdown disagree after rendering/read-back | JSON wins; mark Markdown stale/parity-failed, return `blocked` or `partial` with `next_recommended: resolve-blockers`, and do not let downstream phases consume stale Markdown. |
 | New-change evidence requires YAML/schema/matrices in design or all-row design non-applicability bookkeeping | Treat as invalid for the active flow; validate from narrative design, catalog, and artifact evidence. |
 | Source ID rows are missing, duplicated, unknown, malformed, unsafe, unsupported, or have unsupported non-applicability | Persist no passing report; return `blocked` with `next_recommended: resolve-blockers` unless remediation clearly belongs to `apply`. |
@@ -75,19 +76,19 @@ Follow the shared contracts instead of duplicating their rules:
 
 1. Load supplemental skills via `skills/_shared/skill-resolver.md` and `sdd-phase-common.md` Section A.
 2. Apply common post-apply gates; resolve/read required inputs from the selected backend or explicit `contextFiles`.
-3. Confirm embedded secure design exists and apply-progress is present from the selected backend.
+3. Confirm embedded secure design exists and selected-backend general review evidence is non-blocking. Consume canonical `review-report.json` as authoritative when present; use derived Markdown only for compatibility summaries, section anchors, and handoff text.
 4. Load `references/validation-rules.md` after readiness passes, then parse narrative secure-design classification, applicable category rules, evidence expectations, exceptions, residual risks, safe-evidence policy, and omitted categories. Do not require design YAML/schema/matrices.
 5. Expand the catalog Source ID inventory and validate `sourceRowValidation.rows` against the detailed validation reference.
 6. Validate missing, duplicate, and unknown Source IDs; required row fields; row-level non-applicability justification; route/finding consistency; safe evidence; warning carry-forward; and exception completeness.
 7. Validate operational evidence leakage boundaries when operational evidence exists; preserve exact safe placeholders while rejecting unsafe evidence.
-8. Build canonical `review-security-report.json` with schema identity, `changeName`, verdict/status, `nextRecommended`, source refs, catalog refs, `sourceRowValidation.rows`, blockers, warnings, unsafe evidence rejections, warning carry-forward, exceptions, unavailable tooling, and artifact parity/read-back metadata.
-9. Validate JSON before Markdown rendering: required fields present, exactly 155 rows, exact-once Source IDs, source-row grouping fields only, safe-evidence rules checked, non-applicability/exception completeness, and routing/counts match verdict.
-10. Render derived Markdown from canonical JSON using `references/report-template.md`; include lean navigation first and the full 155-row matrix last.
+8. Build canonical `review-security-report.json` with schema identity, `changeName`, verdict/status, `nextRecommended`, source refs, general review handoff, catalog refs, `sourceRowValidation.rows`, blockers, warnings, unsafe evidence rejections, warning carry-forward, exceptions, unavailable tooling, and artifact parity/read-back metadata.
+9. Validate JSON before Markdown rendering: required fields present, exactly 155 rows, exact-once Source IDs, source-row grouping fields only, safe-evidence rules checked, non-applicability/exception completeness, general review handoff cites canonical `review-report.json`, and routing/counts match verdict.
+10. Render derived Markdown from canonical JSON using `references/report-template.md`; include lean navigation first, then `## Security Review Summary` (grouped by `controlDomain`, derived from `rows[]` joined with catalog by `sourceId`), and the full 155-row matrix last.
 11. Persist and read back canonical JSON first, then derived Markdown, compare parity metadata, and register both artifacts in state/status handoff with JSON first using `authority: canonical` and Markdown second using `authority: derived`.
 
 ## Output Contract
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Security Review Report Summary` in `detailed_report` with change, inputs inspected, verdict, canonical JSON ref, derived Markdown ref, source-row counts, blockers, non-blockers, operational evidence leakage verdict when evidence exists, placeholder safety notes, source-row ownership validation, safe-evidence notes, unavailable tooling, artifact parity/read-back metadata, and next route. The `artifacts` array MUST list canonical JSON before derived Markdown; use notes such as `authority: canonical` and `authority: derived` until the shared envelope supports a dedicated authority field.
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `## Security Review Report Summary` in `detailed_report` with change, inputs inspected, verdict, canonical JSON ref, derived Markdown ref, source-row counts, blockers, non-blockers, operational evidence leakage verdict when evidence exists, placeholder safety notes, source-row ownership validation, safe-evidence notes, unavailable tooling, artifact parity/read-back metadata, security review summary by control domain (passing/total + blockers per domain, lifted from the rendered `## Security Review Summary` section), and next route. The `artifacts` array MUST list canonical JSON before derived Markdown; use notes such as `authority: canonical` and `authority: derived` until the shared envelope supports a dedicated authority field.
 
 ## Routing Contract
 
@@ -99,10 +100,10 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 ## Rules
 
-- ALWAYS run in parallel with `sdd-review`, after `sdd-apply`, and before `sdd-verify` for new changes.
+- ALWAYS run after non-blocking `sdd-review` and before `sdd-verify` for new changes.
 - ALWAYS require narrative `design.md#secure-development-design` for active new changes.
 - NEVER require design/test-design to materialize Source IDs, schema fields, YAML/JSON, or exhaustive non-applicability rows.
-- NEVER consume, duplicate, recreate, or re-score the 96-control general review matrix. This phase is independent of `sdd-review` output.
+- NEVER duplicate, recreate, or re-score the 96-control general review matrix; consume canonical `review-report.json` as handoff evidence and use Markdown only as compatibility.
 - ALWAYS treat canonical `review-security-report.json` as the security-review source of truth. Derived Markdown exists for human/downstream compatibility only.
 - Source-row presence alone is not compliance evidence; each row needs safe corroborating evidence, justified non-applicability, or complete approved exception.
 - Return `next_recommended: verify` only for non-blocking security-review verdicts.
