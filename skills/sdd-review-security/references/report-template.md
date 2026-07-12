@@ -9,97 +9,60 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 | Markdown Section | Source JSON Field(s) |
 | --- | --- |
 | `# Review Security Report: {Change Title}` | `changeName` |
-| `## Verdict` | `changeName`, `status`, `verdict`, blocker/warning counts, `nextRecommended` |
-| `## Source References` | `sourceRefs`, `catalogRefs` |
-| `## General Review Handoff` | `generalReviewHandoff` |
-| `## Source Row Navigation` | `sourceRowValidation.groupingFields`, `sourceRowValidation.navigationSummary` |
-| `## Source Row Summary` | `sourceRowValidation.expectedCount`, `validatedCount`, `coverageStatus`, `exactOnce` |
-| `## Grouped Non-Applicability` | `sourceRowValidation.groupedNaSummaries` |
-| `## Blockers and Warnings` | `blockers[]`, `warnings[]`, `unsafeEvidenceRejections[]`, `warningCarryForward[]` |
-| `## Exceptions` | `exceptions[]` |
+| `## Verdict` | `changeName`, `status`, `verdict`, `nextRecommended`, `artifactMetadata.canonicalJsonRef` |
+| `## Totals` | `totals` |
+| `## General Review Reference` | `generalReviewRef` |
 | `## Unavailable Tooling` | `unavailableTooling[]` |
+| `## Exceptions` | `exceptions[]` |
 | `## Artifact Metadata` | `artifactMetadata` |
-| `## Recommendation` | `verdict`, `nextRecommended`, blockers/warnings |
-| `## Full Source Row Matrix` | `sourceRowValidation.rows` |
+| `## Recommendation` | `verdict`, `nextRecommended`, `totals.blockers` |
+| `## Matrix` | `rows[]` joined with catalog `sourceRows[]` by `sourceId` |
 
 ## Required Structure
 
 ````markdown
-# Review Security Report: {Change Title}
+# Review Security Report: {changeName}
 
 ## Verdict
 
 | Field | Value |
 | --- | --- |
-| Change | `{change-name}` |
+| Change | `{changeName}` |
 | Status | success \| blocked \| partial |
 | Verdict | PASS \| PASS WITH WARNINGS \| FAIL |
-| Blocking findings | {blockerCount} |
-| Non-blocking warnings | {warningCount} |
 | Next recommendation | verify \| apply \| resolve-blockers |
-| JSON authority | `{review-security-report.json ref}` |
+| JSON authority | `{artifactMetadata.canonicalJsonRef}` |
 | Markdown authority | derived compatibility view |
 
-## Source References
+## Totals
 
-- Secure design: `{sourceRefs.secureDesign}`
-- Test design: `{sourceRefs.testDesign}`
-- Tasks/apply evidence: `{sourceRefs.tasks}`, `{sourceRefs.applyProgress}`
-- Changed-file context: `{sourceRefs.changedFiles}`
-- General review JSON: `{generalReviewHandoff.canonicalJsonRef}`
-- General review Markdown compatibility: `{generalReviewHandoff.derivedMarkdownRef}`
-- Catalog JSON: `{catalogRefs.operationalJson}` snapshot `{catalogRefs.snapshotId}`
-- Catalog human view: `{catalogRefs.humanMarkdown}`
+| Metric | Value |
+| --- | --- |
+| Total source rows (155) | `{totals.sourceRowCount}` |
+| Validated | `{totals.validated}` |
+| Passing | `{totals.passing}` |
+| Failing | `{totals.failing}` |
+| N/A | `{totals.notApplicable}` |
+| Blockers | `{totals.blockers}` |
+| Warnings | `{totals.warnings}` |
+| Exceptions | `{totals.exceptions}` |
 
-## General Review Handoff
+## General Review Reference
 
-{Render `generalReviewHandoff` verdict, non-blocking state, relevant security/operational handoff summaries, and source refs only. Do not duplicate or re-score the 96-control general review matrix. Canonical `review-report.json` is authoritative; Markdown is compatibility only.}
-
-## Source Row Navigation
-
-Render navigation from source-row grouping fields only: `controlDomain`, `corporateSection`, `repoProfiles`, `runtimeSurface`, and/or `dataSurface`.
-
-| Grouping field | Value | Expected | Validated | Blockers | Warnings | N/A | Notes |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| `controlDomain` | `file-handling` | 12 | 12 | 0 | 0 | 12 | Safe summary |
-
-## Source Row Summary
-
-Expected Source ID count: `{sourceRowValidation.expectedCount}`. Validated Source ID count: `{sourceRowValidation.validatedCount}`. Coverage: `{sourceRowValidation.coverageStatus}`. Exact once: `{sourceRowValidation.exactOnce}`.
-
-## Grouped Non-Applicability
-
-Grouped summaries are generated from row-level JSON only. Each grouped row must still retain its own `applies`, `complies`, `justification`, `evidenceType`, `evidenceLocation`, `finding`, `ownerPhase`, and `route` under `sourceRowValidation.rows`.
-
-| Grouping Field | Group | Source IDs / Count | Justification | Evidence Type | Evidence Location | Owner Phase | Route |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `corporateSection` | `7. Session Management` | `{row ids/count}` | Safe shared rationale | `n/a-evidence` | `path#section` | review-security | verify |
-
-## Blockers and Warnings
-
-### Blockers
-
-{Rows with `finding = blocker`, grouped by route and owner phase. Include safe evidence and required action. Use "None" when empty.}
-
-### Warnings
-
-{Rows with `finding = warning`, grouped by risk and carry-forward owner. Use "None" when empty.}
-
-### Unsafe Evidence Rejections
-
-{Rows where evidence was rejected because it exposed or attempted to expose secrets, credentials, PAN, PII, tokens, connection strings, private keys, raw logs, generated bytes, or confidential values. Use "None" when empty. Do not copy unsafe values.}
-
-### Warning Carry-Forward
-
-{Non-blocking source-row warnings that must remain visible to `sdd-verify` and archive, with report links and owner phase. Use "None" when empty.}
-
-## Exceptions
-
-{Complete approved exceptions or "None".}
+- General review JSON: `{generalReviewRef}`
+- (Consumed as handoff authority; not re-scored here)
 
 ## Unavailable Tooling
 
-{Runtime test/lint/type/format/coverage unavailable evidence when applicable; missing tools are not passing evidence.}
+{List from `unavailableTooling[]` or "None"}
+
+## Exceptions
+
+| Source ID | Approver | Approved At | Accepted Risk | Mitigation | Evidence Gap |
+| --- | --- | --- | --- | --- | --- |
+| `{sourceId}` | `{approver}` | `{approvedAt}` | `{acceptedRiskRationale}` | `{mitigationOrFollowUp}` | `{evidenceGap}` |
+
+(or "None")
 
 ## Artifact Metadata
 
@@ -107,33 +70,36 @@ Grouped summaries are generated from row-level JSON only. Each grouped row must 
 | --- | --- |
 | Canonical JSON ref | `{artifactMetadata.canonicalJsonRef}` |
 | Derived Markdown ref | `{artifactMetadata.derivedMarkdownRef}` |
-| JSON persisted/read back | `{artifactMetadata.jsonPersisted}` / `{artifactMetadata.jsonReadBack}` |
-| Markdown generated/read back | `{artifactMetadata.markdownGenerated}` / `{artifactMetadata.markdownReadBack}` |
+| JSON persisted / read back | `{artifactMetadata.jsonPersisted}` / `{artifactMetadata.jsonReadBack}` |
+| Markdown generated / persisted / read back | `{artifactMetadata.markdownGenerated}` / `{artifactMetadata.markdownPersisted}` / `{artifactMetadata.markdownReadBack}` |
 | JSON/Markdown parity | `{artifactMetadata.parityStatus}` |
 | JSON authority | canonical |
 | Markdown authority | derived |
 
 ## Recommendation
 
-- Next recommendation: `{nextRecommended}`
-- Follow-up: {route-specific summary}
+- Next: `{nextRecommended}`
+- {route-specific follow-up text}
 
-## Full Source Row Matrix
+## Matrix
 
-The full 155-row source matrix is rendered last from `sourceRowValidation.rows`.
+Full 155-row table rendered last. Join `rows[].sourceId` with catalog `sourceRows[].sourceId` to get Corporate Section, Control Domain, PCI Alignment, Guideline, and Applies When columns.
 
-| Source ID | Corporate Section | Control Domain | PCI Alignment | Guideline Ref/Text | Applies When | Applies | Complies | Lifecycle Status | Evidence Type | Evidence Location | Justification | Finding | Owner Phase | Route |
+| Source ID | Corporate Section | Control Domain | PCI Alignment | Guideline | Applies When | Applies | Complies | Lifecycle Status | Evidence Type | Evidence Location | Justification | Finding | Owner Phase | Route |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `1.1` | `1. Authentication` | `identity-authentication` | `PCI Req ...` | `catalog ref or safe text` | Safe applicability summary | Yes/No/N/A | Yes/No/N/A | `implemented`/... | `implementation-reference`/... | `path#section` | Safe rationale | none/blocker/warning | apply/review-security/verify | verify/apply/resolve-blockers |
+| `{sourceId}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | Yes/No/N/A | Yes/No/N/A | `{lifecycleStatus}` | `{evidenceType}` | `{evidenceLocation}` | `{justification}` | none/blocker/warning | `{ownerPhase}` | `{route}` |
 ````
 
-## Rendering Rules
+## Matrix Rules
 
-- Render Markdown only from canonical JSON.
-- Do not define independent validation logic in Markdown.
-- Use source-row grouping fields only for navigation and grouped non-applicability.
-- Every grouped non-applicability summary must preserve row-level decisions in JSON.
-- Evidence must be review-safe: cite paths, sections, summaries, command outcomes, or redacted placeholders only.
-- Render the full 155-row matrix as the final major content section.
-- Rendered Markdown MUST be read back and compared to `review-security-report.json` for verdict/routing/counts, source-row coverage counts, blocker/warning counts, source refs, exceptions, unavailable tooling, and artifact parity metadata.
-- Any Markdown generation, persistence, read-back, or JSON parity failure MUST route to `resolve-blockers`; downstream phases must not consume stale Markdown.
+- Table header must match exactly; 155 rows required, all source IDs exactly once
+- `applies` and `complies` must be Yes, No, or N/A
+- N/A rows require non-empty justification and evidenceLocation
+- Rows with `finding=blocker` make verdict FAIL unless `lifecycleStatus=exception-approved`
+- Rendered Markdown must be read back and compared to JSON for verdict/routing/counts and source-row coverage
+
+## Safe Evidence Rules
+
+- Evidence may cite paths, section anchors, sanitized summaries, command outcomes, and redacted placeholders only
+- Must not include secrets, credentials, tokens, connection strings, PAN, PII, raw logs, sensitive payloads, production identifiers, generated bytes, or final-document-only values
+- Missing runtime tooling is recorded in `unavailableTooling[]`, never as passing evidence

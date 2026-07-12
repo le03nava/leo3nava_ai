@@ -7,7 +7,7 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 - Validate active changes from narrative `design.md#secure-development-design`, `test-design.md`, tasks/apply evidence, changed-file context, canonical `review-report.json` as general-review authority, derived `review-report.md` / `sdd/{change-name}/review` only as compatibility evidence, the canonical operational catalog JSON, the derived human/audit Markdown catalog view when reviewer readability is needed, and shared security contracts.
 - Design and test-design remain narrative/selective inputs. Do not repair them by copying Source ID matrices, schema blocks, machine-readable applicability fields, or exhaustive non-applicability bookkeeping into those artifacts.
 - `review-security-report.json` is the canonical active artifact. `review-security-report.md` / `sdd/{change-name}/review-security` is a derived compatibility view generated from that JSON.
-- `sourceRowValidation.rows` is the only active security matrix and MUST contain exactly 155 rows.
+- `rows[]` is the only active security matrix and MUST contain exactly 155 rows.
 - Legacy compact-control data is forbidden in active validation, navigation, summaries, metadata, grouped non-applicability, and derived Markdown.
 - Do not duplicate, recreate, or re-score the general 96-control `sdd-review` matrix; cite canonical `review-report.json` handoff summaries and use Markdown as supporting compatibility evidence only.
 - If canonical security-review JSON and derived Markdown disagree, JSON wins. Mark Markdown stale/parity-failed and route to `resolve-blockers`; downstream phases must not consume stale Markdown as current evidence.
@@ -17,10 +17,9 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 | Rule | Requirement |
 | --- | --- |
 | Exact source universe | Expand the catalog inventory and validate all 155 expected Source IDs exactly once. Missing, duplicate, or unknown IDs block. |
-| Exact report table | The report table path is `sourceRowValidation.rows`; no parallel security matrix is permitted. |
-| Count consistency | `sourceRowValidation.expectedCount` and `validatedCount` MUST both be `155` for non-blocking reports; `coverageStatus` MUST be `complete`; `exactOnce` MUST be `true`. |
-| Required row fields | Every row MUST include `sourceId`, `corporateSection`, `pciAlignment`, either `guidelineText` or `guidelineRefs`, `controlDomain`, `repoProfiles`, `runtimeSurface`, `dataSurface`, `appliesWhen`, `applies`, `complies`, `lifecycleStatus`, `evidenceType`, `evidenceLocation`, `justification`, `finding`, `ownerPhase`, and `route`. |
-| Source-row grouping | Navigation and grouped non-applicability MAY use only `controlDomain`, `corporateSection`, `repoProfiles`, `runtimeSurface`, or `dataSurface`. |
+| Exact report table | The report table path is `rows[]`; no parallel security matrix is permitted. |
+| Count consistency | `totals.sourceRowCount` (const 155) and `totals.validated` MUST both be `155` for non-blocking reports. |
+| Required row fields | Every row MUST include `sourceId`, `applies`, `complies`, `lifecycleStatus`, `evidenceType`, `evidenceLocation`, `justification`, `finding`, `ownerPhase`, and `route`. Catalog fields (`corporateSection`, `pciAlignment`, `guidelineText`, `controlDomain`, `repoProfiles`, `runtimeSurface`, `dataSurface`, `appliesWhen`) are joined from the catalog at render time. |
 | Row values | `applies` and `complies` MUST be `Yes`, `No`, or `N/A`; `finding` MUST be `none`, `blocker`, or `warning`; routes MUST be `verify`, `apply`, or `resolve-blockers`. |
 | Route consistency | Blocking rows route to the owner that can remediate them. A non-blocking report cannot contain unresolved blockers. |
 
@@ -35,7 +34,6 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 ## Required Field and Vocabulary Validation
 
 - Missing row fields block unless the row carries a complete approved exception for the evidence gap.
-- A row with neither `guidelineText` nor `guidelineRefs` blocks.
 - Empty evidence locations, empty justifications, unknown lifecycle values, unknown evidence types, unknown owner phases, or unknown routes block.
 - Validation errors must cite JSON paths, row IDs, counts, and field names safely. They must not copy unsafe evidence values.
 
@@ -46,16 +44,6 @@ Detailed runtime rules for `sdd-review-security`. Load this file only after requ
 - Unsafe row evidence MUST be represented through `unsafeEvidenceRejections` plus a safe row finding; do not copy the unsafe value into blockers, warnings, Markdown, logs, or command output.
 - Exact `Pendiente de confirmar:` and exact `No aplica.` are safe marker states. They are not leakage, but they do not replace required safe non-leakage proof when an applicable security obligation exists.
 - Missing tools, missing runtime commands, or unavailable automation are not passing evidence. Report them as unavailable tooling and use allowed static/manual evidence only when the test design permits it.
-
-## Row-Preserving Non-Applicability
-
-| Rule | Requirement |
-| --- | --- |
-| Row-level preservation | Every `N/A` row MUST retain its own `applies`, `complies`, `justification`, `evidenceType`, `evidenceLocation`, `finding`, `ownerPhase`, and `route`. |
-| Grouping fields | Grouped `N/A` summaries MAY group only by source-row fields: `controlDomain`, `corporateSection`, `repoProfiles`, `runtimeSurface`, or `dataSurface`. |
-| Equivalent rationale | Grouping is allowed only when every grouped row has equivalent safe justification and compatible owner/route. Otherwise split the group or block. |
-| No authority transfer | A grouped summary is presentation only and never replaces row-level JSON decisions. |
-| Unsupported `N/A` | Missing justification, unsafe evidence, inconsistent row decisions, or unsupported grouping routes to `resolve-blockers` unless remediation is clearly implementation/apply work. |
 
 ## Blocking and Routing Decisions
 
@@ -73,13 +61,12 @@ Before returning success, verify:
 
 - Canonical JSON schema metadata is present and uses `nextRecommended` only inside artifact metadata.
 - Phase envelope uses snake_case `next_recommended`.
-- Canonical `review-security-report.json` includes schema identity, `changeName`, status/verdict, `nextRecommended`, source refs, catalog refs, general review handoff, `sourceRowValidation.rows`, blockers, warnings, unsafe evidence rejections, warning carry-forward, exceptions, unavailable tooling, and artifact parity/read-back metadata.
-- `sourceRowValidation.rows` contains exactly 155 rows.
+- Canonical `review-security-report.json` includes `schemaName`, `changeName`, `status`, `verdict`, `nextRecommended`, `totals`, `catalogRef`, `catalogSnapshotId`, `unavailableTooling`, `generalReviewRef`, `rows[]` (exactly 155), `exceptions[]`, and `artifactMetadata`.
+- `rows[]` contains exactly 155 rows.
 - Source-row coverage is exact once: no missing, duplicate, or unknown Source IDs.
-- Source-row grouping fields only are used for navigation and grouped non-applicability.
+- Matrix is rendered via join of `rows[].sourceId` with catalog `sourceRows[].sourceId`; no grouping metadata is stored in the report.
 - Every row contains the required fields and vocabulary values.
 - Every `N/A` row has row-level justification and safe evidence.
-- Every grouped `N/A` summary preserves row IDs/counts and does not override row-level JSON.
 - Every exception has complete approved-exception fields from the shared security contract.
 - Safe-evidence rules were enforced.
 - Derived Markdown is rendered from canonical JSON, read back, parity-checked, and renders the full source-row matrix last.
