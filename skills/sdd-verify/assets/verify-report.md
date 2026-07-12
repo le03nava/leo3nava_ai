@@ -47,6 +47,16 @@ Mandatory planned cases from `test-design.md` are verification-blocking: uncover
 
 **Compliance summary**: {N}/{total} scenarios compliant
 
+### General Review Summary
+
+Consumed from `review-report.md` / canonical `review-report.json`. Do not reproduce the full 96-control matrix.
+
+**Verdict**: {PASS / PASS WITH WARNINGS / FAIL}
+**Blocking failures**: {N} · **Non-blocking findings**: {N}
+**Catalog**: `{review-control-catalog path}` — {N}/96 controls evaluated
+**Top blocking findings**: {list or None}
+**Source**: `{review-report path}`
+
 ### Security Review Summary
 
 Consumed from `review-security-report.md` / canonical `review-security-report.json`. Do not reproduce the full 155-row matrix.
