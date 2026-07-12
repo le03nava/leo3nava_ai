@@ -97,6 +97,7 @@ Use this resolver whenever checking dependencies, launching sub-agents, validati
 | Design | `sdd/{change-name}/design` | `openspec/changes/{change-name}/design.md` | Both | Inline phase result only |
 | Security design (historical/read-only) | `sdd/{change-name}/security-design` | `openspec/changes/{change-name}/security-design.md` | Both | Historical data only when already present; no active phase output |
 | Test design | `sdd/{change-name}/test-design` | `openspec/changes/{change-name}/test-design.md` | Both | Inline phase result only |
+| Test cases | `sdd/{change-name}/test-cases` | `openspec/changes/{change-name}/test-cases.json` | Both; apply Hybrid Conflict Policy | Inline phase result only |
 | Tasks | `sdd/{change-name}/tasks` | `openspec/changes/{change-name}/tasks.md` | Both | Inline phase result only |
 | Apply progress | `sdd/{change-name}/apply-progress` | `openspec/changes/{change-name}/tasks.md` checkbox state plus status evidence | Both; merge without dropping either side | Current conversation evidence only |
 | Review report | Canonical JSON: `sdd/{change-name}/review-report.json`; derived Markdown compatibility view: `sdd/{change-name}/review` | Canonical JSON: `openspec/changes/{change-name}/review-report.json`; derived Markdown compatibility file: `openspec/changes/{change-name}/review-report.md` | Both canonical JSON refs plus both derived Markdown refs; apply Hybrid Conflict Policy | Inline phase result only; include canonical JSON facts and derived Markdown view when needed for human/downstream compatibility |
@@ -305,3 +306,4 @@ Persistence-specific reminders retained here:
 - Every persistent SDD artifact write must follow the selected mode and pass read-back verification before a phase reports `status: success`.
 - For automated SDD artifacts saved to Engram, use `capture_prompt: false` when the tool schema supports it; omit the field rather than failing on older schemas.
 - Recovery fallback for `test-design`: if persisted state says design is complete but `artifactRefs.testDesign` is empty, resolve the artifact directly from `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md`. If it is still missing, continuation must recommend `test-design` / `sdd-test-design` before launching `sdd-tasks`.
+- Recovery fallback for `test-cases`: if persisted state says test-design is complete but `artifactRefs.testCases` is empty, resolve the artifact directly from `sdd/{change-name}/test-cases` or `openspec/changes/{change-name}/test-cases.json`.

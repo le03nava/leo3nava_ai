@@ -37,10 +37,10 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, mandatory `test-design`, delivery context, and testing capabilities from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
+| Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, mandatory `test-cases.json` (canonical) and `test-design.md` (derived), delivery context, and testing capabilities from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | `sdd/{change-name}/tasks` or `openspec/changes/{change-name}/tasks.md`. |
 | Mutates | None outside the produced tasks artifact. |
-| Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-design.md`; omitted mandatory planned cases are blockers. |
+| Test-design consumption | Tasks must derive implementation, testing, static/manual evidence, validation-metadata checks, verification, and warning work from `test-cases.json` (canonical) and `test-design.md` (derived); omitted mandatory planned cases are blockers. |
 | Security consumption | Applicable narrative security rules, review-security expectations, and evidence expectations from `design.md#secure-development-design` and `test-design.md` must be represented as tasks or complete approved exceptions. Exhaustive `N/A` rationale and lifecycle row status belong to canonical `review-security-report.json` with derived Markdown compatibility. |
 | Operational considerations consumption | Tasks must represent concrete operational evidence collection, exact-marker validation, safe-evidence checks, non-SQL monitoring coverage, unavailable-tooling notes, unresolved-gap carry-forward, and archive/manual-document handoff only when derived from `design.md`, `test-design.md`, or equivalent artifact evidence. |
 | Review workload behavior | Preserve the Review Workload Forecast guard lines, delivery strategy (`null` when deferred), chain strategy, size-exception field, and reviewable work-unit split. |
@@ -70,6 +70,7 @@ Routing rules for `next_recommended`:
 | Task draft contains vague, non-verifiable, or oversized tasks | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 | Review workload risk is `High` against the received review budget and chain strategy is missing | Set `Decision needed before apply: Yes` and `Chain strategy: pending`; do not ask the user directly. |
 | Strict TDD is active | Include RED/GREEN/REFACTOR task ordering for affected behavior. |
+| Any case with `mandatory: true` in `test-cases.json` has no covering task | Return `blocked` with `next_recommended: resolve-blockers`; do not persist tasks. |
 
 ## What to Do
 
@@ -83,7 +84,13 @@ From the design document, identify:
 - The dependency order (what must come first)
 - Testing requirements per component
 
-From `test-design.md`, identify:
+From `test-cases.json` (canonical source of truth), identify:
+- Planned automated, manual, and static checks
+- Mandatory and non-mandatory cases from case metadata
+- Every case with `mandatory: true` that MUST be covered by at least one implementation, testing, or evidence task
+- Expected evidence that `sdd-apply` and `sdd-verify` will later consume
+
+From `test-design.md` (derived human-readable view), identify:
 - Planned automated, manual, and static checks
 - Mandatory cases that must become implementation, testing, or evidence tasks
 - Non-mandatory cases that should become advisory evidence tasks when feasible
@@ -261,6 +268,7 @@ Before persisting or returning, verify:
 - Testing/evidence tasks reference specific planned cases from `test-design.md` and scenarios from the specs.
 - Security evidence tasks reference guideline IDs and controls from `design.md#secure-development-design` when required.
 - Every mandatory planned case in `test-design.md` is represented by implementation, testing, or evidence work; omitted mandatory cases are blockers.
+- Every case with `mandatory: true` in `test-cases.json` is traceable to at least one task. If any mandatory case has no corresponding task, return `blocked` with `next_recommended: resolve-blockers` and name the uncovered case IDs.
 - Every mandatory applicable security guideline has implementation, test-design, apply, verify, archive evidence, or a complete approved exception represented in tasks.
 - Static/manual validation notes, review-security evidence, archive evidence fields, and unavailable runtime/coverage/lint/typecheck/format reporting from `design.md#secure-development-design` / `test-design.md` are represented in tasks when applicable.
 - Operational evidence collection, marker validation, safe-evidence checks, monitoring mechanism coverage, archive/manual-document handoff, and unavailable-tooling notes are represented as concrete tasks when applicable from design/test-design evidence.

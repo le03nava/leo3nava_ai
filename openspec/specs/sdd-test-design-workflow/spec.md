@@ -33,42 +33,65 @@ The SDD workflow MUST run `sdd-test-design` after `sdd-design` succeeds for ever
 
 ### Requirement: test-design.md Artifact Contract
 
-The `sdd-test-design` phase MUST create `test-design.md` for every change. The artifact MUST map spec scenarios, design risks, and applicable narrative category rules from `design.md#secure-development-design` to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document justified no-impact assessments from design classification. It MUST NOT require design to include YAML, schema fields, compact controls, Source IDs, matrices, or all-row `N/A` evidence. Common persistence behavior MUST remain delegated to the shared persistence authority.
+The `sdd-test-design` phase MUST create `test-cases.json` with all cases set to `status: pending` as the first output. It MUST then derive `test-design.md` from that JSON as a human-readable view. `test-design.md` is read-only for humans and MUST NOT be treated as source of truth; downstream phases MUST consume `test-cases.json` for case data. The artifact MUST map spec scenarios, design risks, and applicable narrative category rules from `design.md#secure-development-design` to planned automated, manual, or static checks; mark each case as mandatory or non-mandatory; state expected evidence; and document justified no-impact assessments from design classification. It MUST NOT require design to include YAML, schema fields, compact controls, Source IDs, matrices, or all-row `N/A` evidence. Common persistence behavior MUST remain delegated to the shared persistence authority.
+
+#### Scenario: JSON is produced before Markdown
+
+- GIVEN `sdd-test-design` is ready to emit its outputs
+- WHEN the phase runs
+- THEN `test-cases.json` MUST be written and verified before `test-design.md` is generated
+- AND `test-design.md` MUST be derived solely from the content of `test-cases.json`
+
+#### Scenario: test-design.md reflects JSON content faithfully
+
+- GIVEN `test-cases.json` has been persisted with N cases
+- WHEN `test-design.md` is derived
+- THEN it MUST list all N cases with their type, mandatory flag, and expected evidence
+- AND it MUST NOT contain case data that is absent from the JSON
+
+#### Scenario: Markdown is not authoritative
+
+- GIVEN `test-design.md` and `test-cases.json` both exist for a change
+- WHEN a downstream phase resolves test case data
+- THEN it MUST read `test-cases.json` as the source of truth
+- AND it MUST NOT treat manually edited Markdown as an authoritative update
 
 #### Scenario: Behavior-impacting change
 
 - GIVEN specs or design describe behavior, contracts, routing, or compatibility changes
 - WHEN `sdd-test-design` runs
-- THEN `test-design.md` MUST list planned checks linked to those inputs
-- AND each check MUST include type, severity, and expected evidence.
+- THEN `test-cases.json` MUST list planned checks linked to those inputs
+- AND each check MUST include type, mandatory flag, and expected evidence
 
 #### Scenario: Applicable security controls are consumed
 
 - GIVEN `design.md` lists applicable secure development category rules
 - WHEN `sdd-test-design` runs
-- THEN `test-design.md` MUST include checks or justified non-test evidence for mandatory rules
-- AND blocked security obligations MUST remain blockers.
+- THEN `test-cases.json` MUST include checks or justified non-test evidence for mandatory rules
+- AND blocked security obligations MUST remain blockers
 
 #### Scenario: No-impact assessment is handled
 
 - GIVEN design classifies the change as no security impact with changed-surface rationale
 - WHEN `sdd-test-design` runs
-- THEN it MUST cite that assessment
-- AND it MUST still produce `test-design.md` without requiring YAML, schema, matrix, or all-row `N/A` content.
+- THEN it MUST cite that assessment in `test-cases.json`
+- AND it MUST still produce `test-cases.json` and derived `test-design.md` without requiring
+  YAML, schema, matrix, or all-row `N/A` content
 
 #### Scenario: No-impact change
 
 - GIVEN the change has no behavior, security, or testability impact
 - WHEN `sdd-test-design` runs
-- THEN `test-design.md` MUST state a no-impact assessment
-- AND downstream phases MUST treat the artifact as complete rather than absent.
+- THEN `test-cases.json` MUST state a no-impact assessment
+- AND downstream phases MUST treat the artifact as complete rather than absent
 
 #### Scenario: Persistence boundary is delegated
 
-- GIVEN `sdd-test-design` writes or resolves `test-design.md` in any supported artifact-store mode
+- GIVEN `sdd-test-design` writes or resolves `test-cases.json` and `test-design.md`
+  in any supported artifact-store mode
 - WHEN backend behavior is required
 - THEN it MUST follow the shared persistence authority
-- AND it MUST keep the mandatory artifact contract local to the phase.
+- AND it MUST keep the mandatory artifact contract local to the phase
 
 ### Requirement: Check Types and Severity
 

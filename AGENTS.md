@@ -6,3 +6,7 @@ Use this file to document repository-specific instructions for AI coding agents.
 
 - `sdd-operational-doc` is a manual post-archive utility. It generates a Spanish operational handoff document from an archived SDD change and must not be treated as a required SDD DAG phase.
 - `sdd-technical-doc` is a manual post-archive utility. It generates a Spanish technical documentation Markdown file from an archived SDD change and must not be treated as a required SDD DAG phase.
+
+## Project Skills
+
+- `project-conventions` is a supplemental skill loaded by SDD phases (sdd-design, sdd-test-design, sdd-tasks, sdd-apply) when the change requires real project conventions. It provides architecture patterns, code style, testing infrastructure state, delivery conventions, and secure design guidance. It is NOT a required SDD DAG phase and must not be treated as one. Location: `skills/project-conventions/SKILL.md`.

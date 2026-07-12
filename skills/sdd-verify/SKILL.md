@@ -48,10 +48,10 @@ Common post-apply gates and review-evidence consumption rules are defined in `sk
 
 | Concern | Contract |
 | --- | --- |
-| Required inputs | Structured status plus available proposal, specs, design with mandatory `## Secure Development Design`, mandatory `test-design`, tasks, apply-progress/task checkbox evidence, non-blocking general review evidence from the selected backend (canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` compatibility view), and non-blocking security-review evidence from the selected backend (canonical `review-security-report.json` when present plus derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view). Standalone `security-design.md` is legacy/read-only compatibility data only. |
-| Produced artifact | `sdd/{change-name}/verify-report` or `openspec/changes/{change-name}/verify-report.md`. |
-| Mutates | None outside the produced verification report artifact. |
-| Test-design consumption | Compare every planned `test-design.md` case against implementation, execution, apply-progress, security evidence, or justified skip evidence; uncovered mandatory cases fail verification, while uncovered non-mandatory cases are warnings. |
+| Required inputs | Structured status plus available proposal, specs, design with mandatory `## Secure Development Design`, mandatory `test-cases.json` and `test-design`, tasks, apply-progress/task checkbox evidence, non-blocking general review evidence from the selected backend (canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` compatibility view), and non-blocking security-review evidence from the selected backend (canonical `review-security-report.json` when present plus derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view). Standalone `security-design.md` is legacy/read-only compatibility data only. |
+| Produced artifact | `sdd/{change-name}/verify-report` or `openspec/changes/{change-name}/verify-report.md`, plus updated `sdd/{change-name}/test-cases` or `openspec/changes/{change-name}/test-cases.json` with final per-case statuses as the canonical lifecycle record. |
+| Mutates | Canonical `test-cases.json` status fields during verification, plus the produced verification report artifact. |
+| Test-design consumption | Read `test-cases.json` as canonical source of truth. For each case: assign `status: verified` when evidence passes, `status: warning` for uncovered cases with `mandatory: false`, `status: skipped` for justified deviations. Persist updated `test-cases.json` before returning success. `verify-report` MUST reference the JSON path/topic key and cite case statuses from it; it MUST NOT reproduce the full cases table. `test-design.md` remains a derived human-readable aid only. |
 | Security consumption | Compare `design.md#secure-development-design` narrative rules, changed-surface rationale, residual risks, static/manual validation notes, canonical `review-security-report.json` row evidence, source-row verdict/warnings/evidence summary, artifact parity/read-back metadata, and mandatory evidence before archive readiness; complete approved exceptions are the only valid substitute for missing mandatory evidence. Derived Markdown is compatibility only. |
 | Review consumption | Follow `skills/_shared/sdd-post-apply-gates.md`: resolve exactly one non-blocking general review identity and one non-blocking security review identity, cite summaries only, and never duplicate either matrix. When canonical general-review or security-review JSON is present, it is authoritative over derived Markdown for verdict, counts, routing, matrix facts, catalog identity, validation state, and artifact parity. |
 | Operational evidence verification | Confirm operational evidence from design/test-design/tasks/apply/review/security-review when present, including safe evidence, exact `Pendiente de confirmar:` / `No aplica.` markers, unresolved warnings, gaps, and unavailable-tooling notes. Never invent missing operational values or require absent categories. |
@@ -92,6 +92,7 @@ Common post-apply gates and review-evidence consumption rules are defined in `sk
 | Mandatory test-design case has no matching implementation, execution, or justified skip evidence | CRITICAL `UNTESTED` and verdict `FAIL`. |
 | Runtime test, linter, type-checker, formatter, or coverage command is unavailable | Report unavailable tooling according to `skills/_shared/sdd-post-apply-gates.md`. |
 | Non-mandatory test-design case has no matching evidence | WARNING; do not fail solely because of this uncovered non-mandatory case. |
+| After assigning statuses, `test-cases.json` persistence fails | Return `partial` with `next_recommended: resolve-blockers` and include inline case-status summary in `detailed_report`. |
 | Design deviation exists | WARNING unless it breaks a spec. |
 | Verification failure discovered | Report only; do not patch implementation. |
 | Verify-report persistence fails | Return `partial` with `next_recommended: resolve-blockers` and the report inline in `detailed_report`. |
@@ -113,7 +114,7 @@ Common post-apply gates and review-evidence consumption rules are defined in `sk
 11. Run test, build/type-check, and coverage commands when available. For full spec verification, require runtime evidence when tooling is available: source inspection alone does not prove spec scenario compliance unless the repository configuration explicitly limits the change to static/manual evidence. Report unavailable runtime/build/lint/type/format/coverage tooling explicitly.
 12. Build the behavioral and security compliance matrices from actual test results and evidence when specs/scenarios/security controls exist; cite review and security-review summary evidence separately, preserve catalog identity/count/mapping/warning/exception/report-link evidence, and do not duplicate either review matrix or the full source-row matrix.
 13. Validate the report before persistence: completeness table present, general review and security review evidence citations present, source-row verdict/warning consumption present when applicable, every spec scenario has a status, every security control has evidence/exception status when required, every test-design case has a coverage status, validation metadata is covered, unavailable tooling is explicit, runtime evidence includes command and result when available, skipped dimensions are listed, Strict TDD sections are present when active, and any CRITICAL issue forces verdict `FAIL`.
-14. Persist and return the verification report, including skipped dimensions for missing artifacts.
+14. Persist updated `test-cases.json` first using the canonical key/path (`sdd/{change-name}/test-cases` / `openspec/changes/{change-name}/test-cases.json`) with final per-case statuses, then persist and return the verification report, including skipped dimensions for missing artifacts.
 
 ## Output Contract
 
@@ -134,6 +135,11 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 - **Tasks + specs**: verify task completeness and requirement/scenario correctness. Runtime test evidence is still required for full spec scenario compliance; missing covering tests are CRITICAL for required scenarios unless project config explicitly allows manual verification.
 - **Full artifacts**: verify completeness, correctness, review evidence consumption, security evidence, test-design planned case coverage, and coherence.
 - **Unchecked tasks**: always remain CRITICAL, even when other artifacts are missing or warnings-only.
+
+## Rules
+
+- ALWAYS update and persist `test-cases.json` with final case statuses before returning success. The JSON is the canonical lifecycle record.
+- NEVER reproduce the full cases table in verify-report — reference `test-cases.json` instead.
 
 ## References
 

@@ -36,14 +36,14 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Concern | Contract |
 | --- | --- |
 | Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, and testing capabilities from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
-| Produced artifact | Mandatory `sdd/{change-name}/test-design` or `openspec/changes/{change-name}/test-design.md` for every change, including no-impact changes. |
+| Produced artifact | Mandatory canonical `sdd/{change-name}/test-cases` / `openspec/changes/{change-name}/test-cases.json` plus derived `sdd/{change-name}/test-design` / `openspec/changes/{change-name}/test-design.md` for every change, including no-impact changes. |
 | Mutates | None outside the produced test design artifact. |
 | Mandatory artifact behavior | Do not route directly from design to tasks without a complete `test-design` artifact. No-impact changes still produce a concise no-impact assessment rather than omitting the artifact. |
 | Planned evidence mapping | Preserve scenario, design-risk, applicable security category rule, check type, severity, expected evidence, no-impact assessment, and open-question mapping. Mandatory cases are verification-blocking when uncovered. |
 | Operational considerations planning | Consume `design.md#Operational Considerations` or equivalent design evidence when present, and plan static, documentary, manual, or automated checks only for applicable operational evidence/gaps. If design omits operational considerations or marks them `No aplica.`, do not synthesize mandatory operational categories. |
 | Source-row planning | When `design.md#secure-development-design` describes corporate security context, plan static/manual/automated checks from applicable narrative category rules and changed-surface context only. Test-design MUST NOT require design to carry YAML, schema fields, compact controls, Source IDs, matrices, machine-readable applicability fields, or exhaustive `N/A` rows; it MUST preserve `review-security` as the owner that validates every Source ID exactly once and reports coverage/focused findings. |
 | Unavailable tooling | If runtime, build, coverage, lint, typecheck, or format tooling is unavailable, record explicit unavailable-tooling notes and plan static/manual evidence instead. Missing tooling is never passing evidence. |
-| Downstream consumption | `sdd-tasks`, `sdd-apply`, `sdd-verify`, and archive readiness checks consume `test-design` as the test-planning source of truth. |
+| Downstream consumption | `sdd-tasks`, `sdd-apply`, `sdd-verify`, and archive readiness checks consume `test-cases.json` as canonical case data; `test-design.md` is a derived human-readable view only. |
 | Success routing | `next_recommended: tasks`. |
 | Block routing | `next_recommended: resolve-blockers` for missing proposal/spec/design, missing embedded secure development design, testability blockers, or persistence failure. Do not route new changes to standalone `security-design`. |
 
@@ -111,19 +111,57 @@ Mandatory narrative-rule evidence blockers MUST stay visible: unsafe evidence or
 
 If there is no behavior or testability impact, write a concise no-impact assessment instead of inventing checks.
 
-### Step 4: Write test-design.md
+### Step 4: Write test-cases.json and derive test-design.md
 
-**IF mode is `openspec` or `hybrid`:** Create the test-design document:
+**IF mode is `openspec` or `hybrid`:** Create both artifacts under the change folder:
 
 ```text
 openspec/changes/{change-name}/
 ├── proposal.md
 ├── specs/
 ├── design.md
-└── test-design.md          ← You create this; consumes design.md#secure-development-design
+├── test-cases.json         ← You create this first (canonical)
+└── test-design.md          ← You derive this from JSON (human-readable view)
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the test-design content in memory; persist it only if the mode allows persistence.
+**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose both artifacts in memory; persist only when mode allows persistence.
+
+#### Step 4a: Write canonical test-cases.json first
+
+Create `test-cases.json` as the canonical source of truth. Every generated case MUST start with `status: pending`.
+
+Use this schema contract inline:
+
+```json
+{
+  "schemaName": "sdd.test-cases",
+  "schemaVersion": 1,
+  "changeName": "{change-name}",
+  "generatedBy": "sdd-test-design",
+  "updatedBy": "sdd-test-design",
+  "updatedAt": "ISO-8601",
+  "cases": [
+    {
+      "id": "TC-001",
+      "description": "Planned check description",
+      "type": "automated | manual | static",
+      "mandatory": true,
+      "status": "pending | blocked | applied | verified | skipped | warning",
+      "evidence": null,
+      "spec": "spec-domain: Scenario reference",
+      "category": "category-label"
+    }
+  ]
+}
+```
+
+Required per-case fields: `id`, `description`, `type`, `mandatory`, `status`, `evidence`, `spec`, `category`.
+
+Valid `status` values: `pending | blocked | applied | verified | skipped | warning`.
+
+#### Step 4b: Derive test-design.md from test-cases.json
+
+Generate `test-design.md` from the persisted JSON cases table. `test-design.md` is a human-readable projection and is not authoritative case data.
 
 #### Test Design Document Format
 
@@ -213,10 +251,16 @@ Before persisting or returning, verify:
 **This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, skip persistence.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
-- artifact: `test-design`
-- topic_key: `sdd/{change-name}/test-design`
-- openspec path: `openspec/changes/{change-name}/test-design.md`
-- type: `architecture`
+- Persist canonical artifact first:
+  - artifact: `test-cases`
+  - topic_key: `sdd/{change-name}/test-cases`
+  - openspec path: `openspec/changes/{change-name}/test-cases.json`
+  - type: `architecture`
+- Then persist derived artifact:
+  - artifact: `test-design`
+  - topic_key: `sdd/{change-name}/test-design`
+  - openspec path: `openspec/changes/{change-name}/test-design.md`
+  - type: `architecture`
 
 ### Step 7: Return Summary
 
@@ -246,6 +290,7 @@ Ready for tasks (sdd-tasks).
 
 - ALWAYS read proposal, specs, and design before writing test design.
 - ALWAYS read mandatory `design.md#secure-development-design` before writing test design; standalone `security-design.md` is legacy/read-only only.
+- ALWAYS generate `test-cases.json` first; derive `test-design.md` from that JSON. `test-design.md` is read-only for humans and MUST NOT be used as source of truth by downstream phases.
 - ALWAYS cover each mandatory applicable narrative security rule before returning success. Do not require justified `N/A` rows from design/test-design for omitted catalog rows.
 - DO NOT implement tests or code; this phase plans evidence only.
 - DO NOT skip the artifact for no-impact changes; document the no-impact assessment.
