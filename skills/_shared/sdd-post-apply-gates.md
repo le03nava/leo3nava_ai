@@ -9,7 +9,7 @@ This contract centralizes common dependency gates, review-evidence handling, arc
 | Phase | Owns | Consumes | Must not own |
 | --- | --- | --- | --- |
 | `sdd-review` | General applied-change review, canonical `review-report.json`, and derived 96-control `review-report.md` compatibility matrix. | Status, design/test-design/tasks/apply evidence, changed-file context. | Security-review row verdicts, exhaustive compact security matrix, exhaustive Source ID matrix, final runtime verification, Excel/Python/workbook generation. |
-| `sdd-review-security` | Security review, canonical `review-security-report.json`, derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view, and exhaustive `sourceRowValidation.rows` exact-once Source ID validation. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` for compatibility, narrative secure design, test-design, tasks/apply evidence, changed-file context. | The general 96-control review matrix, final runtime verification, archive readiness. |
+| `sdd-review-security` | Security review, canonical `review-security-report.json`, derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view, and exhaustive `sourceRowValidation.rows` exact-once Source ID validation. | Runs in parallel with `sdd-review`; shared base inputs only: `design.md#secure-development-design`, test-design, tasks/apply evidence, changed-file context. Does not consume general review evidence. | The general 96-control review matrix, final runtime verification, archive readiness. |
 | `sdd-verify` | Final implementation/spec/test-design/security evidence verification and `verify-report.md`. | Non-blocking general review evidence: canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review`, non-blocking security-review evidence with canonical `review-security-report.json` when present plus derived Markdown compatibility view, implementation evidence, runtime/static command evidence. | Reproducing or re-scoring either review matrix, owning exhaustive Source ID rows, fixing implementation. |
 | `sdd-archive` | Final source-of-truth sync, archive move/report, and audit-trail preservation. | Passing `verify-report`, non-blocking review reports, completed tasks/apply evidence, mandatory security evidence, status/action context. | Re-scoring reviews, re-running verification, fixing implementation, or owning review matrices. |
 
@@ -37,7 +37,7 @@ Additional phase-specific inputs:
 | Phase | Additional required input |
 | --- | --- |
 | `sdd-review` | Proposal/specs when available, 96-control review catalog. |
-| `sdd-review-security` | Non-blocking general review evidence: canonical `review-report.json` when present and derived `review-report.md` / `sdd/{change-name}/review` compatibility view, security guideline catalog, security contract. |
+| `sdd-review-security` | Security guideline catalog, security contract. |
 | `sdd-verify` | Non-blocking general review evidence: canonical `review-report.json` when present and derived `review-report.md` / `sdd/{change-name}/review`, non-blocking security-review evidence with canonical `review-security-report.json` when present and derived `review-security-report.md` / `sdd/{change-name}/review-security`, testing capabilities/config. |
 | `sdd-archive` | Passing `verify-report`, complete task state, state artifact, archive destination context, and any explicit partial/stale-checkbox reconciliation approval. |
 
@@ -66,7 +66,7 @@ Use these routes consistently:
 | --- | --- |
 | Remediation requires code, prompt, task, contract, or apply-evidence work | `next_recommended: apply` |
 | Remediation requires missing context, artifact repair, backend reconciliation, unsafe evidence cleanup, schema/catalog repair, or configuration repair | `next_recommended: resolve-blockers` |
-| Current phase produced non-blocking review evidence | next DAG phase only: `review-security`, `verify`, or `archive` |
+| Current phase produced non-blocking review evidence | next DAG phase only: `verify` or `archive` |
 | Current phase found CRITICAL/blocking issues | never advance to a downstream phase |
 | Archive readiness fails because general review is missing or unreadable | `next_recommended: review` |
 | Archive readiness fails because security review is missing or unreadable | `next_recommended: review-security` |
@@ -77,7 +77,8 @@ Phase envelopes use snake_case `next_recommended`. Persisted status/state uses c
 
 ## Review Evidence Consumption
 
-- `sdd-review-security` MUST consume canonical `review-report.json` as authoritative general-review evidence when present and MAY read derived `review-report.md` / `sdd/{change-name}/review` as supporting compatibility evidence only. It MUST NOT duplicate, recreate, or re-score the 96-control matrix.
+- `sdd-review` and `sdd-review-security` run in parallel after `sdd-apply`. They share the same base inputs (`design.md#secure-development-design`, test-design, tasks/apply evidence, changed-file context) and are independent of each other's output. The orchestrator MUST wait until both appear in `completedPhases` before launching `sdd-verify`.
+- `sdd-review-security` does NOT consume `review-report.json` and MUST NOT require it as a prerequisite. It owns its security verdict independently.
 - `sdd-review-security` MUST produce canonical `review-security-report.json` first and derived Markdown second. The canonical JSON owns security-review verdict/status, routing, source-row counts, exact-once coverage, blocker/warning summaries, unsafe evidence rejections, warning carry-forward, exceptions, evidence refs, and artifact parity/read-back metadata.
 - `sdd-verify` MUST consume exactly one non-blocking general review report identity from the selected backend, including canonical JSON when present plus the derived Markdown compatibility view, and exactly one non-blocking security review report identity from the selected backend, including canonical `review-security-report.json` when present plus derived Markdown compatibility view.
 - `sdd-archive` MUST consume exactly one non-blocking general review report identity from the selected backend, including canonical JSON when present plus the derived Markdown compatibility view, and exactly one non-blocking security review report identity from the selected backend, including canonical `review-security-report.json` when present plus derived Markdown compatibility view, plus a passing verify report.
@@ -91,7 +92,7 @@ Operational evidence consumption:
 | Phase | Must consume | Must preserve or hand off |
 | --- | --- | --- |
 | `sdd-review` | Present/planned operational considerations from design/test-design/tasks/apply evidence, exact markers, changed-file refs, unavailable-tooling notes, and unresolved gaps. | Operational findings outside the 96-control matrix plus refs/gaps for `sdd-review-security` when evidence exists. |
-| `sdd-review-security` | General-review operational refs/gaps, secure design rules, safe-evidence policy, changed files, and apply evidence when operational evidence exists. | Leakage verdicts for restricted operational identifiers, secrets, logs/payloads, generated bytes, final-doc-only values, safe placeholders, and future exception evidence. |
+| `sdd-review-security` | Secure design rules, safe-evidence policy, changed files, and apply evidence when operational evidence exists. | Leakage verdicts for restricted operational identifiers, secrets, logs/payloads, generated bytes, final-doc-only values, safe placeholders, and future exception evidence. |
 | `sdd-verify` | Non-blocking review and security-review operational evidence, warning summaries, unavailable-tooling notes, and implementation evidence when present. | Verification that applicable operational evidence/gaps/warnings remain preserved, without requiring absent categories. |
 | `sdd-archive` | Passing verify operational evidence, non-blocking review/security-review summaries, completed task state, warnings, exceptions, and unavailable-tooling notes when present. | Operational status, evidence refs, unresolved gaps, warning carry-forward, final-document handoff boundaries, and confirmation that `sdd-operational-doc` remains manual post-archive when relevant. |
 

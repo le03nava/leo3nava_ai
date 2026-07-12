@@ -156,7 +156,7 @@ schemaName: sdd.state
 schemaVersion: 1
 changeName: {change-name}
 artifactStore: engram | openspec | hybrid | none
-currentPhase: explore | propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | blocked | complete
+currentPhase: explore | propose | spec | design | test-design | tasks | apply | review | review-security | review-parallel | verify | archive | blocked | complete
 completedPhases: []
   artifactRefs:
   explore: []
@@ -183,6 +183,8 @@ delivery:
     approver: {name-or-null}
     rationale: {text-or-null}
 nextRecommended: propose | spec | design | test-design | tasks | apply | review | review-security | verify | archive | sdd-new | select-change | resolve-blockers | none
+
+> **Parallel review**: After `sdd-apply`, both `sdd-review` and `sdd-review-security` return `next_recommended: verify` independently. The orchestrator MUST advance to `verify` only when both phases appear in `completedPhases`. Use `currentPhase: review-parallel` when both are running simultaneously. Do not advance on the first one to complete.
 blockedReasons:
   - code: {machine-readable-code}
     message: {human-readable-summary}
@@ -244,7 +246,7 @@ Recovery reconciliation rules:
 - If `blockedReasons` is non-empty or `nextRecommended` is `resolve-blockers`, report blockers and stop before launching phases.
 - If cached preflight and recovered state disagree on `artifactStore`, stop and reconcile unless one side is clearly missing/stale by `stateRevision` or `updatedAt`. Delivery strategy, review budget, and chain strategy may be `null` until the tasks/delivery guard resolves them; reconcile only conflicting non-null values.
 - If state is missing or invalid but persistence is enabled, reconstruct only a shape-compatible fallback status from artifact presence and `skills/_shared/sdd-status-contract.md`; do not route directly from ad hoc artifact checks.
-- When fallback reconstruction is required, choose the earliest missing phase in DAG order and apply the status contract dependency-state rules. Preserve the post-apply order: `apply -> review -> review-security -> verify -> archive`; archive readiness is defined by `skills/_shared/sdd-post-apply-gates.md#archive-readiness`.
+- When fallback reconstruction is required, choose the earliest missing phase in DAG order and apply the status contract dependency-state rules. Preserve the post-apply order: `apply -> [review ∥ review-security] -> verify -> archive`; both `review` and `review-security` must be in `completedPhases` before `verify` may proceed; archive readiness is defined by `skills/_shared/sdd-post-apply-gates.md#archive-readiness`.
 - Valid state is authoritative for `currentPhase` and `nextRecommended`; use artifact-presence fallback only when state is missing or invalid.
 - Re-run the backend-aware SDD Init Guard before repairing or rewriting recovered state.
 
