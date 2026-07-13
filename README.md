@@ -18,10 +18,10 @@ Expected destinations:
 
 | Source | Destination |
 |--------|-------------|
-| `skills/` | `%USERPROFILE%\.config\opencode\skills` |
-| `skills/` | `C:\Users\leo3n\.copilot\skills` |
-| `agents/` | `%USERPROFILE%\.config\opencode\prompts` |
-| `agents/` | `C:\Users\leo3n\.copilot\agents` |
+| `src/skills/` | `%USERPROFILE%\.config\opencode\skills` |
+| `src/skills/` | `C:\Users\leo3n\.copilot\skills` |
+| `src/agents/` | `%USERPROFILE%\.config\opencode\prompts` |
+| `src/agents/` | `C:\Users\leo3n\.copilot\agents` |
 
 The scripts only sync to tools whose base directories already exist. Missing destinations are skipped with an informational message, and existing destinations still receive the files. Destination subdirectories are created when needed and matching files are overwritten on rerun.
 
@@ -29,9 +29,10 @@ The scripts only sync to tools whose base directories already exist. Missing des
 
 | Path | Purpose |
 |------|---------|
-| `agents/` | Agent prompt definitions, including SDD phase agents. |
-| `skills/` | Reusable opencode skills and shared SDD contracts. |
+| `src/agents/` | Agent prompt definitions, including SDD phase agents. |
+| `src/skills/` | Reusable opencode skills and shared SDD contracts. |
 | `scripts/` | Windows PowerShell sync scripts for opencode and Copilot setup. |
+| `report-exporter/` | Python utility to export JSON review reports to Excel. |
 | `openspec/` | Spec-driven documentation for repository capabilities and archived changes. |
 | `LICENSE` | MIT license for this repository. |
 
@@ -63,7 +64,7 @@ For new changes, `sdd-design` owns secure development design inside `design.md#s
 
 The review phase writes canonical `review-report.json` plus a derived Markdown compatibility view: OpenSpec uses `openspec/changes/{change-name}/review-report.json` and `review-report.md`; Engram/hybrid uses `sdd/{change-name}/review-report.json` and `sdd/{change-name}/review`. Non-blocking general review routes to `sdd-review-security`, which writes canonical `review-security-report.json` plus derived Markdown before verification. Downstream phases may read derived Markdown for compatibility, but canonical review JSON and security-review JSON are authoritative when present; verification and archive consume review summaries without owning their matrices.
 
-Shared contracts live under `skills/_shared/` and define persistence, status, security, language-domain, and executor-boundary rules used by the SDD agents.
+Shared contracts live under `src/skills/_shared/` and define persistence, status, security, language-domain, and executor-boundary rules used by the SDD agents.
 
 ## Requirements
 

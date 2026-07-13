@@ -5,7 +5,7 @@ if ([string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$sourceAgentsPath = Join-Path -Path $repoRoot -ChildPath 'agents'
+$sourceAgentsPath = Join-Path -Path $repoRoot -ChildPath 'src\agents'
 
 if (-not (Test-Path -LiteralPath $sourceAgentsPath -PathType Container)) {
     throw "Source agents directory not found: $sourceAgentsPath"

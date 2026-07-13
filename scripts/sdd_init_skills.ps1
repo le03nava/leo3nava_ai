@@ -5,7 +5,7 @@ if ([string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$sourceSkillsPath = Join-Path -Path $repoRoot -ChildPath 'skills'
+$sourceSkillsPath = Join-Path -Path $repoRoot -ChildPath 'src\skills'
 
 if (-not (Test-Path -LiteralPath $sourceSkillsPath -PathType Container)) {
     throw "Source skills directory not found: $sourceSkillsPath"

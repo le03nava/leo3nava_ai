@@ -8,7 +8,7 @@ project:
 context: |
   Repository type: AI agent/skill distribution, not an application runtime.
   Stack: Markdown instruction contracts for SDD agents and skills, plus adapter prompt copies for OpenCode and Claude.
-  Architecture: SDD phase executors, shared SDD contracts under skills/_shared, and local support artifacts under .atl.
+  Architecture: SDD phase executors, shared SDD contracts under src/skills/_shared, and local support artifacts under .atl.
   Testing: No package manifest, build file, or executable test runner detected in this repository.
   Style: Skills use YAML frontmatter and concise runtime-contract sections; generated technical artifacts default to English.
 
