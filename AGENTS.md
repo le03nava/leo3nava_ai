@@ -6,6 +6,7 @@ Use this file to document repository-specific instructions for AI coding agents.
 
 - `sdd-operational-doc` is a manual post-archive utility. It generates a Spanish operational handoff document from an archived SDD change and must not be treated as a required SDD DAG phase.
 - `sdd-technical-doc` is a manual post-archive utility. It generates a Spanish technical documentation Markdown file from an archived SDD change and must not be treated as a required SDD DAG phase.
+- `install-package-builder` is a manual user-invocable utility. It builds a versioned installation package from git repositories for a change order and must not be treated as a required SDD DAG phase.
 
 ## Project Skills
 
