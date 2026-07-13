@@ -9,4 +9,4 @@ Use this file to document repository-specific instructions for AI coding agents.
 
 ## Project Skills
 
-- `project-conventions` is a supplemental skill loaded by SDD phases (sdd-design, sdd-test-design, sdd-tasks, sdd-apply) when the change requires real project conventions. It provides architecture patterns, code style, testing infrastructure state, delivery conventions, and secure design guidance. It is NOT a required SDD DAG phase and must not be treated as one. Location: `src/skills/project-conventions/SKILL.md`.
+- `project-conventions` is a supplemental skill loaded by SDD phases (sdd-design, sdd-test-design, sdd-tasks, sdd-apply) when the change requires real project conventions. It provides architecture patterns, code style, testing infrastructure state, delivery conventions, and secure design guidance. It is NOT a required SDD DAG phase and must not be treated as one. Location: `skills/project-conventions/SKILL.md`.
