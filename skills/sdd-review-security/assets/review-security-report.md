@@ -8,14 +8,14 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 
 | Markdown Section | Source JSON Field(s) |
 | --- | --- |
-| `# Review Security Report: {Change Title}` | `changeName` |
+| `# Review Security Report: {changeName}` | `changeName` |
 | `## Verdict` | `changeName`, `status`, `verdict`, `nextRecommended`, `artifactMetadata.canonicalJsonRef` |
 | `## Totals` | `totals` |
 | `## General Review Reference` | `generalReviewRef` |
 | `## Unavailable Tooling` | `unavailableTooling[]` |
 | `## Exceptions` | `exceptions[]` |
 | `## Artifact Metadata` | `artifactMetadata` |
-| `## Security Review Summary` | `rows[]` grouped by catalog `controlDomain` (join by `sourceId`); `totals` |
+| `## Summary` | `rows[]` grouped by catalog `controlDomain` (join by `sourceId`); `totals` |
 | `## Recommendation` | `verdict`, `nextRecommended`, `totals.blockers` |
 | `## Matrix` | `rows[]` joined with catalog `sourceRows[]` by `sourceId` |
 
@@ -77,7 +77,7 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 | JSON authority | canonical |
 | Markdown authority | derived |
 
-## Security Review Summary
+## Summary
 
 Summary by control domain. Derived from `rows[]` joined with catalog `controlDomain` by `sourceId`. Passing = rows where `complies: Yes` or `lifecycleStatus: not-applicable` or `lifecycleStatus: exception-approved`. Blockers = rows where `finding: blocker`.
 
@@ -117,9 +117,9 @@ Full 155-row table rendered last. Join `rows[].sourceId` with catalog `sourceRow
 
 ## Matrix Rules
 
-- Table header must match exactly; 155 rows required, all source IDs exactly once
-- `applies` and `complies` must be Yes, No, or N/A
-- N/A rows require non-empty justification and evidenceLocation
+- Header must match exactly; 155 rows required, all source IDs exactly once
+- `applies` and `complies` must be `Yes`, `No`, or `N/A`
+- `N/A` rows require non-empty justification and evidenceLocation
 - Rows with `finding=blocker` make verdict FAIL unless `lifecycleStatus=exception-approved`
 - Rendered Markdown must be read back and compared to JSON for verdict/routing/counts and source-row coverage
 

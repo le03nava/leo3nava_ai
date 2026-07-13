@@ -8,81 +8,74 @@ Markdown MUST NOT be hand-authored as the source of truth. If JSON and Markdown 
 
 ## JSON Field Mapping
 
-| Root JSON Field | Type | Rendered In |
-|---|---|---|
-| `schemaName` | string const | ## Verdict table (internal validation only) |
-| `schemaVersion` | integer | ## Verdict table (internal validation only) |
-| `changeName` | string | `# Review Report: {changeName}` heading and ## Verdict table |
-| `artifactKind` | string const | ## Verdict table (internal validation only) |
-| `generatedAt` | date-time | ## Verdict table |
-| `status` | enum | ## Verdict table |
-| `verdict` | enum | ## Verdict table and ## Recommendation |
-| `nextRecommended` | enum | ## Verdict table and ## Recommendation |
-| `totals` | object | ## Totals table |
-| `catalogRef` | string const | ## Artifact Metadata table |
-| `catalogSnapshotId` | string | ## Artifact Metadata table |
-| `unavailableTooling` | array | ## Unavailable Tooling section |
-| `matrix` | array[96] | ## Matrix table (joined with catalog controls[]) |
-| `artifactMetadata` | object | ## Artifact Metadata table and ## Verdict table |
+| Markdown Section | Source JSON Field(s) |
+| --- | --- |
+| `# Review Report: {changeName}` | `changeName` |
+| `## Verdict` | `changeName`, `status`, `verdict`, `nextRecommended`, `artifactMetadata.canonicalJsonRef`, `artifactMetadata.derivedMarkdownRef` |
+| `## Totals` | `totals` |
+| `## Unavailable Tooling` | `unavailableTooling[]` |
+| `## Artifact Metadata` | `artifactMetadata` |
+| `## Recommendation` | `verdict`, `nextRecommended` |
+| `## Matrix` | `matrix[]` joined with catalog `controls[]` by `item` |
 
 ## Required Structure
 
 The rendered `review-report.md` MUST contain the following sections in order:
 
+````markdown
 # Review Report: {changeName}
 
 ## Verdict
 
 | Field | Value |
-|---|---|
-| Change | {changeName} |
-| Status | {status} |
-| Verdict | {verdict} |
-| Next recommendation | {nextRecommended} |
-| JSON authority | {artifactMetadata.canonicalJsonRef} |
-| Markdown authority | {artifactMetadata.derivedMarkdownRef} |
+| --- | --- |
+| Change | `{changeName}` |
+| Status | success \| blocked \| partial |
+| Verdict | PASS \| PASS WITH WARNINGS \| FAIL |
+| Next recommendation | verify \| apply \| resolve-blockers |
+| JSON authority | `{artifactMetadata.canonicalJsonRef}` |
+| Markdown authority | derived compatibility view |
 
 ## Totals
 
-| Metric | Count |
-|---|---|
-| Total controls | 96 |
-| Passing | {totals.passing} |
-| Failing | {totals.failing} |
-| N/A | {totals.notApplicable} |
-| Blocking | {totals.blocking} |
-| Non-blocking | {totals.nonBlocking} |
+| Metric | Value |
+| --- | --- |
+| Total controls (96) | `{totals.total}` |
+| Passing | `{totals.passing}` |
+| Failing | `{totals.failing}` |
+| N/A | `{totals.notApplicable}` |
+| Blocking | `{totals.blocking}` |
+| Non-blocking | `{totals.nonBlocking}` |
 
 ## Unavailable Tooling
 
-{List from unavailableTooling[] or "None"}
+{List from `unavailableTooling[]` or "None"}
 
 ## Artifact Metadata
 
-| Field | Value |
-|---|---|
-| Canonical JSON ref | {artifactMetadata.canonicalJsonRef} |
-| Derived Markdown ref | {artifactMetadata.derivedMarkdownRef} |
-| JSON persisted / read back | {jsonPersisted} / {jsonReadBack} |
-| Markdown generated / persisted / read back | {markdownGenerated} / {markdownPersisted} / {markdownReadBack} |
-| JSON/Markdown parity | {parityStatus} |
+| Check | Result |
+| --- | --- |
+| Canonical JSON ref | `{artifactMetadata.canonicalJsonRef}` |
+| Derived Markdown ref | `{artifactMetadata.derivedMarkdownRef}` |
+| JSON persisted / read back | `{artifactMetadata.jsonPersisted}` / `{artifactMetadata.jsonReadBack}` |
+| Markdown generated / persisted / read back | `{artifactMetadata.markdownGenerated}` / `{artifactMetadata.markdownPersisted}` / `{artifactMetadata.markdownReadBack}` |
+| JSON/Markdown parity | `{artifactMetadata.parityStatus}` |
 | JSON authority | canonical |
 | Markdown authority | derived |
 
 ## Recommendation
 
-- Next: {nextRecommended}
+- Next: `{nextRecommended}`
 - {route-specific follow-up text}
 
 ## Matrix
 
-Full 96-row table. Columns (in order):
+Full 96-row table rendered last. Join `matrix[].item` with catalog `controls[].id` to get Requirement, Standard, Category, and Severity columns.
 
 | Item | Requirement | Standard | Category | Severity | Complies | Finding | Evidence Location | Notes |
-|---|---|---|---|---|---|---|---|---|
-| {matrix[].item} | {controls[].requirement} | {controls[].standard} | {controls[].category} | {controls[].severity} | {matrix[].complies} | {matrix[].finding} | {matrix[].evidenceLocation} | {matrix[].notes} |
-
-Rendering rule: join `matrix[].item` with `catalog controls[].id` to get `Requirement`, `Standard`, `Category`, `Severity` columns.
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `{matrix[].item}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | Yes/No/N/A | `{matrix[].finding}` | `{matrix[].evidenceLocation}` | `{matrix[].notes}` |
+````
 
 ## Matrix Rules
 
@@ -95,7 +88,6 @@ Rendering rule: join `matrix[].item` with `catalog controls[].id` to get `Requir
 
 ## Safe Evidence Rules
 
-- Evidence may cite paths, section anchors, sanitized summaries, and unavailable-tooling statements only.
-- Evidence MUST NOT include secrets, credentials, tokens, connection strings, PAN, PII, raw logs, sensitive payloads, production IDs/production identifiers, generated bytes, or final-document-only values.
-- Missing runtime/build/lint/type-check/format/coverage tooling is recorded as unavailable evidence, never as passing evidence.
-- This template does not define or require Excel, Python, script, spreadsheet, or workbook generation.
+- Evidence may cite paths, section anchors, sanitized summaries, command outcomes, and redacted placeholders only
+- Must not include secrets, credentials, tokens, connection strings, PAN, PII, raw logs, sensitive payloads, production identifiers, generated bytes, or final-document-only values
+- Missing runtime tooling is recorded in `unavailableTooling[]`, never as passing evidence
