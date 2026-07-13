@@ -1,6 +1,6 @@
 # SDD Review Control Catalog
 
-> **Derived/reference-only view**: `skills/sdd-review/references/review-control-catalog.json` is the canonical source of truth for the stable 96-control corporate code-review checklist. This Markdown file is a human-readable reference view only.
+> **Derived/reference-only view**: `skills/sdd-review/assets/review-control-catalog.json` is the canonical source of truth for the stable 96-control corporate code-review checklist. This Markdown file is a human-readable reference view only.
 >
 > If this Markdown differs from `review-control-catalog.json`, JSON wins. Treat the mismatch as a derived-view repair issue: repair or regenerate this Markdown view from the JSON catalog instead of changing control semantics here.
 
@@ -10,7 +10,7 @@ The matrix in `review-report.md` uses the JSON control `id` as its `Item` value.
 
 | Evidence | Result |
 | --- | --- |
-| Catalog source | Canonical JSON: `skills/sdd-review/references/review-control-catalog.json`, based on user-provided 96-item corporate code-review checklist source items `1` through `96`. |
+| Catalog source | Canonical JSON: `skills/sdd-review/assets/review-control-catalog.json`, based on user-provided 96-item corporate code-review checklist source items `1` through `96`. |
 | Total controls | 96 rows. |
 | Unique Item IDs | 96 unique IDs: `REV-CORP-001..REV-CORP-096`. |
 | Source mapping | Each `REV-CORP-NNN` maps one-to-one to source item `N`. |

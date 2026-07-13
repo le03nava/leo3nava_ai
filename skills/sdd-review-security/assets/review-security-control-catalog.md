@@ -2,7 +2,7 @@
 
 Operational source-row catalog for embedded SDD secure development design, canonical `review-security-report.json`, derived Markdown compatibility, verification evidence, and archive gates.
 
-> Canonical source: `security-guideline-catalog.operational.json` owns the structured Source ID inventory, grouping vocabulary, evidence expectations, owner phase defaults, route metadata, and validation counts. This Markdown file is a human-readable/auditable view derived from that JSON.
+> Canonical source: `review-security-control-catalog.json` owns the structured Source ID inventory, grouping vocabulary, evidence expectations, owner phase defaults, route metadata, and validation counts. This Markdown file is a human-readable/auditable view derived from that JSON.
 
 ## Snapshot Metadata
 
@@ -62,7 +62,7 @@ Inventory total: 155 expanded Source IDs.
 
 ## Full Corporate Guideline Snapshot
 
-This section is generated from `security-guideline-catalog.operational.json.sourceRows` for audit readability. The JSON is the canonical source of every Source ID, corporate section, PCI alignment, control domain, source-row vocabularies, evidence expectations, owner phase defaults, route metadata, and guideline text.
+This section is generated from `review-security-control-catalog.json.sourceRows` for audit readability. The JSON is the canonical source of every Source ID, corporate section, PCI alignment, control domain, source-row vocabularies, evidence expectations, owner phase defaults, route metadata, and guideline text.
 
 ### 1. Authentication — aligned to PCI Req 6.5.8, 6.5.10
 
