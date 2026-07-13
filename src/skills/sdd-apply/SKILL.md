@@ -43,7 +43,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Apply evidence semantics | Record completed tasks, files changed, Standard/Strict TDD mode, test-design coverage or justified deviations, embedded secure-design evidence including N/A rationale where applicable, unavailable runtime/coverage/lint/typecheck/format tooling, issues, remaining tasks, workload/PR boundary, and persisted checkbox verification in `detailed_report` / apply-progress. |
 | Deviation semantics | If implementation cannot follow design or `test-design.md`, record the deviation, rationale, replacement evidence, and downstream verify implication; do not silently drop mandatory planned evidence. |
 | Conditional behavior | `none` mode may edit implementation files only when workspace guards allow it, but must not update SDD/OpenSpec/Engram artifacts; Strict TDD loads `strict-tdd.md` only when active. |
-| Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: review` only when all implementation tasks are visibly complete in the persisted task artifact. |
+| Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: review-parallel` only when all implementation tasks are visibly complete in the persisted task artifact. The orchestrator MUST launch `sdd-review` AND `sdd-review-security` in parallel; use `currentPhase: review-parallel`. |
 | Block routing | `next_recommended: resolve-blockers` for unsafe workspace, unresolved workload decision, missing artifact, Strict TDD issue, partial persistence failure, or blocked task. |
 
 ## Output Contract
@@ -52,7 +52,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 
 Routing rules for `next_recommended`:
 - **Assigned batch complete, implementation tasks remain**: return `next_recommended: apply` and report the next pending task/slice.
-- **All implementation tasks complete**: return `next_recommended: review`. Verify and archive are never direct successors of apply.
+- **All implementation tasks complete**: return `next_recommended: review-parallel`. The orchestrator MUST launch `sdd-review` AND `sdd-review-security` in parallel (use `currentPhase: review-parallel`) and MUST NOT advance to `sdd-verify` until both phases appear in `completedPhases`. Verify and archive are never direct successors of apply.
 - **Blocked apply**: return `next_recommended: resolve-blockers` and include the exact unsafe workspace, unresolved workload decision, missing artifact, Strict TDD issue, or blocked task in `risks` / `detailed_report`.
 - **Partial persistence failure**: return `next_recommended: resolve-blockers` unless the same progress/task checkbox update can be safely retried without new user input.
 - Do not return camelCase `nextRecommended` from the phase envelope. CamelCase is for status/state artifacts only.
@@ -62,7 +62,7 @@ Routing rules for `next_recommended`:
 | Situation | Action |
 | --- | --- |
 | `applyState` is `blocked` | Return `blocked` with `next_recommended: resolve-blockers`; do not edit. |
-| `applyState` is `all_done` | Do not edit; return `success` with `next_recommended: review`. Verify and archive are never direct successors of apply. |
+| `applyState` is `all_done` | Do not edit; return `success` with `next_recommended: review-parallel`. The orchestrator MUST launch `sdd-review` AND `sdd-review-security` in parallel. Verify and archive are never direct successors of apply. |
 | `workspace-planning` mode has no `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers`; treat linked repos and folders as read-only. |
 | Needed edit is outside `allowedEditRoots` | Return `blocked` with `next_recommended: resolve-blockers` and the unsafe path. |
 | Workload decision is required but unresolved | Return `blocked` with `next_recommended: resolve-blockers`, `Decision needed before apply: Yes`, `Chain strategy: pending`, and `Size exception: pending`; do not ask the user directly. |
@@ -76,7 +76,7 @@ Routing rules for `next_recommended`:
 Before reading implementation files or writing code, consume the structured status provided by the orchestrator or build the equivalent status from artifacts.
 
 - If `applyState` is `blocked`, STOP and return `blocked` with `next_recommended: resolve-blockers` plus the missing artifacts or unsafe context.
-- If `applyState` is `all_done`, do not edit. Return `success` with `next_recommended: review`. Verify and archive are never direct successors of apply.
+- If `applyState` is `all_done`, do not edit. Return `success` with `next_recommended: review-parallel`. The orchestrator MUST launch `sdd-review` AND `sdd-review-security` in parallel and MUST NOT launch `sdd-verify` until both appear in `completedPhases`. Verify and archive are never direct successors of apply.
 - If `applyState` is `ready`, proceed only on the assigned pending tasks.
 - Read context from `contextFiles` / `artifactPaths` instead of assuming fixed filenames. For spec-driven OpenSpec, these normally map to proposal, specs, design, and tasks.
 - If `actionContext.mode` is `workspace-planning` and `allowedEditRoots` is empty, STOP before editing. Treat linked repos and folders as read-only planning context.
@@ -286,7 +286,7 @@ If none, say "None."}
 - Estimated review budget impact: {brief note}
 
 ### Status
-{N}/{total} tasks complete. {Ready for next batch / Ready for review / Blocked by X}
+{N}/{total} tasks complete. {Ready for next batch / Ready for parallel review (sdd-review ∥ sdd-review-security) / Blocked by X}
 ```
 
 ## Rules
