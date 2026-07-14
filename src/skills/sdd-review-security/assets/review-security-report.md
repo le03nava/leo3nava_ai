@@ -11,13 +11,12 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 | `# Review Security Report: {changeName}` | `changeName` |
 | `## Verdict` | `changeName`, `status`, `verdict`, `nextRecommended`, `artifactMetadata.canonicalJsonRef` |
 | `## Totals` | `totals` |
-| `## General Review Reference` | `generalReviewRef` |
 | `## Unavailable Tooling` | `unavailableTooling[]` |
 | `## Exceptions` | `exceptions[]` |
 | `## Artifact Metadata` | `artifactMetadata` |
-| `## Summary` | `rows[]` grouped by catalog `controlDomain` (join by `sourceId`); `totals` |
+| `## Summary` | `controls[]` grouped by catalog `category` (join by `id`); `totals` |
 | `## Recommendation` | `verdict`, `nextRecommended`, `totals.blockers` |
-| `## Matrix` | `rows[]` joined with catalog `sourceRows[]` by `sourceId` |
+| `## Matrix` | `controls[].id`, `controls[].complies`, `controls[].finding`, `controls[].evidenceLocation`, `controls[].justification` joined with catalog `controls[]` by `id` to get `guideline` and `category` |
 
 ## Required Structure
 
@@ -39,7 +38,7 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 
 | Metric | Value |
 | --- | --- |
-| Total source rows (155) | `{totals.sourceRowCount}` |
+| Total controls (155) | `{totals.controlCount}` |
 | Validated | `{totals.validated}` |
 | Passing | `{totals.passing}` |
 | Failing | `{totals.failing}` |
@@ -48,20 +47,15 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 | Warnings | `{totals.warnings}` |
 | Exceptions | `{totals.exceptions}` |
 
-## General Review Reference
-
-- General review JSON: `{generalReviewRef}`
-- (Consumed as handoff authority; not re-scored here)
-
 ## Unavailable Tooling
 
 {List from `unavailableTooling[]` or "None"}
 
 ## Exceptions
 
-| Source ID | Approver | Approved At | Accepted Risk | Mitigation | Evidence Gap |
+| ID | Approver | Approved At | Accepted Risk | Mitigation | Evidence Gap |
 | --- | --- | --- | --- | --- | --- |
-| `{sourceId}` | `{approver}` | `{approvedAt}` | `{acceptedRiskRationale}` | `{mitigationOrFollowUp}` | `{evidenceGap}` |
+| `{id}` | `{approver}` | `{approvedAt}` | `{acceptedRiskRationale}` | `{mitigationOrFollowUp}` | `{evidenceGap}` |
 
 (or "None")
 
@@ -79,9 +73,9 @@ This file is the derived Markdown presentation contract for `sdd-review-security
 
 ## Summary
 
-Summary by control domain. Derived from `rows[]` joined with catalog `controlDomain` by `sourceId`. Passing = rows where `complies: Yes` or `lifecycleStatus: not-applicable` or `lifecycleStatus: exception-approved`. Blockers = rows where `finding: blocker`.
+Summary by category. Derived from `controls[]` joined with catalog `category` by `id`. Passing = rows where `complies: Yes` or `complies: N/A` with justification. Blockers = rows where `finding: blocker`.
 
-| Control Domain | Passing/Total | Blockers |
+| Category | Passing/Total | Blockers |
 | --- | --- | --- |
 | authorization-access-control | `{N}/{total}` | `{count or 0}` |
 | credential-secrets | `{N}/{total}` | `{count or 0}` |
@@ -99,7 +93,7 @@ Summary by control domain. Derived from `rows[]` joined with catalog `controlDom
 | sensitive-data-protection | `{N}/{total}` | `{count or 0}` |
 | session-management | `{N}/{total}` | `{count or 0}` |
 
-**Overall**: `{totals.passing}/{totals.sourceRowCount}` passing · `{totals.blockers}` blockers · `{totals.warnings}` warnings · `{totals.exceptions}` exceptions
+**Overall**: `{totals.passing}/{totals.controlCount}` passing · `{totals.blockers}` blockers · `{totals.warnings}` warnings · `{totals.exceptions}` exceptions
 
 ## Recommendation
 
@@ -108,20 +102,23 @@ Summary by control domain. Derived from `rows[]` joined with catalog `controlDom
 
 ## Matrix
 
-Full 155-row table rendered last. Join `rows[].sourceId` with catalog `sourceRows[].sourceId` to get Corporate Section, Control Domain, PCI Alignment, Guideline, and Applies When columns.
+Full 155-row table rendered last. For each row in `controls[]`, join `id` with catalog `controls[].id` to get `guideline` and `category`. All other columns come directly from the JSON row.
 
-| Source ID | Corporate Section | Control Domain | PCI Alignment | Guideline | Applies When | Applies | Complies | Lifecycle Status | Evidence Type | Evidence Location | Justification | Finding | Owner Phase | Route |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `{sourceId}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | `{catalog join}` | Yes/No/N/A | Yes/No/N/A | `{lifecycleStatus}` | `{evidenceType}` | `{evidenceLocation}` | `{justification}` | none/blocker/warning | `{ownerPhase}` | `{route}` |
+| ID | Guideline | Category | Complies | Finding | Evidence Location | Justification |
+| --- | --- | --- | --- | --- | --- | --- |
+| `{controls[].id}` | `{catalog join: guideline}` | `{catalog join: category}` | `{controls[].complies}` | `{controls[].finding}` | `{controls[].evidenceLocation}` | `{controls[].justification}` |
 ````
 
 ## Matrix Rules
 
-- Header must match exactly; 155 rows required, all source IDs exactly once
-- `applies` and `complies` must be `Yes`, `No`, or `N/A`
-- `N/A` rows require non-empty justification and evidenceLocation
-- Rows with `finding=blocker` make verdict FAIL unless `lifecycleStatus=exception-approved`
-- Rendered Markdown must be read back and compared to JSON for verdict/routing/counts and source-row coverage
+- Header must match exactly: ID | Guideline | Category | Complies | Finding | Evidence Location | Justification
+- 155 rows required, all control IDs (`REV-SEC-001` to `REV-SEC-155`) exactly once
+- `Complies` must be `Yes`, `No`, or `N/A`
+- `N/A` rows require non-empty `justification` and `evidenceLocation`
+- Rows with `finding: blocker` make verdict FAIL unless an approved exception exists
+- `justification` MUST NOT be truncated — render the full text from the JSON row
+- `guideline` is joined from the catalog by `id`; it MUST NOT be truncated
+- Rendered Markdown must be read back and compared to JSON for verdict/routing/counts and control coverage
 
 ## Safe Evidence Rules
 
