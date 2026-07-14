@@ -67,9 +67,17 @@ def extract_usage(body: bytes | str | Mapping[str, Any]) -> dict[str, int] | Non
     }
 
 
-def extract_sse_usage(chunks: Iterable[bytes | str]) -> dict[str, int] | None:
-    """Extract usage from SSE chunks, preferring usage found in the final data chunks."""
+def extract_sse_usage(chunks: Iterable[bytes | str]) -> tuple[dict[str, int] | None, str | None]:
+    """Extract usage and model from SSE chunks.
+
+    Supports two formats:
+    - OpenAI Chat Completions: usage at payload["usage"] with prompt_tokens/completion_tokens
+    - GitHub Copilot Responses API: usage at payload["response"]["usage"] with input_tokens/output_tokens
+
+    Returns a tuple of (usage_dict, model_str).
+    """
     last_usage: Mapping[str, Any] | None = None
+    model: str | None = None
 
     for chunk in chunks:
         text = chunk.decode("utf-8", errors="replace") if isinstance(chunk, bytes) else chunk
@@ -84,18 +92,43 @@ def extract_sse_usage(chunks: Iterable[bytes | str]) -> dict[str, int] | None:
                 payload = json.loads(data)
             except json.JSONDecodeError:
                 continue
-            if isinstance(payload, Mapping) and isinstance(payload.get("usage"), Mapping):
+            if not isinstance(payload, Mapping):
+                continue
+            # OpenAI Chat Completions format: usage at top level, model at top level
+            if isinstance(payload.get("usage"), Mapping):
                 last_usage = payload["usage"]
+                if payload.get("model"):
+                    model = str(payload["model"])
+            # GitHub Copilot Responses API format: usage and model nested inside "response"
+            elif isinstance(payload.get("response"), Mapping):
+                response = payload["response"]
+                if isinstance(response.get("usage"), Mapping):
+                    last_usage = response["usage"]
+                if response.get("model") and model is None:
+                    model = str(response["model"])
 
     if not last_usage:
         LOGGER.warning("SSE stream completed without usage metadata")
-        return None
+        return None, model
+
+    # Normalize both field naming conventions
+    prompt = (
+        last_usage.get("prompt_tokens")
+        or last_usage.get("input_tokens")
+        or 0
+    )
+    completion = (
+        last_usage.get("completion_tokens")
+        or last_usage.get("output_tokens")
+        or 0
+    )
+    total = last_usage.get("total_tokens") or (int(prompt) + int(completion))
 
     return {
-        "prompt_tokens": int(last_usage.get("prompt_tokens", 0)),
-        "completion_tokens": int(last_usage.get("completion_tokens", 0)),
-        "total_tokens": int(last_usage.get("total_tokens", 0)),
-    }
+        "prompt_tokens": int(prompt),
+        "completion_tokens": int(completion),
+        "total_tokens": int(total),
+    }, model
 
 
 def detect_agent(headers: Mapping[str, Any] | None) -> str:
@@ -153,6 +186,37 @@ class TokenMonitorAddon:
         self.conn = storage.init_db(self.db_path)
         self.sse_buffers: dict[str, list[bytes]] = {}
 
+    def load(self, loader: Any) -> None:
+        loader.add_option(
+            name="db_path",
+            typespec=str,
+            default=str(DEFAULT_DB_PATH),
+            help="SQLite database path",
+        )
+        loader.add_option(
+            name="filter_host",
+            typespec=str,
+            default="",
+            help="Comma-separated host substrings to filter (empty = all hosts)",
+        )
+
+    def configure(self, updated: Any) -> None:
+        from mitmproxy import ctx  # noqa: PLC0415
+
+        if "db_path" in updated:
+            new_path = Path(ctx.options.db_path).expanduser()
+            if new_path != self.db_path:
+                try:
+                    self.conn.close()
+                except Exception:  # noqa: BLE001
+                    pass
+                self.db_path = new_path
+                self.conn = storage.init_db(self.db_path)
+
+        if "filter_host" in updated:
+            raw = ctx.options.filter_host or ""
+            self.filter_hosts = [h.strip().lower() for h in raw.split(",") if h.strip()]
+
     def _host_matches(self, flow: Any) -> bool:
         if not self.filter_hosts:
             return True
@@ -182,13 +246,14 @@ class TokenMonitorAddon:
         flow_id = str(getattr(flow, "id", ""))
 
         usage: dict[str, int] | None = None
+        sse_model: str | None = None
         if flow_id in self.sse_buffers or "text/event-stream" in content_type:
             body = getattr(flow.response, "content", b"") or b""
             if isinstance(body, str):
                 body = body.encode("utf-8")
             self.sse_buffers.setdefault(flow_id, []).append(body)
             chunks = self.sse_buffers.pop(flow_id, [])
-            usage = extract_sse_usage(chunks)
+            usage, sse_model = extract_sse_usage(chunks)
         else:
             usage = extract_usage(_safe_response_json(flow) or getattr(flow.response, "content", b""))
 
@@ -199,7 +264,7 @@ class TokenMonitorAddon:
         req_meta = extract_headers(request_headers)
         res_meta = extract_headers(response_headers)
         model_raw = (_safe_response_json(flow) or {}).get("model")
-        model = _truncate(str(model_raw)) if model_raw is not None else None
+        model = _truncate(str(model_raw)) if model_raw is not None else _truncate(sse_model)
         endpoint = _truncate(
             getattr(flow.request, "pretty_host", None) or getattr(flow.request, "host", None)
         )
@@ -254,23 +319,19 @@ def create_addon_from_argv(argv: list[str] | None = None) -> TokenMonitorAddon:
     return TokenMonitorAddon(db_path=args.db_path, filter_hosts=args.filter_host)
 
 
-addons: list[TokenMonitorAddon] = []
+addons: list[TokenMonitorAddon] = [TokenMonitorAddon()]
 
 
 def main(argv: list[str] | None = None) -> int:
     parsed = _parse_script_args(argv)
-    if "--" in sys.argv and "mitmdump" in Path(sys.argv[0]).name.lower():
-        passthrough_args = sys.argv[sys.argv.index("--") + 1 :]
-        addons.clear()
-        addons.append(create_addon_from_argv(passthrough_args))
-        return 0
-
     print(
-        "Run with: mitmdump -s token_monitor.py -- "
-        f"--port {parsed.port} --db-path {Path(parsed.db_path).expanduser()}"
+        "Run with: mitmdump -s token_monitor.py "
+        f"--set db_path={Path(parsed.db_path).expanduser()} "
+        f"--listen-port {parsed.port}"
     )
     return 0
 
 
 if __name__ == "__main__":
+    import sys
     raise SystemExit(main())

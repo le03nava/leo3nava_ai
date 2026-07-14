@@ -7,6 +7,9 @@ Local mitmproxy addon + exporter to capture token usage from LLM API traffic and
 - Python 3.11+
 - `mitmproxy` (installed from `requirements.txt`)
 - `mkcert` (for local certificate trust setup)
+  - Windows: `winget install FiloSottile.mkcert`
+  - macOS: `brew install mkcert`
+  - Linux: download binary from https://github.com/FiloSottile/mkcert/releases
 
 ## One-time setup (certificate trust)
 
@@ -29,13 +32,13 @@ python -m pip install -r requirements-dev.txt
 From `token-monitor/`:
 
 ```bash
-mitmdump -s token_monitor.py -- --port 8080 --db-path ~/.token-monitor/usage.db
+mitmdump -s token_monitor.py --set db_path=~/.token-monitor/usage.db --listen-port 8080
 ```
 
-Optional host filtering:
+Optional host filtering (comma-separated):
 
 ```bash
-mitmdump -s token_monitor.py -- --port 8080 --db-path ~/.token-monitor/usage.db --filter-host api.openai.com --filter-host api.githubcopilot.com
+mitmdump -s token_monitor.py --set db_path=~/.token-monitor/usage.db --listen-port 8080 --set filter_host=api.openai.com,api.githubcopilot.com
 ```
 
 ## Agent configuration

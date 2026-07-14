@@ -13,7 +13,7 @@ AI API calls are invisible at cost level — there is no per-agent, per-session 
 - Agent detection via `User-Agent` + optional `X-Agent-Name` header
 - JSONL output: one record per request with `ts`, `agent`, `model`, `endpoint`, `prompt_tokens`, `completion_tokens`, `total_tokens`, `session_id`
 - CSV export script (separate from the addon)
-- CLI configuration via `argparse` (mirrors `report-exporter/` conventions)
+- CLI configuration via `argparse` (mirrors `tools-py/report-exporter/` conventions)
 - Unit tests under `token-monitor/tests/`
 
 ### Out of Scope
@@ -39,7 +39,7 @@ None.
 2. **TLS**: `mkcert` generates a local CA; `mkcert -install` adds it to the Windows trust store once. Python's `requests`/`httpx` and the OS both trust it natively.
 3. **Streaming**: The addon accumulates SSE data chunks per `flow.id`; on stream end it parses the last `data:` line for `usage`.
 4. **Output**: Each captured event is appended as a JSON line to a configurable output file (default: `token_usage.jsonl`).
-5. **Config**: `argparse` flags for `--output`, `--port`, `--filter-host`; mirrors `report-exporter/` pattern.
+5. **Config**: `argparse` flags for `--output`, `--port`, `--filter-host`; mirrors `tools-py/report-exporter/` pattern.
 
 ## Affected Areas
 

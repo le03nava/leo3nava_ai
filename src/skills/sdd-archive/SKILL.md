@@ -138,6 +138,17 @@ openspec/changes/{change-name}/
 Use today's date in ISO format (e.g., `2026-02-16`).
 If the destination already exists, STOP and return `blocked` with the existing destination path. Do not overwrite or mutate an existing archive folder.
 
+**Move semantics — follow this exact sequence:**
+
+1. Confirm `openspec/changes/archive/` exists; create it if not.
+2. Confirm the destination `openspec/changes/archive/YYYY-MM-DD-{change-name}/` does NOT exist; if it does, STOP and return `blocked`.
+3. Copy ALL files and subdirectories from `openspec/changes/{change-name}/` to the destination. Do not skip any file, including JSON reports, Markdown files, test-cases, and apply-progress.
+4. Verify the destination contains the same file count as the source before deletion.
+5. Delete the ENTIRE source folder `openspec/changes/{change-name}/` — not individual files, the whole directory.
+6. Verify immediately that `openspec/changes/{change-name}/` no longer exists. If it still exists after deletion, return `status: partial` with `next_recommended: resolve-blockers` and include the exact recovery steps: "Delete openspec/changes/{change-name}/ manually — archive copy at openspec/changes/archive/YYYY-MM-DD-{change-name}/ is complete."
+
+**Never** leave the source folder partially populated. A partial state (some files deleted, some remaining) is worse than no deletion — it creates ambiguity about which copy is authoritative.
+
 ### Step 4: Verify Archive
 
 **IF mode is `openspec` or `hybrid`:** Confirm:
@@ -152,7 +163,7 @@ If the destination already exists, STOP and return `blocked` with the existing d
 - [ ] Mandatory applicable security evidence is verified or covered by complete approved exceptions recorded in the audit trail
 - [ ] Applicable operational status, evidence refs, unresolved gaps, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries are preserved without requiring absent readiness categories or `sdd-operational-doc` execution
 - [ ] Archived `tasks.md` has no unchecked implementation tasks, unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof
-- [ ] Active changes directory no longer has this change
+- [ ] Active changes directory no longer has this change — verify by checking that `openspec/changes/{change-name}/` does NOT exist; if it still exists, return `status: partial` with `next_recommended: resolve-blockers` immediately, do not continue to Step 5
 - [ ] Archive report lists all synced domains, archive destination, verification verdict, and any intentional-with-warnings reason
 
 **IF mode is `engram`:** Confirm all artifact observation IDs are recorded in the archive report and the tasks observation has no unchecked implementation tasks unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof.

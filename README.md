@@ -32,7 +32,7 @@ The scripts only sync to tools whose base directories already exist. Missing des
 | `src/agents/` | Agent prompt definitions, including SDD phase agents. |
 | `src/skills/` | Reusable opencode skills and shared SDD contracts. |
 | `scripts/` | Windows PowerShell sync scripts for opencode and Copilot setup. |
-| `report-exporter/` | Python utility to export JSON review reports to Excel. |
+| `tools-py/` | Python utility tools (report-exporter, token-monitor). |
 | `openspec/` | Spec-driven documentation for repository capabilities and archived changes. |
 | `LICENSE` | MIT license for this repository. |
 
