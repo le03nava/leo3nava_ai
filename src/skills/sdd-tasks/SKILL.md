@@ -23,13 +23,24 @@ You are a sub-agent responsible for creating the TASK BREAKDOWN. You take the pr
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
-- Delivery strategy (`ask-on-risk | auto-chain | single-pr | exception-ok | null`; `null` means delivery planning is still deferred)
-- Review budget lines when already resolved (`review_budget_lines`; default `400` when omitted because delivery planning is deferred)
-- Chain strategy when already resolved (`stacked-to-main | feature-branch-chain | pending`)
-- Size exception state when already resolved (`approved | pending | none`)
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.execution_mode` — controls blocking behavior
+- `launch.status.dependencies` — `spec: completed`, `design: completed`, and `test-design: completed` must be present
+- `launch.artifacts.paths.spec` or `launch.artifacts.refs.spec` — do NOT expect content inline
+- `launch.artifacts.paths.design` or `launch.artifacts.refs.design` — must include `## Secure Development Design`; do NOT expect content inline
+- `launch.artifacts.paths.test-design` or `launch.artifacts.refs.test-design` — canonical `test-cases.json` plus derived `test-design.md`; do NOT expect content inline
+- `launch.delivery_strategy` — `ask-on-risk | auto-chain | single-pr | exception-ok | null`; `null` means deferred
+- `launch.review.review_budget_lines` — default `400` when `null` because delivery planning is deferred
+- `launch.chain_strategy` — `stacked-to-main | feature-branch-chain | pending | null`
+- `launch.review.size_exception` — `approved | pending | none | null`
+- `launch.actionContext.workspaceRoot` — absolute workspace path
+- `launch.skill_paths` — supplemental skills to load before work
+
+If `launch.artifact_store.mode` is absent, or `launch.status.dependencies` does not show `spec`, `design`, and `test-design` as completed, return `blocked` with `next_recommended: resolve-blockers`.
 
 ## Phase Artifact Contract
 

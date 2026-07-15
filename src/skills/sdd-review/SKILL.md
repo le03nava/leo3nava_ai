@@ -21,6 +21,19 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 Run after `sdd-apply` completes implementation work, in parallel with `sdd-review-security`. Produce durable review evidence; do not fix issues and do not replace verification, embedded secure-design authority, or security review ownership. Verification consumes both review reports after both parallel reviews complete.
 
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.status.dependencies` — `apply: completed` must be present
+- `launch.artifacts.paths` or `launch.artifacts.refs` — refs for design, test-design, tasks, apply-progress, and changed-file context; do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute workspace path to inspect changed files
+- `launch.actionContext.allowedEditRoots` — read-only scope for changed-file inspection
+- `launch.skill_paths` — supplemental skills to load before work
+
+If `launch.artifact_store.mode` is absent or `launch.status.dependencies` does not show `apply: completed`, return `blocked` with `next_recommended: resolve-blockers`.
+
 ## Phase Artifact Contract
 
 Common backend mechanics: follow `skills/_shared/persistence-contract.md` through **Section B** (retrieval) and **Section C** (persistence) in `skills/_shared/sdd-phase-common.md`.

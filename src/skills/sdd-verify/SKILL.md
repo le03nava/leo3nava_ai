@@ -21,7 +21,21 @@ Follow `skills/_shared/language-domain-contract.md`.
 
 Run when the orchestrator launches verification for an SDD change. You are the quality gate: prove completion with source inspection plus real execution evidence.
 
-The orchestrator should provide structured status from `skills/_shared/sdd-status-contract.md`. Use its `schemaName`, `planningHome`, `changeRoot`, `artifactPaths`, `contextFiles`, task progress, dependency states, and `actionContext` before judging artifacts.
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.status.dependencies` — `review: completed` and `review-security: completed` must both be present
+- `launch.artifacts.paths` or `launch.artifacts.refs` — refs for spec, design, test-design, tasks, apply-progress, review-report, review-security-report; do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute workspace path to run tests and inspect code
+- `launch.actionContext.allowedEditRoots` — scope for any test execution or file inspection
+- `launch.skill_paths` — supplemental skills to load before work
+
+The `## Phase Context` section contains:
+- Strict TDD instructions when active (`STRICT TDD MODE IS ACTIVE. Test runner: {cmd}.`)
+
+If `launch.artifact_store.mode` is absent, or `launch.status.dependencies` does not show both `review` and `review-security` as completed, return `blocked` with `next_recommended: resolve-blockers`.
 
 ## Hard Rules
 

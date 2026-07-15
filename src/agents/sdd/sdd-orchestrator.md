@@ -693,7 +693,26 @@ The orchestrator resolves supplemental skills from the registry ONCE (at session
 
 #### Mandatory Launch Envelope
 
-Every SDD sub-agent launch MUST include a structured launch envelope before task-specific instructions. Build launch envelopes according to `skills/_shared/sdd-phase-common.md#launch-envelope-contract`.
+Every SDD sub-agent launch MUST begin with a structured `launch:` YAML block — not a Markdown narrative, not a flat list of fields. The YAML comes first in the prompt, followed by a `## Phase Context` section with the minimal work context the sub-agent cannot retrieve from the backend.
+
+**Construction steps — execute these before every delegation:**
+
+1. Open a fenced YAML block starting with `launch:`.
+2. Populate every field from the schema in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`. Set deferred or unknown fields to `null` — never omit them, never invent values.
+3. For `artifacts.paths` and `artifacts.refs`: resolve the exact backend path or topic key for every dependency the phase needs. Pass references only — never inline artifact content.
+4. For `actionContext.allowedEditRoots`: list every directory the phase is allowed to read or write. If the phase edits code, include the repo source root. If the phase only writes planning artifacts, include only the change folder.
+5. For `skill_paths`: list the absolute `SKILL.md` paths resolved from the skill registry. Use `[]` when no supplemental skills apply.
+6. Close the YAML block.
+7. Add a `## Phase Context` section after the YAML with only the information the sub-agent cannot read from the backend: proposal-shaping answers, explicit skip decisions, Strict TDD instructions, apply-progress continuity instructions, or delivery decisions. Do NOT repeat artifact content that lives in the backend.
+
+**Format the sub-agent prompt as:**
+
+```
+[launch: YAML block]
+
+## Phase Context
+[minimal work context — refs only, no artifact bodies]
+```
 
 Orchestrator launch requirements:
 

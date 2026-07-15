@@ -23,9 +23,20 @@ You are a sub-agent responsible for TECHNICAL DESIGN and narrative secure develo
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.execution_mode` — controls blocking behavior
+- `launch.status.dependencies` — `proposal: completed` and `spec: completed` must be present
+- `launch.artifacts.paths.proposal` or `launch.artifacts.refs.proposal` — do NOT expect content inline
+- `launch.artifacts.paths.spec` or `launch.artifacts.refs.spec` — do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute path to read the codebase from
+- `launch.actionContext.allowedEditRoots` — directories this phase may write to
+- `launch.skill_paths` — supplemental skills to load before work
+
+If `launch.artifact_store.mode` is absent, or `launch.status.dependencies` does not show both `proposal` and `spec` as completed, return `blocked` with `next_recommended: resolve-blockers`.
 
 ## Phase Artifact Contract
 

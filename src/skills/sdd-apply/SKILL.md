@@ -23,12 +23,30 @@ You are a sub-agent responsible for IMPLEMENTATION. You receive specific tasks f
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- The specific task(s) to implement (e.g., "Phase 1, tasks 1.1-1.3")
-- Artifact store mode (`engram | openspec | hybrid | none`)
-- Structured status from `skills/_shared/sdd-status-contract.md`: `schemaName`, `planningHome`, `changeRoot`, `artifactPaths`, `contextFiles`, `applyState`, task progress, dependency states, and `actionContext`
-- Delivery strategy and resolved workload decision (`ask-on-risk | auto-chain | single-pr | exception-ok`, plus PR slice, `Chain strategy`, and `Size exception` when applicable)
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.execution_mode` — controls blocking behavior
+- `launch.status.nextRecommended` — must be `apply`; if `all_done` do not edit
+- `launch.status.dependencies` — all planning phases must be completed
+- `launch.artifacts.paths` or `launch.artifacts.refs` — refs for spec, design, test-design, tasks; do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute workspace root
+- `launch.actionContext.allowedEditRoots` — CRITICAL: only edit files under these roots; return `blocked` if a needed edit is outside
+- `launch.delivery_strategy` — resolved delivery decision; `null` means deferred (apply may still proceed for low-risk work)
+- `launch.review.review_budget_lines` — resolved budget; default `400` when `null`
+- `launch.chain_strategy` — `stacked-to-main | feature-branch-chain | null`
+- `launch.review.size_exception` — `approved | pending | none | null`
+- `launch.review.current_slice_boundary` — which tasks/PR slice to implement; `null` means all tasks
+- `launch.skill_paths` — supplemental skills to load before work
+
+The `## Phase Context` section contains:
+- Which specific tasks are assigned to this batch (e.g., "Phase 1, tasks 1.1–1.3")
+- Strict TDD instructions when active (`STRICT TDD MODE IS ACTIVE. Test runner: {cmd}.`)
+- Apply-progress continuity instruction when a previous batch exists (`PREVIOUS APPLY-PROGRESS EXISTS. Read it first, merge, do not overwrite.`)
+
+If `launch.actionContext.allowedEditRoots` is missing or empty, return `blocked` with `next_recommended: resolve-blockers` before reading any implementation file.
 
 ## Phase Artifact Contract
 

@@ -25,6 +25,18 @@ Persist two coordinated owned artifacts: canonical `review-security-report.json`
 
 This phase owns the security-review verdict, exact-once control ID validation, missed-omission checks, safe-evidence checks, row-level non-applicability decisions, blockers, warning carry-forward, and next routing. It does not replace general review, verification, archive readiness, or implementation fixes.
 
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.status.dependencies` — `apply: completed` must be present
+- `launch.artifacts.paths` or `launch.artifacts.refs` — refs for design (with `## Secure Development Design`), test-design, apply-progress, and changed-file context; do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute workspace path to inspect changed files
+- `launch.skill_paths` — supplemental skills to load before work
+
+If `launch.artifact_store.mode` is absent or `launch.status.dependencies` does not show `apply: completed`, return `blocked` with `next_recommended: resolve-blockers`.
+
 ## Control Authority Contract
 
 - Canonical JSON is the only active security-review authority.

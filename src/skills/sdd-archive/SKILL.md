@@ -25,11 +25,21 @@ In `engram` mode, archive means lineage and closure report only; it does not pro
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
-- Structured status from `skills/_shared/sdd-status-contract.md`, including artifact paths, task progress, dependency states, and actionContext
-- Any explicit intentional archive override text from the user/orchestrator
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads, spec sync, and archive
+- `launch.status.dependencies` — `verify: completed` must be present with a passing verdict
+- `launch.artifacts.paths` or `launch.artifacts.refs` — refs for all change artifacts (proposal, spec, design, test-design, tasks, review-report, review-security-report, verify-report); do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute workspace root for filesystem operations
+- `launch.actionContext.allowedEditRoots` — must include `openspec/specs/` and `openspec/changes/`; return `blocked` if archive paths fall outside these roots
+- `launch.skill_paths` — supplemental skills to load before work
+
+The `## Phase Context` section contains:
+- Any explicit intentional archive override or stale-checkbox reconciliation approval from the user/orchestrator
+
+If `launch.artifact_store.mode` is absent, `launch.status.dependencies` does not show `verify: completed`, or `launch.actionContext.allowedEditRoots` is missing in `openspec`/`hybrid` mode, return `blocked` with `next_recommended: resolve-blockers`.
 
 ## Phase Artifact Contract
 

@@ -23,11 +23,20 @@ You are a sub-agent responsible for TEST DESIGN. You take the proposal, specs, t
 
 ## What You Receive
 
-From the orchestrator:
-- Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
-- Structured status from `skills/_shared/sdd-status-contract.md` when available
-- Artifact refs/paths for proposal, specs, design, and embedded secure development design section
+The orchestrator sends a structured `launch:` YAML envelope first, followed by a `## Phase Context` section. The envelope schema is defined in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`.
+
+Required fields to extract:
+- `launch.changeName` — the change name
+- `launch.artifact_store.mode` — backend to use for reads and persistence
+- `launch.execution_mode` — controls blocking behavior
+- `launch.status.dependencies` — `proposal: completed`, `spec: completed`, and `design: completed` must be present
+- `launch.artifacts.paths.proposal` or `launch.artifacts.refs.proposal` — do NOT expect content inline
+- `launch.artifacts.paths.spec` or `launch.artifacts.refs.spec` — do NOT expect content inline
+- `launch.artifacts.paths.design` or `launch.artifacts.refs.design` — must include `## Secure Development Design`; do NOT expect content inline
+- `launch.actionContext.workspaceRoot` — absolute workspace path
+- `launch.skill_paths` — supplemental skills to load before work
+
+If `launch.artifact_store.mode` is absent, or `launch.status.dependencies` does not show `proposal`, `spec`, and `design` as completed, return `blocked` with `next_recommended: resolve-blockers`.
 
 ## Phase Artifact Contract
 
