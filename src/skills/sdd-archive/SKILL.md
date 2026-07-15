@@ -140,6 +140,8 @@ If the destination already exists, STOP and return `blocked` with the existing d
 
 **Move semantics — follow this exact sequence:**
 
+> **PATH CRITICAL**: The archive destination is `openspec/changes/archive/YYYY-MM-DD-{change-name}/` — NEVER `openspec/archive/`.
+
 1. Confirm `openspec/changes/archive/` exists; create it if not.
 2. Confirm the destination `openspec/changes/archive/YYYY-MM-DD-{change-name}/` does NOT exist; if it does, STOP and return `blocked`.
 3. Copy ALL files and subdirectories from `openspec/changes/{change-name}/` to the destination. Do not skip any file, including JSON reports, Markdown files, test-cases, and apply-progress.
