@@ -273,20 +273,29 @@ Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 
 ### Step 7: Return Summary
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put this test-design summary in `detailed_report`:
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the canonical YAML format defined in the Section D example. Adapt these fields for this phase:
 
-```markdown
+- `phase`: `test-design`
+- `next_recommended`: `tasks` (success) | `resolve-blockers` (blocked/partial)
+- `executive_summary`: one short paragraph — total cases planned (mandatory/non-mandatory), automated/manual/static split, security posture (no-impact or applicable categories covered), and testing constraints summary
+- `artifacts`: two entries — canonical `test-cases` (JSON) first, then derived `test-design` (MD); both with correct mode, ref/path, `persisted: true`, `readable: true`
+- `risks`: structured array or `None` — never an empty array `[]`
+- `skill_resolution`: from `skill-resolver.md#step-4-report-resolution`
+- `detailed_report`: use this minimum content for `sdd-test-design`:
+
+```
 ## Test Design Created
 
 **Change**: {change-name}
 **Location**: `openspec/changes/{change-name}/test-design.md` (openspec/hybrid) | Engram `sdd/{change-name}/test-design` (engram) | inline (none)
+**Canonical**: `openspec/changes/{change-name}/test-cases.json` (openspec/hybrid) | Engram `sdd/{change-name}/test-cases` (engram)
 
 ### Summary
-- **Inputs**: Proposal, specs, and design read.
-- **Security Inputs**: Embedded `design.md#secure-development-design` consumed.
-- **Cases Planned**: {N mandatory, M non-mandatory; automated/manual/static counts}
-- **No-Impact Assessment**: {present/not applicable}
-- **Testing Constraints**: {detected runner/static/manual constraints}
+- **Inputs**: {Proposal, N specs, and design read. Embedded design.md#secure-development-design consumed.}
+- **Security Inputs**: {No-impact classification confirmed / Applicable categories: list}
+- **Cases Planned**: {N mandatory, M non-mandatory — X automated, Y manual, Z static}
+- **No-Impact Assessment**: {Not applicable (behavioral changes present; security posture is no-impact) / present}
+- **Testing Constraints**: {list detected runner/static/manual constraints}
 
 ### Open Questions
 {List any unresolved questions, or "None"}

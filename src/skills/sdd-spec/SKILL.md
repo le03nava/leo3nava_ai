@@ -235,9 +235,17 @@ Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 
 ### Step 7: Return Summary
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put this specs summary in `detailed_report`:
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the canonical YAML format defined in the Section D example. Adapt these fields for this phase:
 
-```markdown
+- `phase`: `spec`
+- `next_recommended`: `design` (success) | `resolve-blockers` (blocked/partial)
+- `executive_summary`: one short paragraph — domains covered, total requirements added/modified, total scenarios, and coverage summary (happy paths, edge cases, error states)
+- `artifacts`: one entry per spec file produced; type `spec`; correct mode, ref/path, `persisted: true`, `readable: true`. In openspec/hybrid, include one entry per domain file.
+- `risks`: structured array or `None` — never an empty array `[]`
+- `skill_resolution`: from `skill-resolver.md#step-4-report-resolution`
+- `detailed_report`: use this minimum content for `sdd-spec`:
+
+```
 ## Specs Created
 
 **Change**: {change-name}

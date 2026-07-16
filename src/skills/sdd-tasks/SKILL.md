@@ -301,9 +301,17 @@ Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 
 ### Step 6: Return Summary
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put this tasks summary in `detailed_report`:
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the canonical YAML format defined in the Section D example. Adapt these fields for this phase:
 
-```markdown
+- `phase`: `tasks`
+- `next_recommended`: `apply` (success, including when workload decision is needed) | `resolve-blockers` (blocked/partial)
+- `executive_summary`: one short paragraph — total tasks, phase count, review budget risk level, whether a decision is needed before apply, and chain strategy if resolved
+- `artifacts`: one entry; type `tasks`; correct mode, ref/path, `persisted: true`, `readable: true`
+- `risks`: structured array or `None` — never an empty array `[]`. Include a WARNING risk entry when `Decision needed before apply: Yes`.
+- `skill_resolution`: from `skill-resolver.md#step-4-report-resolution`
+- `detailed_report`: use this minimum content for `sdd-tasks`. **The Review Workload Forecast guard lines are consumed literally by the orchestrator — preserve them exactly:**
+
+```
 ## Tasks Created
 
 **Change**: {change-name}
@@ -332,8 +340,16 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 - Decision needed before apply: {Yes | No}
 - Suggested work-unit PR split: {brief list or "Not needed"}
 
+Decision needed before apply: {Yes|No}
+Chained PRs recommended: {Yes|No}
+Chain strategy: {stacked-to-main|feature-branch-chain|pending}
+Size exception: {approved|pending|none}
+Review budget lines: {number}
+Review budget risk: {Low|Medium|High}
+400-line budget risk: {Low|Medium|High}
+
 ### Next Step
-{Ready for implementation (sdd-apply) OR return `Decision needed before apply: Yes` so the orchestrator can resolve chained PRs before sdd-apply.}
+{Ready for implementation (sdd-apply) | Decision needed before apply — orchestrator must resolve delivery strategy before sdd-apply.}
 ```
 
 ## Rules

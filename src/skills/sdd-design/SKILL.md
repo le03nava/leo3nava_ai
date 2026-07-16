@@ -289,9 +289,18 @@ After persistence succeeds, route directly to `sdd-test-design` / `test-design`.
 
 ### Step 6: Return Summary
 
-Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put this design summary in `detailed_report`:
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the canonical YAML format defined in the Section D example. Adapt these fields for this phase:
 
-```markdown
+- `phase`: `design`
+- `status`: MUST be `success`, `partial`, or `blocked`. **Never** `completed`, `done`, `ok`, or any other value.
+- `next_recommended`: `test-design` (success) | `resolve-blockers` (blocked/partial)
+- `executive_summary`: one short paragraph — technical approach, number of key decisions, files affected count, security classification (impacting/no-impact), and whether open questions were resolved
+- `artifacts`: one entry per artifact produced; type `design`; correct mode, ref/path, `persisted: true`, `readable: true`
+- `risks`: structured array or `None` — never an empty array `[]`
+- `skill_resolution`: from `skill-resolver.md#step-4-report-resolution`
+- `detailed_report`: use this minimum content for `sdd-design`:
+
+```
 ## Design Created
 
 **Change**: {change-name}
@@ -307,7 +316,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put thi
 {List any unresolved questions, or "None"}
 
 ### Next Step
-Ready for test design (`sdd-test-design`).
+Ready for test design (sdd-test-design).
 ```
 
 ## Rules

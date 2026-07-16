@@ -197,17 +197,57 @@ Response ordering:
 - The final output must be text containing the envelope, not a tool result. If the final action is a persistence tool call, the orchestrator loses the analysis.
 - Do not call `mem_session_summary`; session summaries are reserved for the top-level agent.
 
-Example:
+Example (using `sdd-propose` as the reference phase — adapt `phase`, `next_recommended`, `artifacts.type`, and `detailed_report` content per phase):
 
-```markdown
-**Status**: success
-**Summary**: Proposal created for `{change-name}`. Defined scope, approach, and rollback plan.
-**Artifacts**: Engram `sdd/{change-name}/proposal` | `openspec/changes/{change-name}/proposal.md`
-**Next**: sdd-spec
-**Risks**: None
-**Skill Resolution**: paths-injected — 3 skills (react-19, typescript, tailwind-4)
-See `skills/_shared/skill-resolver.md` for the full `skill_resolution` shape and allowed modes.
+```yaml
+status: success
+phase: propose
+change: sdd-cost-tracker-calls
+next_recommended: spec
+executive_summary: |
+  Proposal created for `sdd-cost-tracker-calls`. Defined intent, scope (5 deliverables in,
+  phases table deferred), rollback plan, and capabilities contract for sdd-spec.
+  Risk level is low — additive only, no breaking changes.
+artifacts:
+  - type: proposal
+    mode: openspec
+    ref: openspec/changes/sdd-cost-tracker-calls/proposal.md
+    persisted: true
+    readable: true
+    notes: null
+risks: None
+skill_resolution:
+  mode: paths-injected
+  loaded:
+    - skills/project-conventions/SKILL.md
+detailed_report: |
+  ## Proposal Created
+
+  **Change**: sdd-cost-tracker-calls
+  **Location**: `openspec/changes/sdd-cost-tracker-calls/proposal.md`
+
+  ### Summary
+  - **Intent**: Add per-call granularity to sdd-cost-tracker
+  - **Scope**: 5 deliverables in scope; phases table and MCP tools deferred
+  - **Approach**: Mirror existing patterns; fire-and-forget postCall branch in plugin
+  - **Risk Level**: Low
+
+  ### Next Step
+  Ready for specs (sdd-spec). Design runs after specs pass.
 ```
+
+Rules for the envelope:
+- `status` MUST be one of `success`, `partial`, or `blocked`. Never `completed`, `done`, `ok`, `hold`, or `failed`.
+- `phase` is the short phase token (e.g. `propose`, `spec`, `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive`).
+- `change` is the kebab-case change name from the launch envelope `changeName`.
+- `executive_summary` is a short human-readable paragraph (3-5 lines) summarizing what happened and why it matters. Write it as plain text or a single-line YAML scalar. Do NOT use bullet lists here.
+- `artifacts` is always an array, even for a single artifact. Use the artifact entry shape above. In `hybrid` mode, include one entry per backend (engram + openspec). In `none` mode, set `persisted: false`, `readable: true`, and use `ref: inline`.
+- `risks` is a structured array using the risk entry shape, or the literal word `None`. Never use an empty array `[]` — use `None` when there are no risks.
+- `skill_resolution` follows `skills/_shared/skill-resolver.md#step-4-report-resolution`. Always include it; use `mode: none` only when no supplemental skills were required.
+- `detailed_report` is a fenced YAML scalar (use `|`). Put the full phase-specific summary here — requirements tables, coverage, decisions, forecast, etc. See the phase-specific minimum detail table above.
+- `next_recommended` uses snake_case phase tokens only (e.g. `spec`, `design`, `test-design`, `tasks`, `apply`, `resolve-blockers`). Never camelCase.
+
+See `skills/_shared/skill-resolver.md` for the full `skill_resolution` shape and allowed modes.
 
 ## E. Artifact Naming Convention
 

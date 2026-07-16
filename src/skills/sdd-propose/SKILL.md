@@ -191,9 +191,17 @@ Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 
 ### Step 6: Return Summary
 
-Return to the orchestrator:
+Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the canonical YAML format defined in the Section D example. Adapt these fields for this phase:
 
-```markdown
+- `phase`: `propose`
+- `next_recommended`: `spec` (success) | `resolve-blockers` (blocked/partial)
+- `executive_summary`: one short paragraph — intent, scope count (N in / M deferred), approach, risk level, and rollback confirmed
+- `artifacts`: one entry per artifact produced; type `proposal`; correct mode, ref/path, `persisted: true`, `readable: true`
+- `risks`: structured array or `None` — never an empty array `[]`
+- `skill_resolution`: from `skill-resolver.md#step-4-report-resolution`
+- `detailed_report`: use this minimum content for `sdd-propose`:
+
+```
 ## Proposal Created
 
 **Change**: {change-name}
