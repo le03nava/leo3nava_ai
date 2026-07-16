@@ -16,7 +16,7 @@
  *   event: message.updated (AssistantMessage in a tracked child session)
  *     → accumulate tokens + cost by childSessionID
  *
- *   event: session.deleted
+ *   event: session.idle
  *     → POST /phases with the accumulated totals for that session
  */
 
@@ -59,7 +59,7 @@ interface SessionContext {
 // ---------------------------------------------------------------------------
 
 const RE_SUBAGENT_TYPE = /subagent_type[:\s]+sdd-([a-z-]+)/i
-const RE_CHANGE_NAME = /changeName[:\s"']+([^\s"',\n]+)/i
+const RE_CHANGE_NAME = /change_?name[:\s"']+([^\s"',\n]+)/i
 
 function extractSddPhase(text: string): string | null {
   const m = RE_SUBAGENT_TYPE.exec(text)
@@ -104,9 +104,7 @@ async function postPhase(sessionId: string, ctx: SessionContext): Promise<void> 
 
     if (!res.ok) {
       const text = await res.text().catch(() => "(no body)")
-      console.error(
-        `[sdd-cost-tracker] POST /phases failed: HTTP ${res.status} — ${text}`,
-      )
+      console.error(`[sdd-cost-tracker] POST /phases failed: HTTP ${res.status} — ${text}`)
     }
   } catch (err) {
     // Fire-and-forget: never crash the session on a tracking failure
@@ -119,6 +117,16 @@ async function postPhase(sessionId: string, ctx: SessionContext): Promise<void> 
 // ---------------------------------------------------------------------------
 
 const SddCostTrackerPlugin: Plugin = async ({ project }) => {
+  // project may be a string name or a full project object depending on opencode version
+  const projectName: string =
+    typeof project === "string"
+      ? project
+      : typeof (project as any)?.name === "string"
+        ? (project as any).name
+        : typeof (project as any)?.worktree === "string"
+          ? (project as any).worktree.replace(/\\/g, "/").split("/").pop() ?? ""
+          : ""
+
   /**
    * Queued contexts from tool.execute.before, waiting to be associated with a
    * child session once session.created fires with a parentID.
@@ -137,23 +145,31 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
     // Intercept Task tool launches to detect SDD sub-agent invocations
     // -----------------------------------------------------------------------
     "tool.execute.before": async (input, output) => {
-      if (input.tool !== "Task") return
+      if (input.tool !== "task") return
 
-      // The prompt is carried in output.args — cast to any since the schema
-      // varies by tool.
       const args = (output as any).args ?? {}
       const prompt: string =
         typeof args.prompt === "string" ? args.prompt : JSON.stringify(args)
 
-      const phase = extractSddPhase(prompt)
-      if (!phase) return
+      const phaseFromArg: string | null =
+        typeof args.subagent_type === "string" && args.subagent_type.startsWith("sdd-")
+          ? args.subagent_type
+          : null
 
+      const phase = phaseFromArg ?? extractSddPhase(prompt)
       const changeName = extractChangeName(prompt)
-      if (!changeName) return
 
-      // input.sessionID is the parent (orchestrator) session
+      if (!phase) return
+      if (!changeName) {
+        console.error(`[sdd-cost-tracker] phase=${phase} but changeName not found in prompt`)
+        return
+      }
+
       const parentSessionID: string | undefined = (input as any).sessionID
-      if (!parentSessionID) return
+      if (!parentSessionID) {
+        console.error(`[sdd-cost-tracker] parentSessionID missing on input`)
+        return
+      }
 
       pendingByParent.set(parentSessionID, { phase, changeName })
     },
@@ -181,7 +197,7 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
         sessions.set(childID, {
           phase: pending.phase,
           changeName: pending.changeName,
-          project: project ?? "",
+          project: projectName,
           modelId: null,
           providerId: null,
           tokensInput: 0,
@@ -199,41 +215,39 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
       // message.updated — accumulate tokens & cost for tracked sessions
       // -------------------------------------------------------------------
       if (type === "message.updated") {
-        const msg = properties?.message
+        const msg = properties?.info ?? properties?.message
         if (!msg || msg.role !== "assistant") return
 
-        const sessionID: string | undefined = properties?.sessionID
+        const sessionID: string | undefined =
+          properties?.info?.sessionID ?? properties?.sessionID
         if (!sessionID) return
 
         const ctx = sessions.get(sessionID)
         if (!ctx) return
 
-        // Extract model/provider from the message metadata (first time seen)
         if (!ctx.modelId && msg.modelID) ctx.modelId = msg.modelID
         if (!ctx.providerId && msg.providerID) ctx.providerId = msg.providerID
 
-        // Accumulate token counts from each message part (content blocks)
-        const usage = msg.tokens ?? msg.usage
-        if (usage) {
-          ctx.tokensInput += usage.input ?? usage.inputTokens ?? 0
-          ctx.tokensOutput += usage.output ?? usage.outputTokens ?? 0
-          ctx.tokensReasoning += usage.reasoning ?? usage.reasoningTokens ?? 0
-          ctx.tokensCacheRead += usage.cacheRead ?? usage.cacheReadTokens ?? 0
-          ctx.tokensCacheWrite += usage.cacheWrite ?? usage.cacheWriteTokens ?? 0
+        const t = msg.tokens
+        if (t) {
+          ctx.tokensInput += t.input ?? t.inputTokens ?? 0
+          ctx.tokensOutput += t.output ?? t.outputTokens ?? 0
+          ctx.tokensReasoning += t.reasoning ?? t.reasoningTokens ?? 0
+          ctx.tokensCacheRead += t.cache?.read ?? t.cacheRead ?? t.cacheReadTokens ?? 0
+          ctx.tokensCacheWrite += t.cache?.write ?? t.cacheWrite ?? t.cacheWriteTokens ?? 0
         }
 
-        // Accumulate cost
         const cost = msg.cost ?? msg.costUSD ?? 0
         ctx.costUsd += typeof cost === "number" ? cost : 0
         return
       }
 
       // -------------------------------------------------------------------
-      // session.deleted — flush accumulated data to the tracker
+      // session.idle — flush accumulated data to the tracker
       // -------------------------------------------------------------------
-      if (type === "session.deleted") {
+      if (type === "session.idle") {
         const sessionID: string | undefined =
-          properties?.info?.id ?? properties?.sessionID
+          properties?.sessionID ?? properties?.info?.id
 
         if (!sessionID) return
 
@@ -242,7 +256,6 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
 
         sessions.delete(sessionID)
 
-        // Only post if we actually captured something meaningful
         if (ctx.tokensInput === 0 && ctx.tokensOutput === 0 && ctx.costUsd === 0) return
 
         await postPhase(sessionID, ctx)
