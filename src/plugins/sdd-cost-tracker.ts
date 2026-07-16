@@ -112,6 +112,41 @@ async function postPhase(sessionId: string, ctx: SessionContext): Promise<void> 
   }
 }
 
+async function postCall(sessionId: string, callIndex: number, msg: any): Promise<void> {
+  const tokens = msg?.tokens
+  const costRaw = msg?.cost ?? msg?.costUSD ?? 0
+
+  const body = JSON.stringify({
+    session_id: sessionId,
+    call_index: callIndex,
+    model_id: msg?.modelID ?? null,
+    provider_id: msg?.providerID ?? null,
+    tokens_input: tokens?.input ?? tokens?.inputTokens ?? 0,
+    tokens_output: tokens?.output ?? tokens?.outputTokens ?? 0,
+    tokens_reasoning: tokens?.reasoning ?? tokens?.reasoningTokens ?? 0,
+    tokens_cache_read: tokens?.cache?.read ?? tokens?.cacheRead ?? tokens?.cacheReadTokens ?? 0,
+    tokens_cache_write:
+      tokens?.cache?.write ?? tokens?.cacheWrite ?? tokens?.cacheWriteTokens ?? 0,
+    cost_usd: typeof costRaw === "number" ? costRaw : 0,
+  })
+
+  try {
+    const res = await fetch(`${TRACKER_URL}/calls`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    })
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "(no body)")
+      console.error(`[sdd-cost-tracker] POST /calls failed: HTTP ${res.status} — ${text}`)
+    }
+  } catch (err) {
+    // Fire-and-forget: never crash the session on a tracking failure
+    console.error(`[sdd-cost-tracker] POST /calls error: ${err}`)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Plugin factory
 // ---------------------------------------------------------------------------
@@ -139,6 +174,12 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
    * Key: childSessionID
    */
   const sessions = new Map<string, SessionContext>()
+
+  /**
+   * Per-session call index for call-level tracking.
+   * Key: childSessionID
+   */
+  const callIndices = new Map<string, number>()
 
   return {
     // -----------------------------------------------------------------------
@@ -208,6 +249,7 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
           costUsd: 0,
           startedAt: Math.floor(Date.now() / 1000),
         })
+        callIndices.set(childID, 0)
         return
       }
 
@@ -229,6 +271,29 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
         if (!ctx.providerId && msg.providerID) ctx.providerId = msg.providerID
 
         const t = msg.tokens
+        const hasTokenData =
+          t &&
+          [
+            t.input,
+            t.inputTokens,
+            t.output,
+            t.outputTokens,
+            t.reasoning,
+            t.reasoningTokens,
+            t.cache?.read,
+            t.cacheRead,
+            t.cacheReadTokens,
+            t.cache?.write,
+            t.cacheWrite,
+            t.cacheWriteTokens,
+          ].some((v) => typeof v === "number")
+
+        if (hasTokenData) {
+          const callIndex = callIndices.get(sessionID) ?? 0
+          void postCall(sessionID, callIndex, msg)
+          callIndices.set(sessionID, callIndex + 1)
+        }
+
         if (t) {
           ctx.tokensInput += t.input ?? t.inputTokens ?? 0
           ctx.tokensOutput += t.output ?? t.outputTokens ?? 0
@@ -255,6 +320,7 @@ const SddCostTrackerPlugin: Plugin = async ({ project }) => {
         if (!ctx) return
 
         sessions.delete(sessionID)
+        callIndices.delete(sessionID)
 
         if (ctx.tokensInput === 0 && ctx.tokensOutput === 0 && ctx.costUsd === 0) return
 

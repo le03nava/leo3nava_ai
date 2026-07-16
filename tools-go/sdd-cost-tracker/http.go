@@ -30,6 +30,10 @@ type summaryResponse struct {
 	Summary []ChangeSummary `json:"summary"`
 }
 
+type getCallsResponse struct {
+	Calls []CallRecord `json:"calls"`
+}
+
 func NewRouter(store *Store) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", handleHealth(store))
@@ -37,7 +41,24 @@ func NewRouter(store *Store) http.Handler {
 	mux.HandleFunc("/changes", handleListChanges(store))
 	mux.HandleFunc("/changes/", handleGetChangePhases(store))
 	mux.HandleFunc("/summary", handleSummary(store))
+	mux.HandleFunc("/calls", handleCalls(store))
 	return mux
+}
+
+func handleCalls(store *Store) http.HandlerFunc {
+	post := handlePostCalls(store)
+	get := handleGetCalls(store)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			post(w, r)
+		case http.MethodGet:
+			get(w, r)
+		default:
+			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
+	}
 }
 
 func handleHealth(store *Store) http.HandlerFunc {
@@ -186,6 +207,48 @@ func handleSummary(store *Store) http.HandlerFunc {
 		}
 
 		writeJSON(w, http.StatusOK, summaryResponse{Summary: summary})
+	}
+}
+
+func handlePostCalls(store *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var record CallRecord
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&record); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid JSON body")
+			return
+		}
+
+		if err := requireNonEmpty("session_id", record.SessionID); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if err := store.InsertCall(r.Context(), record); err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to insert call")
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, upsertPhaseResponse{OK: true})
+	}
+}
+
+func handleGetCalls(store *Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := strings.TrimSpace(r.URL.Query().Get("session_id"))
+		if sessionID == "" {
+			writeError(w, http.StatusBadRequest, "session_id is required")
+			return
+		}
+
+		calls, err := store.GetCallsBySession(r.Context(), sessionID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to get calls")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, getCallsResponse{Calls: calls})
 	}
 }
 

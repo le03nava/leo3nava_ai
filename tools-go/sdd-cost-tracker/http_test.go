@@ -108,6 +108,131 @@ func TestHTTPPostPhasesMissingRequiredFieldsReturns400(t *testing.T) {
 	}
 }
 
+func TestHTTPPostCallsInsertReturnsCreated(t *testing.T) {
+	store := newTestStore(t)
+	defer store.Close()
+
+	router := NewRouter(store)
+	body := map[string]any{
+		"session_id":         "s-calls-1",
+		"call_index":         0,
+		"model_id":           "gpt-5",
+		"provider_id":        "openai",
+		"tokens_input":       12,
+		"tokens_output":      34,
+		"tokens_reasoning":   5,
+		"tokens_cache_read":  2,
+		"tokens_cache_write": 1,
+		"cost_usd":           0.01,
+	}
+
+	rec := performJSONRequest(t, router, http.MethodPost, "/calls", body)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected status 201, got %d", rec.Code)
+	}
+	assertContentTypeJSON(t, rec)
+}
+
+func TestHTTPPostCallsMissingSessionIDReturns400(t *testing.T) {
+	store := newTestStore(t)
+	defer store.Close()
+
+	router := NewRouter(store)
+	body := map[string]any{
+		"call_index": 1,
+	}
+
+	rec := performJSONRequest(t, router, http.MethodPost, "/calls", body)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", rec.Code)
+	}
+	assertErrorPayload(t, rec)
+}
+
+func TestHTTPPostCallsMalformedJSONReturns400(t *testing.T) {
+	store := newTestStore(t)
+	defer store.Close()
+
+	router := NewRouter(store)
+	req := httptest.NewRequest(http.MethodPost, "/calls", bytes.NewReader([]byte("not-json")))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", rec.Code)
+	}
+	assertErrorPayload(t, rec)
+}
+
+func TestHTTPGetCallsValidSession(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	defer store.Close()
+
+	if err := store.InsertCall(ctx, CallRecord{SessionID: "s-get-1", CallIndex: 0, CostUSD: 0.03}); err != nil {
+		t.Fatalf("seed call: %v", err)
+	}
+
+	router := NewRouter(store)
+	req := httptest.NewRequest(http.MethodGet, "/calls?session_id=s-get-1", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var payload struct {
+		Calls []CallRecord `json:"calls"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(payload.Calls) != 1 {
+		t.Fatalf("expected 1 call, got %d", len(payload.Calls))
+	}
+}
+
+func TestHTTPGetCallsUnknownSession(t *testing.T) {
+	store := newTestStore(t)
+	defer store.Close()
+
+	router := NewRouter(store)
+	req := httptest.NewRequest(http.MethodGet, "/calls?session_id=ghost", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var payload struct {
+		Calls []CallRecord `json:"calls"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(payload.Calls) != 0 {
+		t.Fatalf("expected 0 calls, got %d", len(payload.Calls))
+	}
+}
+
+func TestHTTPGetCallsMissingSessionIDReturns400(t *testing.T) {
+	store := newTestStore(t)
+	defer store.Close()
+
+	router := NewRouter(store)
+	req := httptest.NewRequest(http.MethodGet, "/calls", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", rec.Code)
+	}
+	assertErrorPayload(t, rec)
+}
+
 func TestHTTPHealth(t *testing.T) {
 	store := newTestStore(t)
 	defer store.Close()

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -31,6 +32,23 @@ CREATE TABLE IF NOT EXISTS phases (
 );
 `
 
+const createCallsTableSQL = `
+CREATE TABLE IF NOT EXISTS calls (
+  id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id           TEXT    NOT NULL,
+  call_index           INTEGER NOT NULL,
+  model_id             TEXT,
+  provider_id          TEXT,
+  tokens_input         INTEGER DEFAULT 0,
+  tokens_output        INTEGER DEFAULT 0,
+  tokens_reasoning     INTEGER DEFAULT 0,
+  tokens_cache_read    INTEGER DEFAULT 0,
+  tokens_cache_write   INTEGER DEFAULT 0,
+  cost_usd             REAL    DEFAULT 0,
+  recorded_at          INTEGER
+);
+`
+
 type Store struct {
 	db *sql.DB
 }
@@ -51,6 +69,21 @@ type PhaseRecord struct {
 	CostUSD          float64 `json:"cost_usd"`
 	StartedAt        *int64  `json:"started_at,omitempty"`
 	CompletedAt      *int64  `json:"completed_at,omitempty"`
+}
+
+type CallRecord struct {
+	ID               int64   `json:"id"`
+	SessionID        string  `json:"session_id"`
+	CallIndex        int     `json:"call_index"`
+	ModelID          *string `json:"model_id,omitempty"`
+	ProviderID       *string `json:"provider_id,omitempty"`
+	TokensInput      int64   `json:"tokens_input"`
+	TokensOutput     int64   `json:"tokens_output"`
+	TokensReasoning  int64   `json:"tokens_reasoning"`
+	TokensCacheRead  int64   `json:"tokens_cache_read"`
+	TokensCacheWrite int64   `json:"tokens_cache_write"`
+	CostUSD          float64 `json:"cost_usd"`
+	RecordedAt       *int64  `json:"recorded_at,omitempty"`
 }
 
 type ChangeSummary struct {
@@ -102,6 +135,10 @@ func (s *Store) init(ctx context.Context) error {
 
 	if _, err := s.db.ExecContext(ctx, createPhasesTableSQL); err != nil {
 		return fmt.Errorf("create phases table: %w", err)
+	}
+
+	if _, err := s.db.ExecContext(ctx, createCallsTableSQL); err != nil {
+		return fmt.Errorf("create calls table: %w", err)
 	}
 
 	return nil
@@ -268,6 +305,104 @@ ORDER BY id ASC;
 	defer rows.Close()
 
 	return scanPhaseRecords(rows)
+}
+
+func (s *Store) InsertCall(ctx context.Context, r CallRecord) error {
+	if strings.TrimSpace(r.SessionID) == "" {
+		return errors.New("session_id is required")
+	}
+
+	const q = `
+INSERT INTO calls (
+  session_id,
+  call_index,
+  model_id,
+  provider_id,
+  tokens_input,
+  tokens_output,
+  tokens_reasoning,
+  tokens_cache_read,
+  tokens_cache_write,
+  cost_usd,
+  recorded_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+`
+
+	_, err := s.db.ExecContext(
+		ctx,
+		q,
+		r.SessionID,
+		r.CallIndex,
+		r.ModelID,
+		r.ProviderID,
+		r.TokensInput,
+		r.TokensOutput,
+		r.TokensReasoning,
+		r.TokensCacheRead,
+		r.TokensCacheWrite,
+		r.CostUSD,
+		r.RecordedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("insert call: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Store) GetCallsBySession(ctx context.Context, sessionID string) ([]CallRecord, error) {
+	const q = `
+SELECT
+  id,
+  session_id,
+  call_index,
+  model_id,
+  provider_id,
+  tokens_input,
+  tokens_output,
+  tokens_reasoning,
+  tokens_cache_read,
+  tokens_cache_write,
+  cost_usd,
+  recorded_at
+FROM calls
+WHERE session_id = ?
+ORDER BY call_index ASC, id ASC;
+`
+
+	rows, err := s.db.QueryContext(ctx, q, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("get calls by session: %w", err)
+	}
+	defer rows.Close()
+
+	calls := make([]CallRecord, 0)
+	for rows.Next() {
+		var r CallRecord
+		if err := rows.Scan(
+			&r.ID,
+			&r.SessionID,
+			&r.CallIndex,
+			&r.ModelID,
+			&r.ProviderID,
+			&r.TokensInput,
+			&r.TokensOutput,
+			&r.TokensReasoning,
+			&r.TokensCacheRead,
+			&r.TokensCacheWrite,
+			&r.CostUSD,
+			&r.RecordedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan call record: %w", err)
+		}
+		calls = append(calls, r)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate call rows: %w", err)
+	}
+
+	return calls, nil
 }
 
 func (s *Store) GetSummary(ctx context.Context, project string) ([]ChangeSummary, error) {

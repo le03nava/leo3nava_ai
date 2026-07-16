@@ -192,7 +192,7 @@ The binary MUST compile with `CGO_ENABLED=0`. It MUST produce a single self-cont
 
 ### Requirement: Unit Test Coverage
 
-Co-located tests under `tools-go/sdd-cost-tracker/` MUST cover: DB schema initialization, `POST /phases` insert, `POST /phases` upsert, `GET /health`, `GET /changes`, `GET /summary`, `cost_query` tool, and `cost_summary` tool. All tests MUST pass with `go test ./...`.
+Co-located tests under `tools-go/sdd-cost-tracker/` MUST cover: DB schema initialization, `POST /phases` insert, `POST /phases` upsert, `GET /health`, `GET /changes`, `GET /summary`, `cost_query` tool, `cost_summary` tool, and the new call-level tests: `calls` table creation, `InsertCall` success and missing-field rejection, `GetCallsBySession` with results and with no results, `POST /calls` 201/400 cases, and `GET /calls` 200/400 cases. All tests MUST pass with `go test ./...`.
 
 #### Scenario: Full test suite green
 

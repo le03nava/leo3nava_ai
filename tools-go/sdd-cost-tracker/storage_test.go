@@ -41,6 +41,153 @@ func TestSchemaInit(t *testing.T) {
 			t.Fatalf("expected column %q to exist", col)
 		}
 	}
+
+	const callsQ = `PRAGMA table_info(calls);`
+	callsRows, err := store.db.QueryContext(context.Background(), callsQ)
+	if err != nil {
+		t.Fatalf("query calls table info: %v", err)
+	}
+	defer callsRows.Close()
+
+	callsColumns := map[string]bool{}
+	for callsRows.Next() {
+		var (
+			cid       int
+			name      string
+			colType   string
+			notNull   int
+			defaultV  interface{}
+			primaryPK int
+		)
+		if err := callsRows.Scan(&cid, &name, &colType, &notNull, &defaultV, &primaryPK); err != nil {
+			t.Fatalf("scan calls pragma row: %v", err)
+		}
+		callsColumns[name] = true
+	}
+
+	for _, col := range []string{
+		"id", "session_id", "call_index", "model_id", "provider_id",
+		"tokens_input", "tokens_output", "tokens_reasoning", "tokens_cache_read", "tokens_cache_write",
+		"cost_usd", "recorded_at",
+	} {
+		if !callsColumns[col] {
+			t.Fatalf("expected calls column %q to exist", col)
+		}
+	}
+}
+
+func TestInsertCallHappyPath(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	defer store.Close()
+
+	r := baseCallRecord("s1", 0)
+	r.CostUSD = 0.12
+	r.TokensInput = 100
+	r.TokensOutput = 50
+
+	if err := store.InsertCall(ctx, r); err != nil {
+		t.Fatalf("insert call: %v", err)
+	}
+
+	count := rowCount(t, store, "SELECT COUNT(*) FROM calls")
+	if count != 1 {
+		t.Fatalf("expected 1 call row, got %d", count)
+	}
+}
+
+func TestGetCallsBySessionHappyPath(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	defer store.Close()
+
+	r := baseCallRecord("s1", 0)
+	r.CostUSD = 0.21
+	r.TokensInput = 11
+	r.TokensOutput = 7
+	r.TokensReasoning = 3
+	r.TokensCacheRead = 2
+	r.TokensCacheWrite = 1
+
+	if err := store.InsertCall(ctx, r); err != nil {
+		t.Fatalf("insert call: %v", err)
+	}
+
+	rows, err := store.GetCallsBySession(ctx, "s1")
+	if err != nil {
+		t.Fatalf("get calls by session: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 call row, got %d", len(rows))
+	}
+
+	got := rows[0]
+	if got.SessionID != "s1" || got.CallIndex != 0 || got.CostUSD != 0.21 ||
+		got.TokensInput != 11 || got.TokensOutput != 7 || got.TokensReasoning != 3 ||
+		got.TokensCacheRead != 2 || got.TokensCacheWrite != 1 {
+		t.Fatalf("unexpected call row: %+v", got)
+	}
+}
+
+func TestGetCallsBySessionEmpty(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	defer store.Close()
+
+	rows, err := store.GetCallsBySession(ctx, "ghost")
+	if err != nil {
+		t.Fatalf("get calls by session: %v", err)
+	}
+	if len(rows) != 0 {
+		t.Fatalf("expected empty call rows, got %d", len(rows))
+	}
+}
+
+func TestGetCallsBySessionMultiple(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	defer store.Close()
+
+	for i := 0; i < 3; i++ {
+		r := baseCallRecord("s1", i)
+		if err := store.InsertCall(ctx, r); err != nil {
+			t.Fatalf("insert call %d: %v", i, err)
+		}
+	}
+
+	rows, err := store.GetCallsBySession(ctx, "s1")
+	if err != nil {
+		t.Fatalf("get calls by session: %v", err)
+	}
+	if len(rows) != 3 {
+		t.Fatalf("expected 3 call rows, got %d", len(rows))
+	}
+}
+
+func TestGetCallsBySessionOrdering(t *testing.T) {
+	ctx := context.Background()
+	store := newTestStore(t)
+	defer store.Close()
+
+	for _, i := range []int{2, 0, 1} {
+		r := baseCallRecord("s1", i)
+		if err := store.InsertCall(ctx, r); err != nil {
+			t.Fatalf("insert call %d: %v", i, err)
+		}
+	}
+
+	rows, err := store.GetCallsBySession(ctx, "s1")
+	if err != nil {
+		t.Fatalf("get calls by session: %v", err)
+	}
+	if len(rows) != 3 {
+		t.Fatalf("expected 3 call rows, got %d", len(rows))
+	}
+
+	if rows[0].CallIndex != 0 || rows[1].CallIndex != 1 || rows[2].CallIndex != 2 {
+		t.Fatalf("expected ordered call indices [0,1,2], got [%d,%d,%d]",
+			rows[0].CallIndex, rows[1].CallIndex, rows[2].CallIndex)
+	}
 }
 
 func TestUpsertInsert(t *testing.T) {
@@ -252,5 +399,12 @@ func baseRecord(project, changeName, phase, sessionID string) PhaseRecord {
 		ChangeName: changeName,
 		Phase:      phase,
 		SessionID:  sessionID,
+	}
+}
+
+func baseCallRecord(sessionID string, callIndex int) CallRecord {
+	return CallRecord{
+		SessionID: sessionID,
+		CallIndex: callIndex,
 	}
 }
