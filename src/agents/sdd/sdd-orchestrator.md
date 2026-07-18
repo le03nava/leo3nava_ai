@@ -699,11 +699,16 @@ Every SDD sub-agent launch MUST begin with a structured `launch:` YAML block —
 
 1. Open a fenced YAML block starting with `launch:`.
 2. Populate every field from the schema in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`. Set deferred or unknown fields to `null` — never omit them, never invent values.
-3. For `artifacts.paths` and `artifacts.refs`: resolve the exact backend path or topic key for every dependency the phase needs. Pass references only — never inline artifact content.
-4. For `actionContext.allowedEditRoots`: list every directory the phase is allowed to read or write. If the phase edits code, include the repo source root. If the phase only writes planning artifacts, include only the change folder.
-5. For `skill_paths`: list the absolute `SKILL.md` paths resolved from the skill registry. Use `[]` when no supplemental skills apply.
-6. Close the YAML block.
-7. Add a `## Phase Context` section after the YAML with only the information the sub-agent cannot read from the backend: proposal-shaping answers, explicit skip decisions, Strict TDD instructions, apply-progress continuity instructions, or delivery decisions. Do NOT repeat artifact content that lives in the backend.
+3. Compute and include all `status.dependencies` fields using `skills/_shared/sdd-status-contract.md` state semantics (`blocked | ready | all_done`, plus `legacy` for historical security fields). Do not emit partial dependency maps.
+4. For `artifacts.refs` and `artifacts.paths`, resolve every required dependency via `skills/_shared/persistence-contract.md ## Artifact Reference Resolver` using the selected `artifact_store.mode`. In `engram` mode refs are topic keys; in `openspec` mode refs are file paths; in `hybrid` mode refs include both backends; in `none` mode refs are inline/session handles.
+5. Populate `actionContext.mode`, `actionContext.workspaceRoot`, and `actionContext.allowedEditRoots` together. `actionContext.mode` is required (typically `repo-local` for local repository runs).
+6. Populate `delivery_strategy` and `chain_strategy` explicitly. Use `null` when unresolved; do not omit.
+7. Populate `review.review_budget_lines`, `review.current_slice_boundary`, and `review.size_exception` explicitly. Use `null` when not yet resolved.
+8. For `skill_paths`: list the absolute `SKILL.md` paths resolved from the skill registry. Use `[]` when no supplemental skills apply.
+9. Close the YAML block.
+10. Add a `## Phase Context` section after the YAML with only the information the sub-agent cannot read from the backend: proposal-shaping answers, explicit skip decisions, Strict TDD instructions, apply-progress continuity instructions, or delivery decisions. Do NOT repeat artifact content that lives in the backend.
+
+Use `skills/_shared/sdd-phase-common.md ## Launch Envelope Examples` as the canonical concrete launch format reference.
 
 **Format the sub-agent prompt as:**
 
@@ -729,8 +734,11 @@ Before launching any SDD sub-agent, verify:
 - [ ] Session Preflight is cached and forwarded.
 - [ ] Init Guard is satisfied for the selected `artifact_store.mode` unless launching `sdd-init` itself.
 - [ ] Dependency Graph readiness is satisfied for the requested phase.
-- [ ] Artifact refs are resolved through `skills/_shared/persistence-contract.md`.
+- [ ] `status.dependencies` includes all required dependency keys with valid state values.
+- [ ] Artifact refs and paths are resolved through `skills/_shared/persistence-contract.md` for the selected mode.
 - [ ] `actionContext` proves safe workspace/edit roots for any phase that can edit, test, verify, or archive.
+- [ ] `actionContext.mode` is set and consistent with the workspace execution context.
+- [ ] `delivery_strategy`, `chain_strategy`, and `review.*` fields are set (or explicitly `null`) before launch.
 - [ ] Supplemental skills are resolved and injected as exact `SKILL.md` paths when relevant.
 - [ ] Model assignment metadata is resolved or explicitly marked `unknown`.
 - [ ] Strict TDD instructions are forwarded when testing capabilities require them.

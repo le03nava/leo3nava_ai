@@ -48,6 +48,8 @@ When launching phase agents, normalize through this mapping:
 | `resolve-blockers` | report blockers and stop |
 | `none` | no next phase |
 
+Post-resolution rule for `resolve-blockers`: after blocker resolution, the orchestrator MUST re-delegate per Blocker Resolution Protocol in `executor-boundary.md`.
+
 Phase envelopes may return prefixed phase tokens such as `sdd-verify`; consumers MUST normalize them to the native token before comparing dependency states.
 
 ## Field Naming Across Contracts

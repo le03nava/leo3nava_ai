@@ -24,11 +24,55 @@ launch:
     escalation_reason: {reason-or-null}
   status:
     nextRecommended: {token}
-    dependencies: {structured-status-dependencies}
+    dependencies:
+      proposal: blocked | ready | all_done
+      specs: blocked | ready | all_done
+      securityApplicability: blocked | ready | all_done | legacy
+      design: blocked | ready | all_done
+      securityDesign: blocked | ready | all_done | legacy
+      testDesign: blocked | ready | all_done
+      tasks: blocked | ready | all_done
+      apply: blocked | ready | all_done
+      review: blocked | ready | all_done
+      reviewSecurity: blocked | ready | all_done
+      verify: blocked | ready | all_done
+      archive: blocked | ready | all_done
     blockedReasons: []
   artifacts:
-    refs: {artifact refs by type}
-    paths: {file paths by type when available}
+    refs:
+      projectContext: []
+      testingCapabilities: []
+      state: []
+      explore: []
+      proposal: []
+      specs: []
+      securityApplicability: []
+      design: []
+      securityDesign: []
+      testDesign: []
+      tasks: []
+      applyProgress: []
+      reviewReport: []
+      securityReviewReport: []
+      verifyReport: []
+      archiveReport: []
+    paths:
+      projectContext: []
+      testingCapabilities: []
+      state: []
+      explore: []
+      proposal: []
+      specs: []
+      securityApplicability: []
+      design: []
+      securityDesign: []
+      testDesign: []
+      tasks: []
+      applyProgress: []
+      reviewReport: []
+      securityReviewReport: []
+      verifyReport: []
+      archiveReport: []
   actionContext:
     mode: repo-local | workspace-planning | memory-local | ephemeral
     workspaceRoot: {absolute-path-or-null}
@@ -40,6 +84,190 @@ launch:
   skill_paths:
     - {absolute SKILL.md path}
 ```
+
+## Launch Envelope Examples
+
+Use these as canonical examples when constructing launch payloads. The orchestrator must still resolve real refs/paths from the selected backend before delegation.
+
+### Example A — `openspec` launch (design)
+
+```yaml
+launch:
+  phase: sdd-design
+  changeName: fix-blocker-redelegation-protocol
+  artifact_store:
+    mode: openspec
+  execution_mode: interactive
+  delivery_strategy: null
+  chain_strategy: null
+  model_assignment:
+    requested_agent: sdd-design
+    resolved_model: runtime-default
+    resolved_model_source: runtime-default
+    escalation_reason: null
+  status:
+    nextRecommended: design
+    dependencies:
+      proposal: all_done
+      specs: all_done
+      securityApplicability: legacy
+      design: ready
+      securityDesign: legacy
+      testDesign: blocked
+      tasks: blocked
+      apply: blocked
+      review: blocked
+      reviewSecurity: blocked
+      verify: blocked
+      archive: blocked
+    blockedReasons: []
+  artifacts:
+    refs:
+      projectContext:
+        - openspec/config.yaml
+      testingCapabilities:
+        - openspec/config.yaml
+      state:
+        - openspec/changes/fix-blocker-redelegation-protocol/state.yaml
+      explore:
+        - openspec/changes/fix-blocker-redelegation-protocol/explore.md
+      proposal:
+        - openspec/changes/fix-blocker-redelegation-protocol/proposal.md
+      specs:
+        - openspec/changes/fix-blocker-redelegation-protocol/spec.md
+      securityApplicability: []
+      design: []
+      securityDesign: []
+      testDesign: []
+      tasks: []
+      applyProgress: []
+      reviewReport: []
+      securityReviewReport: []
+      verifyReport: []
+      archiveReport: []
+    paths:
+      projectContext:
+        - openspec/config.yaml
+      testingCapabilities:
+        - openspec/config.yaml
+      state:
+        - openspec/changes/fix-blocker-redelegation-protocol/state.yaml
+      explore:
+        - openspec/changes/fix-blocker-redelegation-protocol/explore.md
+      proposal:
+        - openspec/changes/fix-blocker-redelegation-protocol/proposal.md
+      specs:
+        - openspec/changes/fix-blocker-redelegation-protocol/spec.md
+      securityApplicability: []
+      design: []
+      securityDesign: []
+      testDesign: []
+      tasks: []
+      applyProgress: []
+      reviewReport: []
+      securityReviewReport: []
+      verifyReport: []
+      archiveReport: []
+  actionContext:
+    mode: repo-local
+    workspaceRoot: C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai
+    allowedEditRoots:
+      - C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai\\openspec\\changes\\fix-blocker-redelegation-protocol
+  review:
+    review_budget_lines: null
+    current_slice_boundary: null
+    size_exception: null
+  skill_paths:
+    - C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai\\skills\\project-conventions\\SKILL.md
+```
+
+### Example B — `engram` launch (design)
+
+```yaml
+launch:
+  phase: sdd-design
+  changeName: fix-blocker-redelegation-protocol
+  artifact_store:
+    mode: engram
+  execution_mode: interactive
+  delivery_strategy: null
+  chain_strategy: null
+  model_assignment:
+    requested_agent: sdd-design
+    resolved_model: runtime-default
+    resolved_model_source: runtime-default
+    escalation_reason: null
+  status:
+    nextRecommended: design
+    dependencies:
+      proposal: all_done
+      specs: all_done
+      securityApplicability: legacy
+      design: ready
+      securityDesign: legacy
+      testDesign: blocked
+      tasks: blocked
+      apply: blocked
+      review: blocked
+      reviewSecurity: blocked
+      verify: blocked
+      archive: blocked
+    blockedReasons: []
+  artifacts:
+    refs:
+      projectContext:
+        - sdd-init/leo3nava_ai
+      testingCapabilities:
+        - sdd/leo3nava_ai/testing-capabilities
+      state:
+        - sdd/fix-blocker-redelegation-protocol/state
+      explore:
+        - sdd/fix-blocker-redelegation-protocol/explore
+      proposal:
+        - sdd/fix-blocker-redelegation-protocol/proposal
+      specs:
+        - sdd/fix-blocker-redelegation-protocol/spec
+      securityApplicability: []
+      design: []
+      securityDesign: []
+      testDesign: []
+      tasks: []
+      applyProgress: []
+      reviewReport: []
+      securityReviewReport: []
+      verifyReport: []
+      archiveReport: []
+    paths:
+      projectContext: []
+      testingCapabilities: []
+      state: []
+      explore: []
+      proposal: []
+      specs: []
+      securityApplicability: []
+      design: []
+      securityDesign: []
+      testDesign: []
+      tasks: []
+      applyProgress: []
+      reviewReport: []
+      securityReviewReport: []
+      verifyReport: []
+      archiveReport: []
+  actionContext:
+    mode: repo-local
+    workspaceRoot: C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai
+    allowedEditRoots:
+      - C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai\\openspec\\changes\\fix-blocker-redelegation-protocol
+  review:
+    review_budget_lines: null
+    current_slice_boundary: null
+    size_exception: null
+  skill_paths:
+    - C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai\\skills\\project-conventions\\SKILL.md
+```
+
+Hybrid launches must include both Engram and OpenSpec refs in `artifacts.refs` for each dependency. `none` launches use inline/session refs and keep `artifacts.paths` empty.
 
 Consumption rules for executors:
 
@@ -112,7 +340,7 @@ Phase skills remain responsible for defining the artifact key/path, artifact con
 
 ## D. Return Envelope
 
-> **CRITICAL — Response ordering**: Your FINAL output MUST be text (the return envelope), NOT a tool call. If you need to save to Engram (`mem_save`), do it BEFORE your final text response. Do NOT call `mem_session_summary` — that's for top-level agents only. **Why**: When a sub-agent's last action is a tool call, the parent agent receives only the tool result — your text response (the actual analysis) is lost.
+> **CRITICAL — Response ordering**: Your FINAL output MUST be a fenced YAML block and nothing else: open with ````yaml` on its own line, output the full envelope, then close with ``` on its own line. Do NOT output any text, prose, headers, or analysis before the opening fence or after the closing fence. All analysis belongs inside `detailed_report`. Do NOT end on a tool call; if you need to save to Engram (`mem_save`), do it BEFORE your final text response. Do NOT call `mem_session_summary` — that's for top-level agents only. **Why**: When a sub-agent's last action is a tool call, the parent agent receives only the tool result — your text response (the actual analysis) is lost. When a sub-agent wraps the envelope in prose, the orchestrator receives unstructured text instead of a parseable envelope.
 
 Every phase MUST return a structured envelope to the orchestrator. This section is the authoritative phase result contract.
 
@@ -132,7 +360,7 @@ Status semantics:
 
 - `success`: the phase reached its objective, persisted or returned the expected artifact according to `artifact_store.mode`, and the next phase may be considered after gatekeeper validation.
 - `partial`: the phase produced useful output but could not fully persist, verify, archive, or complete a required operation. Include recovery steps in `detailed_report` and route to `resolve-blockers` unless the phase-specific contract defines a safe retry.
-- `blocked`: the phase could not safely proceed because it needs user input, dependency repair, artifact reconciliation, safe edit context, or another external decision. Set `next_recommended: resolve-blockers` unless a phase-specific contract routes to an earlier SDD phase for remediation.
+- `blocked`: the phase could not safely proceed because it needs user input, dependency repair, artifact reconciliation, safe edit context, or another external decision. Set `next_recommended: resolve-blockers` unless a phase-specific contract routes to an earlier SDD phase for remediation. When unblocking a blocked phase, the orchestrator MUST re-delegate to the phase executor — never execute phase work inline. See Blocker Resolution Protocol in `executor-boundary.md`.
 - If a phase needs user input or orchestration, return `blocked`; do not ask the user directly from the sub-agent.
 
 Artifact entry shape:
@@ -194,7 +422,7 @@ Phase-specific minimum details:
 Response ordering:
 
 - Persist artifacts according to `artifact_store.mode` before returning the final envelope.
-- The final output must be text containing the envelope, not a tool result. If the final action is a persistence tool call, the orchestrator loses the analysis.
+- The final output must be one fenced YAML block (` ```yaml ... ``` `), not a tool result and not prose. No text before the opening fence and no text after the closing fence. If the final action is a persistence tool call, the orchestrator loses the analysis.
 - Do not call `mem_session_summary`; session summaries are reserved for the top-level agent.
 
 Example (using `sdd-propose` as the reference phase — adapt `phase`, `next_recommended`, `artifacts.type`, and `detailed_report` content per phase):

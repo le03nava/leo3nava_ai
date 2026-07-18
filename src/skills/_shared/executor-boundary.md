@@ -15,3 +15,14 @@ Some SDD skills are intentionally inline. When a skill says `ORCHESTRATOR GATE (
 ## Coordinator Exceptions
 
 `sdd-onboard` is a coordinator workflow, not a normal executor phase. It may coordinate narrated phase launches only when it is explicitly configured as a coordinator exception by the orchestrator/runtime. Do not treat this exception as permission for ordinary phase executors (`sdd-apply`, `sdd-verify`, etc.) to delegate.
+
+## Blocker Resolution Protocol
+
+When a delegated phase returns `status: blocked` with `next_recommended: resolve-blockers`, the orchestrator MUST report blockers and stop. After the user resolves the blocker, the orchestrator MUST re-delegate the blocked phase to its dedicated executor sub-agent using the launch envelope contract, and MUST NOT execute phase logic inline.
+
+Re-delegated executors SHOULD resume from the last persisted checkpoint artifact instead of restarting from scratch.
+
+- **`sdd-apply` special case**: The executor MUST read existing `apply-progress` evidence and resume from the first unchecked task in persisted task state.
+- **`sdd-archive` special case**: If a destructive-merge operation was partially applied, the orchestrator MUST surface partial-archive state and require explicit user confirmation (or repair instruction) before re-delegating archive. The orchestrator MUST NOT silently re-run archive from scratch in this state.
+- **Partial artifact rule (all phases)**: Executors MUST read existing partial artifacts before resuming and MUST return `blocked` if required partial artifacts are unreadable or corrupt.
+- **No-checkpoint rule**: If no readable checkpoint exists, the executor MAY start from the beginning and MUST NOT assume prior partial work.
