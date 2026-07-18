@@ -56,8 +56,6 @@ Equivalent init checks by mode:
 | --- | --- |
 | `engram` | `sdd-init/{project}` plus `sdd/{project}/testing-capabilities` |
 | `openspec` | `openspec/config.yaml` |
-| `hybrid` | Both Engram observations and `openspec/config.yaml` |
-| `none` | Current-session `sdd-init` result only; not recoverable later |
 
 ## Example 2 - Phase Returns `partial` -> Gatekeeper Catches -> Re-run -> Success
 

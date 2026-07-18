@@ -47,7 +47,6 @@ Return `status: blocked` with `next_recommended: resolve-blockers` when the phas
 
 - required artifacts are missing, unreadable, ambiguous, or materially conflicting
 - changed-file context is absent or ambiguous for a phase that judges changed-file evidence directly
-- selected backend has unresolved hybrid conflicts
 - workspace/action context is unsafe, outside allowed roots, or planning-only for a phase that needs repo evidence
 - required report evidence is missing, unreadable, malformed, or ambiguous
 - persistence or read-back verification fails after no useful durable artifact can be trusted

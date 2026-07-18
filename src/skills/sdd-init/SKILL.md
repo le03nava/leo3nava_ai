@@ -40,8 +40,8 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Produced artifacts | Project context `sdd-init/{project}`; testing capabilities `sdd/{project}/testing-capabilities`; `openspec/config.yaml`; local support registry `.atl/skill-registry.md`; Engram `skill-registry` when the selected mode supports each artifact. |
 | Mutates | OpenSpec bootstrap directories/files only in OpenSpec-capable modes; Engram init/testing/registry observations only in Engram-capable modes; `.atl/skill-registry.md` only in modes that allow local support files. |
 | Initialization semantics | Detect real stack, conventions, architecture, testing tools, strict TDD status, and persistence context before writing. Existing OpenSpec artifacts require explicit update handling instead of blind overwrite. |
-| Local support artifact semantics | Build the skill registry from actual skill paths and persist it as `.atl/skill-registry.md` only when local support files are allowed; in `none`, return the registry inline only. |
-| Conditional behavior | `engram` does not create `openspec/`; `openspec` does not call Engram; `hybrid` writes both selected backends; `none` writes no SDD/OpenSpec/Engram artifacts and no local support files. |
+| Local support artifact semantics | Build the skill registry from actual skill paths and persist it as `.atl/skill-registry.md`. |
+| Conditional behavior | `engram` does not create `openspec/`; `openspec` does not call Engram. |
 | Success routing | `next_recommended: sdd-new` or `sdd-explore`, according to the initialization envelope. |
 | Block routing | `next_recommended: resolve-blockers` for unsafe paths, unresolved existing OpenSpec update decisions, unavailable persistence backend, or failed read-back verification. |
 
@@ -62,8 +62,6 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 |---|---|
 | `mode=engram` | Save context and capabilities to Engram only. |
 | `mode=openspec` | Create/update openspec bootstrap files only. |
-| `mode=hybrid` | Do both Engram and openspec persistence. |
-| `mode=none` | Return detected context and registry inline only; write no SDD/OpenSpec/Engram artifacts and no local support files. |
 | `openspec/` already exists | Report existing files and ask before updating OpenSpec artifacts. |
 | strict TDD marker/config found | Use that value. |
 | no marker/config but test runner exists | Default `strict_tdd: true`. |
@@ -76,7 +74,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 3. Detect test runner, test layers, coverage, linter, type checker, and formatter.
 4. Resolve Strict TDD from agent marker, `openspec/config.yaml`, detected runner fallback, or no-runner fallback.
 5. Initialize persistence for the resolved mode.
-6. Build `.atl/skill-registry.md` using the skill-registry scan rules, except in `mode=none` where the registry is returned inline only.
+6. Build `.atl/skill-registry.md` using the skill-registry scan rules.
 7. Persist project context, testing capabilities, and registry using the exact artifact names for the resolved mode.
 8. Return the structured initialization envelope.
 
@@ -89,7 +87,7 @@ The `artifacts` list MUST explicitly report each artifact as saved, skipped, or 
 - `sdd-init/{project}` Engram project context observation ID, when applicable.
 - `sdd/{project}/testing-capabilities` Engram testing capabilities observation ID, when applicable.
 - `skill-registry` Engram observation ID, when applicable.
-- `.atl/skill-registry.md` path, or `inline only` in `mode=none`.
+- `.atl/skill-registry.md` path.
 - `openspec/config.yaml` path, when applicable.
 
 ## References

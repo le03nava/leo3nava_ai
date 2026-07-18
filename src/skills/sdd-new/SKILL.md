@@ -50,7 +50,7 @@ Ensure the SDD session has execution mode and artifact store mode cached. Preser
 
 ### Step 2: Ensure Init
 
-Confirm initialization exists in the selected artifact store using the orchestrator Init Guard: `sdd-init/{project}` plus testing capabilities for `engram`, `openspec/config.yaml` with project context plus testing capabilities for `openspec`, both sides for `hybrid`, and current-session init context for `none`. If the selected mode is missing or partial, delegate `sdd-init` and resume only after it succeeds.
+Confirm initialization exists in the selected artifact store using the orchestrator Init Guard: `sdd-init/{project}` plus testing capabilities for `engram`, or `openspec/config.yaml` with project context plus testing capabilities for `openspec`. If the selected mode is missing or partial, delegate `sdd-init` and resume only after it succeeds.
 
 ### Step 3: Launch Exploration
 
@@ -86,6 +86,6 @@ Return a concise orchestrator summary, not a phase artifact. Include:
 
 - Do not execute exploration or proposal work inline; delegate to their dedicated sub-agents.
 - Do not create artifacts directly from this workflow; sub-agents own persistence using the selected artifact store.
-- In `engram` or `hybrid`, sub-agents save phase artifacts under `sdd/{change-name}/{artifact}` topic keys.
+- In `engram`, sub-agents save phase artifacts under `sdd/{change-name}/{artifact}` topic keys.
 - Do not proceed from exploration to proposal when exploration reports missing context that would make the proposal speculative.
 - Do not proceed to proposal in automatic mode when material product facts are missing; report a blocker instead of guessing.

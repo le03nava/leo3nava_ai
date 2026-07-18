@@ -39,7 +39,7 @@ Required fields to extract:
 The `## Phase Context` section contains:
 - Any explicit intentional archive override or stale-checkbox reconciliation approval from the user/orchestrator
 
-If `launch.artifact_store.mode` is absent, `launch.status.dependencies` does not show `verify: completed`, or `launch.actionContext.allowedEditRoots` is missing in `openspec`/`hybrid` mode, return `blocked` with `next_recommended: resolve-blockers`.
+If `launch.artifact_store.mode` is absent, `launch.status.dependencies` does not show `verify: completed`, or `launch.actionContext.allowedEditRoots` is missing in `openspec` mode, return `blocked` with `next_recommended: resolve-blockers`.
 
 ## Phase Artifact Contract
 
@@ -49,14 +49,14 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | --- | --- |
 | Required inputs | Proposal, specs, design with mandatory `## Secure Development Design`, `test-design`, tasks, non-blocking general review evidence from the selected backend (canonical `review-report.json` when present plus derived `review-report.md` / `sdd/{change-name}/review` compatibility view), non-blocking security-review evidence from the selected backend (canonical `review-security-report.json` when present plus derived `review-security-report.md` / `sdd/{change-name}/review-security` compatibility view), and passing `verify-report`. Standalone `security-design.md` is legacy/read-only compatibility data only. |
 | Produced artifact | Archive report as `sdd/{change-name}/archive-report`; in OpenSpec, the archive audit-trail reference is `openspec/changes/archive/YYYY-MM-DD-{change-name}/`. |
-| Mutates | OpenSpec/hybrid source specs under `openspec/specs/{domain}/spec.md`; OpenSpec/hybrid change folder location from active change to dated archive; Engram/hybrid archive report lineage. |
+| Mutates | OpenSpec source specs under `openspec/specs/{domain}/spec.md`; OpenSpec change folder location from active change to dated archive; Engram archive report lineage. |
 | Spec sync semantics | Merge delta specs before moving the change folder. Preserve unrelated requirements; create missing main specs from full new specs; require explicit reason/migration for removals and explicit old/new names for renames. |
 | Archive move semantics | Move the entire change folder to the dated archive destination, never overwrite an existing archive folder, and verify the active change folder is gone and archived contents are complete. |
 | Destructive-delta warnings | Stop before destructive merges, large removals, unresolved removals, or ambiguous renames; return `confirmation_required: destructive-merge` for orchestrator-owned confirmation. |
 | Audit-trail semantics | Record artifact refs/observation IDs or concrete paths, synced domains and counts, task completion status, canonical general-review JSON ref when present, derived Markdown compatibility ref, general review verdict/blocking state, canonical security-review JSON ref when present, derived security Markdown compatibility ref, security review verdict/blocking state, verify verdict, embedded secure-design validation metadata, secure design/control evidence and N/A rationale, archive destination, warnings, and any approved reconciliation. Canonical general-review and security-review JSON artifacts are authoritative over derived Markdown on conflict. |
 | Source-row preservation | When corporate source-row validation applies, preserve canonical JSON refs before derived Markdown refs, source-row coverage summary, catalog snapshot identity/path, expected and validated Source ID counts, exact-once coverage status, non-blocking warnings, complete exceptions, safe evidence references, `N/A` evidence/justification status, parity metadata, and review-security/verify verdict links. Archive MUST NOT copy the full review-security source-row matrix into archive summaries. |
 | Operational evidence preservation | Preserve operational evidence/status, refs, exact `Pendiente de confirmar:` gaps, exact `No aplica.` states, warning carry-forward, unavailable-tooling notes, exceptions, and manual operational document handoff boundaries when present. Archive MUST NOT require absent readiness categories or `sdd-operational-doc` execution. |
-| Conditional behavior | Engram mode records lineage and closure without filesystem promotion; `none` mode returns inline closure only and must not claim durable archive, source-of-truth sync, or recoverable completion. |
+| Conditional behavior | Engram mode records lineage and closure without filesystem promotion. |
 | Success routing | `next_recommended: none` after archive report persistence and selected-backend read-back verification succeed. |
 | Block routing | `next_recommended: review`, `review-security`, `verify`, `apply`, or `resolve-blockers` according to missing/blocking review evidence, missing verify evidence, unchecked tasks, missing embedded secure design, unsafe context, destructive merge, destination conflict, or persistence failure. |
 
@@ -98,9 +98,8 @@ Do not start this step until shared Archive Readiness passes.
 
 **IF mode is `engram`:** Skip filesystem sync — artifacts live in Engram only. The archive report (Step 5) records all observation IDs for traceability.
 
-**IF mode is `none`:** Skip — no artifacts to sync.
 
-**IF mode is `openspec` or `hybrid`:** For each delta spec in `openspec/changes/{change-name}/specs/`:
+**IF mode is `openspec`:** For each delta spec in `openspec/changes/{change-name}/specs/`:
 
 #### If Main Spec Exists (`openspec/specs/{domain}/spec.md`)
 
@@ -136,9 +135,8 @@ openspec/changes/{change-name}/specs/{domain}/spec.md
 
 **IF mode is `engram`:** Skip — there are no `openspec/` directories to move. The archive report in Engram serves as the audit trail.
 
-**IF mode is `none`:** Skip — no filesystem operations.
 
-**IF mode is `openspec` or `hybrid`:** Move the entire change folder to archive with date prefix:
+**IF mode is `openspec`:** Move the entire change folder to archive with date prefix:
 
 ```
 openspec/changes/{change-name}/
@@ -163,7 +161,7 @@ If the destination already exists, STOP and return `blocked` with the existing d
 
 ### Step 4: Verify Archive
 
-**IF mode is `openspec` or `hybrid`:** Confirm:
+**IF mode is `openspec`:** Confirm:
 - [ ] Main specs updated correctly
 - [ ] Change folder moved to archive
 - [ ] Archive contains all artifacts (proposal, specs, design, test-design, tasks)
@@ -180,11 +178,10 @@ If the destination already exists, STOP and return `blocked` with the existing d
 
 **IF mode is `engram`:** Confirm all artifact observation IDs are recorded in the archive report and the tasks observation has no unchecked implementation tasks unless the orchestrator explicitly approved archive-time stale-checkbox reconciliation backed by apply-progress/verify-report proof.
 
-**IF mode is `none`:** Skip verification — no persisted artifacts.
 
 ### Step 5: Persist Archive Report
 
-This step is mandatory for `engram`, `openspec`, and `hybrid`. In `none`, skip persistence and return the archive report inline only.
+This step is mandatory for `engram` and `openspec`.
 
 Before persistence, validate the archive report includes:
 - Change name and artifact store mode
@@ -221,7 +218,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put the
 ## Change Archived
 
 **Change**: {change-name}
-**Archived to**: `openspec/changes/archive/{YYYY-MM-DD}-{change-name}/` (openspec/hybrid) | Engram archive report (engram) | inline (none)
+**Archived to**: `openspec/changes/archive/{YYYY-MM-DD}-{change-name}/` (openspec) | Engram archive report (engram)
 
 ### Specs Synced
 | Domain | Action | Details |

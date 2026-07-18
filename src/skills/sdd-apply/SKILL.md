@@ -60,7 +60,7 @@ Common backend mechanics: follow `skills/_shared/persistence-contract.md` throug
 | Task progress semantics | Read previous progress first, preserve existing `[x]` marks, skip already-complete assigned tasks, and mark only completed assigned tasks. Hybrid writes must keep Engram progress and OpenSpec checkboxes aligned. |
 | Apply evidence semantics | Record completed tasks, files changed, Standard/Strict TDD mode, test-design coverage or justified deviations, embedded secure-design evidence including N/A rationale where applicable, unavailable runtime/coverage/lint/typecheck/format tooling, issues, remaining tasks, workload/PR boundary, and persisted checkbox verification in `detailed_report` / apply-progress. |
 | Deviation semantics | If implementation cannot follow design or `test-design.md`, record the deviation, rationale, replacement evidence, and downstream verify implication; do not silently drop mandatory planned evidence. |
-| Conditional behavior | `none` mode may edit implementation files only when workspace guards allow it, but must not update SDD/OpenSpec/Engram artifacts; Strict TDD loads `strict-tdd.md` only when active. |
+| Conditional behavior | Strict TDD loads `strict-tdd.md` only when active. |
 | Success routing | `next_recommended: apply` while implementation tasks remain; `next_recommended: review-parallel` only when all implementation tasks are visibly complete in the persisted task artifact. The orchestrator MUST launch `sdd-review` AND `sdd-review-security` in parallel; use `currentPhase: review-parallel`. |
 | Block routing | `next_recommended: resolve-blockers` for unsafe workspace, unresolved workload decision, missing artifact, Strict TDD issue, partial persistence failure, or blocked task. |
 
@@ -149,8 +149,7 @@ Before starting work, check for existing apply-progress using the selected artif
 
 1. `engram`: `mem_search(query: "sdd/{change-name}/apply-progress", project: "{project}")`; if found, `mem_get_observation(id)` and read the full content.
 2. `openspec`: read `openspec/changes/{change-name}/tasks.md` checkbox state and any `applyProgress` entries from structured status.
-3. `hybrid`: read both Engram apply-progress and OpenSpec task checkbox state when both exist; merge without dropping either side and apply the Hybrid Conflict Policy if they materially disagree. Fallback only when one backend is absent.
-4. `none`: use only current conversation/status evidence; if previous progress is unclear, return `blocked` before editing.
+3. If previous progress is unclear from the selected backend evidence, return `blocked` before editing.
 5. Parse which tasks are already marked complete and skip those tasks — start from the first incomplete assigned task.
 6. When saving your apply-progress in Step 7, MERGE: include all previously completed tasks PLUS your newly completed tasks in a single combined artifact.
 
@@ -164,8 +163,6 @@ Read the cached testing capabilities to determine implementation mode:
 Read testing capabilities from:
 ├── engram: mem_search("sdd/{project}/testing-capabilities") -> mem_get_observation(id)
 ├── openspec: openspec/config.yaml -> strict_tdd + testing section
-├── hybrid: read both; apply Hybrid Conflict Policy if they disagree
-├── none: use only orchestrator-provided current-session testing context
 └── Fallback only when persistence lacks capabilities: check project files directly (package.json, go.mod, etc.)
 
 Resolve mode:
@@ -227,7 +224,7 @@ Before persisting or returning, verify:
 
 - Only assigned tasks were implemented.
 - Every file edit is inside `allowedEditRoots` when roots are provided.
-- Completed tasks are marked `[x]` in the persisted tasks artifact for `engram`, `openspec`, and `hybrid` modes.
+- Completed tasks are marked `[x]` in the persisted tasks artifact for `engram` and `openspec` modes.
 - Planned `test-design.md` checks for the assigned slice were followed, or every deviation has a justification and replacement evidence in apply-progress.
 - Security evidence for applicable controls in the assigned slice is recorded with guideline IDs, file references, evidence status, or complete approved exception details.
 - Previous apply-progress was merged when it existed.
@@ -237,27 +234,26 @@ Before persisting or returning, verify:
 
 ### Step 7: Persist Progress
 
-**This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, skip SDD artifact persistence.**
+**This step is MANDATORY for `engram` and `openspec` modes — do NOT skip it.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 - artifact: `apply-progress`
 - topic_key: `sdd/{change-name}/apply-progress`
 - openspec task path: `openspec/changes/{change-name}/tasks.md`
 - type: `architecture`
-- Also update the tasks artifact with `[x]` marks via `mem_update` (engram) or file edit (openspec/hybrid).
+- Also update the tasks artifact with `[x]` marks via `mem_update` (engram) or file edit (openspec).
 
 #### Merge Protocol
 
 When saving apply-progress:
 1. If you read previous progress in Step 2b, your artifact MUST include ALL previously completed tasks (copy their status and evidence) PLUS your new completions.
 2. In `openspec`, the persisted progress source is `tasks.md` checkbox state; do not invent a separate apply-progress file.
-3. In `hybrid`, update both Engram apply-progress and OpenSpec task checkboxes; both writes must reflect the same completed task set.
-4. The final artifact should show the cumulative state of ALL tasks across ALL batches.
-5. Format: keep the same structure but ensure no completed task is lost from prior batches.
+3. The final artifact should show the cumulative state of ALL tasks across ALL batches.
+4. Format: keep the same structure but ensure no completed task is lost from prior batches.
 
 ### Step 8: Return Summary
 
-Before returning, re-read the persisted tasks artifact in `engram`, `openspec`, and `hybrid` modes and confirm every task you report as completed is marked `[x]` there. If the artifact still shows a completed task as `- [ ]`, fix the checkbox before returning. Do not report `Ready for review` while completed work is only reflected in internal todos or apply-progress.
+Before returning, re-read the persisted tasks artifact in `engram` and `openspec` modes and confirm every task you report as completed is marked `[x]` there. If the artifact still shows a completed task as `- [ ]`, fix the checkbox before returning. Do not report `Ready for review` while completed work is only reflected in internal todos or apply-progress.
 
 Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put this implementation progress summary in `detailed_report`:
 

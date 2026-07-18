@@ -76,9 +76,9 @@ Return status as markdown with these fields, or as equivalent JSON when the host
 schemaName: sdd.status
 schemaVersion: 2
 changeName: <change-name-or-null>
-artifactStore: engram | openspec | hybrid | none
+artifactStore: engram | openspec
 planningHome:
-  mode: repo-local | memory-local | hybrid | ephemeral
+  mode: repo-local | memory-local
   path: <absolute path to openspec, memory namespace, or null>
 changeRoot: <absolute path to openspec/changes/<change>, memory namespace, or null>
 artifactRefs:
@@ -181,8 +181,7 @@ Mode-specific status rules:
 
 - **`engram`**: `artifactRefs` contain Engram topic keys. `artifactPaths` and `contextFiles` are empty arrays unless a real filesystem path is also known.
 - **`openspec`**: `artifactRefs`, `artifactPaths`, and `contextFiles` contain OpenSpec file paths where applicable.
-- **`hybrid`**: `artifactRefs` contain both Engram topic keys and OpenSpec file paths. `artifactPaths` and `contextFiles` contain only filesystem paths. If matching Engram/OpenSpec artifacts materially differ, mark the artifact `partial` and add `blockedReasons` per the Hybrid Conflict Policy in `persistence-contract.md`.
-- **`none`**: `artifactRefs` may contain inline/session refs such as `inline:proposal`. `artifactPaths` and `contextFiles` are empty arrays.
+
 
 Native status JSON is advisory when available. If native currently emits only `artifactStore: openspec`, use that output only as compact evidence for OpenSpec-mode artifact paths/task progress, then normalize through this local contract. Manual fallback MUST use `artifactStore` and `artifactRefs` from the active session preflight for non-OpenSpec modes.
 

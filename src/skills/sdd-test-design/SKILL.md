@@ -99,8 +99,6 @@ Before writing the artifact, read:
 - Testing capabilities when available:
   - Engram: `sdd/{project}/testing-capabilities`
   - OpenSpec: `openspec/config.yaml` `testing` section
-  - Hybrid: read both and apply the Hybrid Conflict Policy if they disagree
-  - None: use only current-session testing context provided by the orchestrator
 
 ### Step 3: Identify Test Design Inputs
 
@@ -122,7 +120,7 @@ If there is no behavior or testability impact, write a concise no-impact assessm
 
 ### Step 4: Write test-cases.json and derive test-design.md
 
-**IF mode is `openspec` or `hybrid`:** Create both artifacts under the change folder:
+**IF mode is `openspec`:** Create both artifacts under the change folder:
 
 ```text
 openspec/changes/{change-name}/
@@ -133,7 +131,7 @@ openspec/changes/{change-name}/
 └── test-design.md          ← You derive this from JSON (human-readable view)
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose both artifacts in memory; persist only when mode allows persistence.
+**IF mode is `engram`:** Do NOT create any `openspec/` directories or files. Compose both artifacts in memory; persist in Engram.
 
 #### Step 4a: Write canonical test-cases.json first
 
@@ -257,7 +255,7 @@ Before persisting or returning, verify:
 
 ### Step 6: Persist Artifact
 
-**This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, skip persistence.**
+**This step is MANDATORY for `engram` and `openspec` modes — do NOT skip it.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 - Persist canonical artifact first:
@@ -287,8 +285,8 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the
 ## Test Design Created
 
 **Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/test-design.md` (openspec/hybrid) | Engram `sdd/{change-name}/test-design` (engram) | inline (none)
-**Canonical**: `openspec/changes/{change-name}/test-cases.json` (openspec/hybrid) | Engram `sdd/{change-name}/test-cases` (engram)
+**Location**: `openspec/changes/{change-name}/test-design.md` (openspec) | Engram `sdd/{change-name}/test-design` (engram)
+**Canonical**: `openspec/changes/{change-name}/test-cases.json` (openspec) | Engram `sdd/{change-name}/test-cases` (engram)
 
 ### Summary
 - **Inputs**: {Proposal, N specs, and design read. Embedded design.md#secure-development-design consumed.}

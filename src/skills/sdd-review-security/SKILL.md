@@ -57,7 +57,7 @@ Follow the shared contracts instead of duplicating their rules:
 | Catalog authority | `assets/review-security-control-catalog.json` is the canonical control catalog with 155 controls; each control has `id`, `category`, `guideline`, `severity`, `defaultComplies`, `finding`, and `evidenceHint`. `assets/review-security-control-catalog.md` is a derived human/audit view. |
 | Markdown presentation | `assets/review-security-report.md` is the derived Markdown compatibility presentation generated from canonical JSON. |
 | Required inputs | Structured status; narrative `design.md#secure-development-design`; tasks/apply evidence; changed-file context; `test-design.md`; security catalog; shared security contract. |
-| Produced artifact | Canonical `sdd/{change-name}/review-security-report.json` plus derived `sdd/{change-name}/review-security` in Engram/hybrid mode, or canonical `openspec/changes/{change-name}/review-security-report.json` plus derived `openspec/changes/{change-name}/review-security-report.md` in OpenSpec mode. |
+| Produced artifact | Canonical `sdd/{change-name}/review-security-report.json` plus derived `sdd/{change-name}/review-security` in Engram mode, or canonical `openspec/changes/{change-name}/review-security-report.json` plus derived `openspec/changes/{change-name}/review-security-report.md` in OpenSpec mode. |
 | Mutates | None outside the produced security review report artifacts. |
 | JSON authority | Build, validate, persist, and read back canonical JSON first. Render Markdown only from that JSON; Markdown never wins on conflict. |
 | Matrix ownership | Only this phase owns security control validation. Do not copy or re-score the general 96-control matrix. |
@@ -161,7 +161,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Put `##
 
 - `../_shared/skill-resolver.md` — supplemental skill loading and `skill_resolution` protocol.
 - `../_shared/sdd-phase-common.md` — phase retrieval, persistence, and return envelope.
-- `../_shared/persistence-contract.md` — artifact keys, backend behavior, hybrid conflict policy, and read-back verification.
+- `../_shared/persistence-contract.md` — artifact keys, backend behavior, and read-back verification.
 - `assets/review-security-control-catalog.json` — canonical control catalog with 155 controls (`REV-SEC-001` to `REV-SEC-155`); each entry has `id`, `category`, `guideline`, `severity`, `defaultComplies`, `finding`, and `evidenceHint`.
 - `assets/review-security-control-catalog.md` — derived human/audit view generated from the canonical JSON catalog.
 - `assets/review-security-report.md` — derived `review-security-report.md` presentation contract generated from `review-security-report.json`.

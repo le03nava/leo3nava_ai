@@ -25,7 +25,7 @@ You are a sub-agent responsible for writing SPECIFICATIONS. You take the proposa
 
 From the orchestrator:
 - Change name
-- Artifact store mode (`engram | openspec | hybrid | none`)
+- Artifact store mode (`engram | openspec`)
 
 ## Phase Artifact Contract
 
@@ -59,8 +59,6 @@ Routing rules for `next_recommended`:
 | `Modified Capabilities` references a missing existing spec | Return `blocked` with `next_recommended: resolve-blockers` unless the proposal explicitly says to create it as new. |
 | `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/spec`. |
 | `openspec` mode | Write only `openspec/changes/{change-name}/specs/{domain}/spec.md`; do not call `mem_save`. |
-| `hybrid` mode | Write OpenSpec files and persist the concatenated Engram artifact. |
-| `none` mode | Return inline only; do not write files and do not call `mem_save`. |
 | Spec draft fails validation | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 
 ## What to Do
@@ -75,29 +73,28 @@ Read the proposal's **Capabilities section** — this is your primary contract:
 ```
 FOR EACH entry under "New Capabilities":
 ├── This becomes a NEW full spec artifact for this change
-├── OpenSpec path, only in openspec/hybrid: openspec/changes/{change-name}/specs/<capability-name>/spec.md
-├── Engram/none shape: a `# <capability-name>` domain section inside the returned/persisted spec artifact
+├── OpenSpec path, in openspec: openspec/changes/{change-name}/specs/<capability-name>/spec.md
+├── Engram shape: a `# <capability-name>` domain section inside the returned/persisted spec artifact
 └── Write a complete spec (not a delta) — archive later promotes it to openspec/specs/<capability-name>/spec.md
 
 FOR EACH entry under "Modified Capabilities":
-├── This becomes a DELTA spec in openspec/hybrid: openspec/changes/{change-name}/specs/<capability-name>/spec.md
-├── In engram/none, this becomes a modified domain section in the single spec artifact
-└── In openspec/hybrid, read existing openspec/specs/<capability-name>/spec.md first — your delta modifies it
+├── This becomes a DELTA spec in openspec: openspec/changes/{change-name}/specs/<capability-name>/spec.md
+├── In engram, this becomes a modified domain section in the single spec artifact
+└── In openspec, read existing openspec/specs/<capability-name>/spec.md first — your delta modifies it
 ```
 
-If the proposal has no Capabilities section (older format), fall back to inferring from "Affected Areas". But always prefer the explicit Capabilities mapping when present. Do not create or read OpenSpec paths in `engram` or `none` mode.
+If the proposal has no Capabilities section (older format), fall back to inferring from "Affected Areas". But always prefer the explicit Capabilities mapping when present. Do not create or read OpenSpec paths in `engram` mode.
 
 ### Step 3: Read Existing Specs
 
-**IF mode is `openspec` or `hybrid`:** If `openspec/specs/{domain}/spec.md` exists, read it to understand CURRENT behavior. Your delta specs describe CHANGES to this behavior.
+**IF mode is `openspec`:** If `openspec/specs/{domain}/spec.md` exists, read it to understand CURRENT behavior. Your delta specs describe CHANGES to this behavior.
 
 **IF mode is `engram`:** Read `sdd/{change-name}/proposal` and check whether `sdd/{change-name}/spec` already exists before saving. If existing domain spec context is unavailable in Engram, state that limitation in the return envelope.
 
-**IF mode is `none`:** Skip — no existing specs to read.
 
 ### Step 4: Write Delta Specs
 
-**IF mode is `openspec` or `hybrid`:** Create specs inside the change folder:
+**IF mode is `openspec`:** Create specs inside the change folder:
 
 ```
 openspec/changes/{change-name}/
@@ -107,7 +104,7 @@ openspec/changes/{change-name}/
         └── spec.md          ← Delta spec
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the spec content in memory; persist it only if the mode allows persistence.
+**IF mode is `engram`:** Do NOT create any `openspec/` directories or files. Compose the spec content in memory; persist it only in Engram.
 
 #### MODIFIED Requirements Workflow (CRITICAL — read before writing deltas)
 
@@ -225,7 +222,7 @@ Before persisting or returning, verify:
 
 ### Step 6: Persist Artifact
 
-**This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, skip persistence.**
+**This step is MANDATORY for `engram` and `openspec` modes — do NOT skip it.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 - artifact: `spec`
@@ -240,7 +237,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the
 - `phase`: `spec`
 - `next_recommended`: `design` (success) | `resolve-blockers` (blocked/partial)
 - `executive_summary`: one short paragraph — domains covered, total requirements added/modified, total scenarios, and coverage summary (happy paths, edge cases, error states)
-- `artifacts`: one entry per spec file produced; type `spec`; correct mode, ref/path, `persisted: true`, `readable: true`. In openspec/hybrid, include one entry per domain file.
+- `artifacts`: one entry per spec file produced; type `spec`; correct mode, ref/path, `persisted: true`, `readable: true`. In openspec, include one entry per domain file.
 - `risks`: structured array or `None` — never an empty array `[]`
 - `skill_resolution`: from `skill-resolver.md#step-4-report-resolution`
 - `detailed_report`: use this minimum content for `sdd-spec`:

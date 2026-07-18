@@ -42,7 +42,7 @@ Common post-apply gates, safe-evidence rules, matrix ownership boundaries, routi
 | Concern | Contract |
 | --- | --- |
 | Required inputs | Structured status plus design with mandatory `## Secure Development Design`, mandatory `test-design`, tasks/apply progress, and changed-file context from the selected backend. Standalone `security-design.md` is legacy/read-only compatibility data only. |
-| Produced artifact | Canonical `sdd/{change-name}/review-report.json` plus derived `sdd/{change-name}/review` in Engram/hybrid mode, or `openspec/changes/{change-name}/review-report.json` plus derived `openspec/changes/{change-name}/review-report.md` in OpenSpec mode. |
+| Produced artifact | Canonical `sdd/{change-name}/review-report.json` plus derived `sdd/{change-name}/review` in Engram mode, or `openspec/changes/{change-name}/review-report.json` plus derived `openspec/changes/{change-name}/review-report.md` in OpenSpec mode. |
 | Mutates | None outside the produced review report artifact. |
 | Review catalog | Load controls only from canonical `assets/review-control-catalog.json`. `assets/review-control-catalog.md` is a derived/reference-only human view and MUST NOT be used as control authority. Every `REV-CORP-001..REV-CORP-096` Item ID and source item `1..96` must appear exactly once. |
 | Matrix contract | The matrix header must be exactly: `Item`, `Artifact/Deliverable`, `Requirement`, `Reviewer`, `Standard`, `Severity`, `Complies`, `Affected Requirement`, `Evidence Location`, `Observations/Comments`. Do not add a Category column. |

@@ -13,7 +13,7 @@ launch:
   phase: sdd-<phase>
   changeName: {change-name}
   artifact_store:
-    mode: engram | openspec | hybrid | none
+    mode: engram | openspec
   execution_mode: interactive | auto
   delivery_strategy: ask-on-risk | auto-chain | single-pr | exception-ok | null
   chain_strategy: stacked-to-main | feature-branch-chain | null
@@ -267,8 +267,6 @@ launch:
     - C:\\Leo\\Proyectos\\leo3nava_ai\\leo3nava_ai\\skills\\project-conventions\\SKILL.md
 ```
 
-Hybrid launches must include both Engram and OpenSpec refs in `artifacts.refs` for each dependency. `none` launches use inline/session refs and keep `artifacts.paths` empty.
-
 Consumption rules for executors:
 
 - Read artifacts from `artifacts.refs` / `artifacts.paths` according to `artifact_store.mode`; do not reconstruct missing artifacts from prose or broad memory searches.
@@ -292,7 +290,7 @@ Loading supplemental skills is not delegation. SDD phase executors still execute
 
 ## B. Artifact Retrieval
 
-Follow `skills/_shared/persistence-contract.md` for artifact-store mode resolution, artifact references, backend read behavior, Engram preview handling, OpenSpec paths, hybrid conflict policy, and missing-artifact behavior.
+Follow `skills/_shared/persistence-contract.md` for artifact-store mode resolution, artifact references, backend read behavior, Engram preview handling, and OpenSpec paths.
 
 Phase skills remain responsible for naming their required inputs and reading every required dependency before producing phase output.
 
@@ -304,8 +302,6 @@ Mode-specific context rules:
 
 - `engram`: read only the provided topic keys via `mem_search` / `mem_get_observation`; persist completed artifacts with `capture_prompt: false` when supported.
 - `openspec`: read/write only the provided OpenSpec paths and paths defined by `skills/_shared/openspec-convention.md`.
-- `hybrid`: read both refs when both are provided; apply the Hybrid Conflict Policy before using either side if they differ materially.
-- `none`: use only inline context provided by the orchestrator; if a required dependency is missing from the prompt, return `blocked` with `next_recommended: resolve-blockers`.
 
 Required context by phase:
 
@@ -328,7 +324,7 @@ Required context by phase:
 Context integrity checks:
 
 - Confirm `changeName`, `artifact_store.mode`, `currentPhase`/`nextRecommended`, and `stateRevision` when provided before doing phase work.
-- If an artifact ref points to a different change, stale state, wrong mode, missing backend, or materially different hybrid content, return `blocked`; do not silently continue.
+- If an artifact ref points to a different change, stale state, wrong mode, or missing backend, return `blocked`; do not silently continue.
 - If `apply-progress`, tasks, chain plan, review budget, or actionContext changed compared with the launch envelope, return `blocked` or report the mismatch in the result envelope.
 - If a required dependency is missing, do not create a placeholder artifact downstream. Route back to the owning earlier phase.
 
@@ -368,7 +364,7 @@ Artifact entry shape:
 ```yaml
 artifacts:
   - type: explore | proposal | spec | design | test-design | tasks | apply-progress | review-report | review-security-report | verify-report | archive-report | state | other
-    mode: engram | openspec | hybrid | none
+    mode: engram | openspec
     ref: "topic key, file path, or inline ref"
     persisted: true | false
     readable: true | false
@@ -377,9 +373,8 @@ artifacts:
 
 Artifact rules:
 
-- `success` requires every expected artifact for that phase to be `persisted: true` and `readable: true`, except in `none` mode where the artifact must be returned inline.
+- `success` requires every expected artifact for that phase to be `persisted: true` and `readable: true`.
 - `partial` must name which artifact or write failed and include the inline artifact content when safe.
-- `hybrid` success requires both Engram and OpenSpec refs or an explicit statement that one side was repaired according to the Hybrid Conflict Policy.
 - Artifacts must use the naming conventions in this file and `skills/_shared/persistence-contract.md`.
 
 Risk entry shape:
@@ -469,7 +464,7 @@ Rules for the envelope:
 - `phase` is the short phase token (e.g. `propose`, `spec`, `design`, `test-design`, `tasks`, `apply`, `review`, `review-security`, `verify`, `archive`).
 - `change` is the kebab-case change name from the launch envelope `changeName`.
 - `executive_summary` is a short human-readable paragraph (3-5 lines) summarizing what happened and why it matters. Write it as plain text or a single-line YAML scalar. Do NOT use bullet lists here.
-- `artifacts` is always an array, even for a single artifact. Use the artifact entry shape above. In `hybrid` mode, include one entry per backend (engram + openspec). In `none` mode, set `persisted: false`, `readable: true`, and use `ref: inline`.
+- `artifacts` is always an array, even for a single artifact. Use the artifact entry shape above.
 - `risks` is a structured array using the risk entry shape, or the literal word `None`. Never use an empty array `[]` — use `None` when there are no risks.
 - `skill_resolution` follows `skills/_shared/skill-resolver.md#step-4-report-resolution`. Always include it; use `mode: none` only when no supplemental skills were required.
 - `detailed_report` is a fenced YAML scalar (use `|`). Put the full phase-specific summary here — requirements tables, coverage, decisions, forecast, etc. See the phase-specific minimum detail table above.

@@ -26,7 +26,7 @@ You are a sub-agent responsible for creating PROPOSALS. You take the exploration
 From the orchestrator:
 - Change name (e.g., "add-dark-mode")
 - Exploration analysis (from sdd-explore) OR direct user description
-- Artifact store mode (`engram | openspec | hybrid | none`)
+- Artifact store mode (`engram | openspec`)
 
 ## Phase Artifact Contract
 
@@ -61,8 +61,6 @@ Routing rules for `next_recommended`:
 | Capabilities cannot be determined from OpenSpec specs or project context | Keep the proposal blocked or explicitly write `None` only when the change truly has no spec-level behavior. |
 | Artifact store mode is `engram` | Do not create `openspec/`; persist only `sdd/{change-name}/proposal`. |
 | Artifact store mode is `openspec` | Write only `openspec/changes/{change-name}/proposal.md`; do not call `mem_save`. |
-| Artifact store mode is `hybrid` | Write OpenSpec proposal and persist the Engram artifact. |
-| Artifact store mode is `none` | Return inline only; do not write files and do not call `mem_save`. |
 | Proposal exceeds the size budget or lacks rollback plan, success criteria, or capabilities | Fix before persistence; if it cannot be fixed, return `blocked`. |
 
 ## What to Do
@@ -89,22 +87,21 @@ Load supplemental skills according to `skills/_shared/skill-resolver.md` and the
 
 ### Step 2: Create Change Directory
 
-**IF mode is `openspec` or `hybrid`:** create the change folder structure:
+**IF mode is `openspec`:** create the change folder structure:
 
 ```
 openspec/changes/{change-name}/
 └── proposal.md
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories. Skip this step.
+**IF mode is `engram`:** Do NOT create any `openspec/` directories. Skip this step.
 
 ### Step 3: Read Existing Specs
 
-**IF mode is `openspec` or `hybrid`:** If `openspec/specs/` has relevant specs, read them to understand current behavior that this change might affect.
+**IF mode is `openspec`:** If `openspec/specs/` has relevant specs, read them to understand current behavior that this change might affect.
 
 **IF mode is `engram`:** Existing context was already retrieved from Engram in the Persistence Contract. Skip filesystem reads.
 
-**IF mode is `none`:** Skip — no existing specs to read.
 
 ### Step 4: Write proposal.md
 
@@ -131,20 +128,20 @@ Be specific about the user need or technical debt being addressed.}
 
 > This section is the CONTRACT between proposal and specs phases.
 > The sdd-spec agent reads this to know exactly which spec files to create or update.
-> In openspec/hybrid mode, research `openspec/specs/` before filling this in. In engram/none mode, use stable logical domain names from project context.
+> In openspec mode, research `openspec/specs/` before filling this in. In engram mode, use stable logical domain names from project context.
 
 ### New Capabilities
 <!-- Capabilities being introduced. Use kebab-case names (e.g., user-auth, data-export, api-rate-limiting).
-     In openspec/hybrid mode, each maps to `openspec/specs/<name>/spec.md` after archive.
-     In engram/none mode, these are logical domain names for the spec artifact.
+     In openspec mode, each maps to `openspec/specs/<name>/spec.md` after archive.
+     In engram mode, these are logical domain names for the spec artifact.
      Leave empty if no new capabilities. -->
 - `<capability-name>`: <brief description of what this capability covers>
 
 ### Modified Capabilities
 <!-- Existing capabilities whose REQUIREMENTS are changing (not just implementation).
      Only list here if spec-level behavior changes. Each needs spec coverage.
-     In openspec/hybrid mode, use existing names from `openspec/specs/`.
-     In engram/none mode, use stable logical domain names from the project context/proposal.
+     In openspec mode, use existing names from `openspec/specs/`.
+     In engram mode, use stable logical domain names from the project context/proposal.
      Leave empty if none. -->
 - `<existing-capability-name>`: <what requirement is changing>
 
@@ -181,7 +178,7 @@ Reference the recommended approach from exploration if available.}
 
 ### Step 5: Persist Artifact
 
-**This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, return the full proposal inline and do not write files or call `mem_save`.**
+**This step is MANDATORY for `engram` and `openspec` modes — do NOT skip it.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 - artifact: `proposal`
@@ -205,7 +202,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the
 ## Proposal Created
 
 **Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/proposal.md` (openspec/hybrid) | Engram `sdd/{change-name}/proposal` (engram) | inline (none)
+**Location**: `openspec/changes/{change-name}/proposal.md` (openspec) | Engram `sdd/{change-name}/proposal` (engram)
 
 ### Summary
 - **Intent**: {one-line summary}
@@ -226,8 +223,8 @@ Ready for specs (sdd-spec). Design runs after specs pass.
 - Every proposal MUST have success criteria
 - Use concrete file paths in "Affected Areas" when possible
 - Apply any `rules.proposal` from `openspec/config.yaml`
-- **ALWAYS fill in the Capabilities section** — this is the contract with sdd-spec. In `openspec` or `hybrid`, research `openspec/specs/` first to use correct existing capability names; in `engram` or `none`, derive stable logical domain names from project context and the proposal.
-- New Capabilities → in `openspec`/`hybrid`, each will become `openspec/specs/<name>/spec.md` after archive; in `engram`/`none`, each becomes a domain section in the spec artifact.
-- Modified Capabilities → in `openspec`/`hybrid`, each will become a delta spec in the change folder; in `engram`/`none`, each becomes a modified domain section in the spec artifact.
+- **ALWAYS fill in the Capabilities section** — this is the contract with sdd-spec. In `openspec`, research `openspec/specs/` first to use correct existing capability names; in `engram`, derive stable logical domain names from project context and the proposal.
+- New Capabilities → in `openspec`, each will become `openspec/specs/<name>/spec.md` after archive; in `engram`, each becomes a domain section in the spec artifact.
+- Modified Capabilities → in `openspec`, each will become a delta spec in the change folder; in `engram`, each becomes a modified domain section in the spec artifact.
 - If nothing changes at the spec level (pure refactor, config change), explicitly write "None" under both sub-sections — don't leave them as template placeholders
 - **Size budget**: Proposal artifact MUST be under 450 words. Use bullet points and tables over prose. Headers organize, not explain.

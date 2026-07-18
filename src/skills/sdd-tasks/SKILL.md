@@ -118,8 +118,6 @@ From `design.md#Operational Considerations`, equivalent design evidence, and `te
 Also read testing capabilities when available:
 - Engram: `sdd/{project}/testing-capabilities`
 - OpenSpec: `openspec/config.yaml` `testing` section
-- Hybrid: read both and apply the Hybrid Conflict Policy if they disagree
-- None: use only current-session testing context provided by the orchestrator
 
 Use testing capabilities to decide whether test-first RED/GREEN/REFACTOR tasks are required. Do not invent TDD tasks when Strict TDD is unavailable or disabled.
 
@@ -127,7 +125,7 @@ If runtime test, coverage, linter, type-checker, or formatter commands are unava
 
 ### Step 3: Write tasks.md
 
-**IF mode is `openspec` or `hybrid`:** Create the task file:
+**IF mode is `openspec`:** Create the task file:
 
 ```
 openspec/changes/{change-name}/
@@ -138,7 +136,7 @@ openspec/changes/{change-name}/
 └── tasks.md               ← You create this; consumes design.md#secure-development-design
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the tasks content in memory; persist it only if the mode allows persistence.
+**IF mode is `engram`:** Do NOT create any `openspec/` directories or files. Compose the tasks content in memory; persist it in Engram.
 
 #### Task File Format
 
@@ -291,7 +289,7 @@ Before persisting or returning, verify:
 
 ### Step 5: Persist Artifact
 
-**This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, skip persistence.**
+**This step is MANDATORY for `engram` and `openspec` modes — do NOT skip it.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 - artifact: `tasks`
@@ -315,7 +313,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the
 ## Tasks Created
 
 **Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/tasks.md` (openspec/hybrid) | Engram `sdd/{change-name}/tasks` (engram) | inline (none)
+**Location**: `openspec/changes/{change-name}/tasks.md` (openspec) | Engram `sdd/{change-name}/tasks` (engram)
 
 ### Breakdown
 | Phase | Tasks | Focus |

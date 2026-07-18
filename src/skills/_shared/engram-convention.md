@@ -1,6 +1,6 @@
 # Engram Artifact Convention (backend reference only)
 
-NOTE: This document is a backend-specific reference for Engram topic names and call shapes. The authoritative cross-mode persistence rules live in `skills/_shared/persistence-contract.md`; phase skills MUST follow that contract for mode resolution, read/write behavior, hybrid conflict handling, state schema, recovery, and persistence verification.
+NOTE: This document is a backend-specific reference for Engram topic names and call shapes. The authoritative cross-mode persistence rules live in `skills/_shared/persistence-contract.md`; phase skills MUST follow that contract for mode resolution, read/write behavior, state schema, recovery, and persistence verification.
 
 Use this file only when an Engram-specific key or call shape is needed. Do not treat it as a competing source for artifact-store mode behavior, SDD state shape, recovery routing, or lifecycle policy.
 
@@ -138,7 +138,7 @@ Engram normally auto-detects the project name from the git remote. Use the curre
 
 ## Upsert Behavior
 
-Same `topic_key` + `project` + `scope` → UPDATE (overwrite), not INSERT. Previous content is lost — `revision_count` increments but old content is NOT saved. This is by design — engram is working memory, not an audit trail. For iteration history or team collaboration, use `openspec` or `hybrid` mode.
+Same `topic_key` + `project` + `scope` -> UPDATE (overwrite), not INSERT. Previous content is lost - `revision_count` increments but old content is NOT saved. This is by design - engram is working memory, not an audit trail. For iteration history or team collaboration, use `openspec`.
 
 ## Why This Convention
 

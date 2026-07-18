@@ -23,7 +23,7 @@ This utility is manual and post-archive only. It is not a required SDD DAG phase
 
 Accept from the user or launch context:
 - Archived change name, or an archive folder path.
-- Artifact store mode when known: `openspec | engram | hybrid | none`.
+- Artifact store mode when known: `openspec | engram`.
 - Optional explicit product metadata: product, application owner, platform, IT project lead, developer, support roles, retention policy, and target output path.
 - Optional explicit final-document operational values. These values may be used only in the generated operational document and must never be copied back into SDD evidence, archive reports, review reports, verify reports, examples, or tasks.
 
@@ -37,8 +37,6 @@ Archived operational evidence is useful input when present, but it is not requir
 | --- | --- |
 | `openspec` | `openspec/changes/archive/YYYY-MM-DD-{change-name}/` |
 | `engram` | `sdd/{change-name}/archive-report` and linked artifact observations |
-| `hybrid` | Resolve both and follow the Hybrid Conflict Policy before choosing authority |
-| `none` | Only current conversation/context; label the document as non-recoverable draft |
 
 When reading an OpenSpec archive, inspect available `proposal.md`, `specs/**/spec.md`, `design.md`, `test-design.md`, `tasks.md`, canonical `review-report.json` plus derived `review-report.md`, canonical `review-security-report.json` plus derived `review-security-report.md`, `verify-report.md`, and any archive report/evidence files.
 
@@ -102,6 +100,6 @@ Return:
 ## References
 
 - `skills/sdd-operational-doc/assets/operational-document-template.md` — mandatory document skeleton.
-- `skills/_shared/persistence-contract.md` — backend resolution and hybrid conflict policy.
+- `skills/_shared/persistence-contract.md` — backend resolution policy.
 - `skills/_shared/openspec-convention.md` — OpenSpec archive path conventions.
 - `skills/_shared/language-domain-contract.md` — artifact language rules.

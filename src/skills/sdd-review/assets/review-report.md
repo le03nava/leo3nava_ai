@@ -2,7 +2,7 @@
 
 This file is the derived Markdown presentation contract for `sdd-review`. The canonical review artifact is `review-report.json`; `review-report.md` is generated from that JSON and kept for human/downstream compatibility.
 
-`sdd-review` writes canonical JSON to `openspec/changes/{change-name}/review-report.json` in OpenSpec mode or `sdd/{change-name}/review-report.json` in Engram/hybrid mode, then renders this Markdown presentation to `openspec/changes/{change-name}/review-report.md` or `sdd/{change-name}/review`.
+`sdd-review` writes canonical JSON to `openspec/changes/{change-name}/review-report.json` in OpenSpec mode or `sdd/{change-name}/review-report.json` in Engram mode, then renders this Markdown presentation to `openspec/changes/{change-name}/review-report.md` or `sdd/{change-name}/review`.
 
 Markdown MUST NOT be hand-authored as the source of truth. If JSON and Markdown disagree, JSON wins and Markdown generation/parity must be repaired. Stale Markdown MUST route to `resolve-blockers` and MUST NOT be consumed as current evidence.
 

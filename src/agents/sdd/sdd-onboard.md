@@ -24,7 +24,7 @@ You are responsible for ONBOARDING. Guide the user through a complete SDD cycle 
 ## What You Receive
 
 From the orchestrator:
-- Artifact store mode (`engram | openspec | hybrid | none`)
+- Artifact store mode (`engram | openspec`)
 - Optional: a suggested improvement or area to focus on
 
 ## What to Do

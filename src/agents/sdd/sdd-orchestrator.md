@@ -32,7 +32,7 @@ Bind this to the dedicated `sdd-orchestrator` agent only. Do NOT apply it to exe
 
 - [Execution Mode (interactive / auto)](#execution-mode)
 - [Proposal Shaping Before `sdd-propose`](#proposal-shaping-before-sdd-propose)
-- [Artifact Store Mode (engram / openspec / hybrid / none)](#artifact-store-mode)
+- [Artifact Store Mode (engram / openspec)](#artifact-store-mode)
 - [Delivery Strategy (deferred)](#delivery-strategy)
 - [Chain Strategy (deferred)](#chain-strategy)
 
@@ -189,16 +189,12 @@ SDD is the structured planning layer for substantial changes.
 
 ### Artifact Store Policy
 
-- `engram` -> default when available; persistent memory across sessions
-- `openspec` -> file-based artifacts; use only when the user explicitly requests it
-- `hybrid` -> both backends; cross-session recovery + local files; more tokens per operation
-- `none` -> return SDD artifacts inline only; recommend enabling engram or openspec for recoverable planning
+- `openspec` -> default; file-based artifacts and team-shareable history
+- `engram` -> persistent memory across sessions
 
 ### Artifact Reference Resolver
 
-Use the Artifact Reference Resolver in `skills/_shared/persistence-contract.md` whenever checking dependencies, launching sub-agents, validating gatekeeper artifacts, continuing a change, or recovering state. Do not inline artifact bodies unless mode is `none` or the artifact is intentionally tiny; pass references and let phase agents read from the selected backend.
-
-In `hybrid`, follow the shared Hybrid Conflict Policy. Never silently choose between Engram and OpenSpec when both contain materially different content.
+Use the Artifact Reference Resolver in `skills/_shared/persistence-contract.md` whenever checking dependencies, launching sub-agents, validating gatekeeper artifacts, continuing a change, or recovering state. Pass references and let phase agents read from the selected backend.
 
 ### Commands
 
@@ -284,7 +280,7 @@ Status/read-only requests route first and bypass preflight. They must not run in
 If a mutating route is selected and preflight is missing, STOP and ask one grouped `question` call with these two base groups:
 
 1. Pace: Interactive, Automatic.
-2. Artifacts: OpenSpec, Engram, Both, None/Ephemeral.
+2. Artifacts: OpenSpec, Engram.
 
 Rules:
 
@@ -299,7 +295,7 @@ Rules:
 Map answers internally:
 
 - Interactive -> `execution_mode: interactive`; Automatic -> `execution_mode: auto`.
-- OpenSpec -> `artifact_store.mode: openspec`; Engram -> `artifact_store.mode: engram`; Both -> `artifact_store.mode: hybrid`; None/Ephemeral -> `artifact_store.mode: none`.
+- OpenSpec -> `artifact_store.mode: openspec`; Engram -> `artifact_store.mode: engram`.
 - Initialize `delivery_strategy`, `review_budget_lines`, and `chain_strategy` as `null` until the delivery guard resolves them.
 
 After all required values are known, summarize the `SDD Session Preflight` block, cache it for this session, pass it to later phase prompts, and continue with SDD Entry Routing.
@@ -356,8 +352,6 @@ Backend-aware init status:
 
 - **`engram`**: complete only when both Engram observations are readable: `sdd-init/{project}` and `sdd/{project}/testing-capabilities`.
 - **`openspec`**: complete only when `openspec/config.yaml` exists, is readable, and provides project context plus testing capabilities.
-- **`hybrid`**: complete only when BOTH Engram (`sdd-init/{project}` plus testing capabilities) and OpenSpec (`openspec/config.yaml` with context/capabilities) are complete. If either side is missing or incomplete, treat init as partial and delegate `sdd-init` to repair the missing backend before continuing.
-- **`none`**: persistent init status is not possible. Delegate `sdd-init` for inline/ephemeral detected context for the current request only. Do not expect persistent `sdd-init` artifacts and do not create OpenSpec or Engram SDD artifacts.
 
 If init is missing or partial for the resolved mode, run `sdd-init` FIRST (delegate to `sdd-init` sub-agent with the resolved `artifact_store.mode`), verify that the required init artifacts now exist for that mode, THEN proceed with the requested command. If verification still fails, STOP and report the missing init artifacts; do not launch the requested phase.
 
@@ -436,10 +430,9 @@ The Phase Gate runs after every phase: when a delegated phase returns and BEFORE
 **Post-phase artifact read policy (cost-aware):**
 
 - **Happy path:** do not read full artifact bodies immediately after a phase. Validate the envelope metadata, artifact refs/paths, routing token, risks, and then run the State Persistence Gate. The next phase executor owns reading the full dependency content.
-- **Minimal probe only when needed:** a bounded existence probe is allowed when metadata is incomplete, a path/ref is suspicious, state is missing or stale, the run is recovering after compaction, `artifact_store.mode` is `hybrid`, or the phase returns `partial`/`blocked` and the recovery path depends on artifact contents.
+- **Minimal probe only when needed:** a bounded existence probe is allowed when metadata is incomplete, a path/ref is suspicious, state is missing or stale, the run is recovering after compaction, or the phase returns `partial`/`blocked` and the recovery path depends on artifact contents.
 - **OpenSpec:** prefer path existence/readability metadata and pass `contextFiles`/paths to the next executor; avoid `Read <artifact>.md [limit=N]` on every successful transition.
 - **Engram:** do not call `mem_get_observation` for the produced artifact in the happy path solely to re-read content; reserve it for recovery, ambiguity, or conflict checks.
-- **Hybrid:** read/compare both backends only when the status/envelope/state indicates a possible material conflict or when launching dependent work requires resolving hybrid authority.
 
 **Gatekeeper validation mechanism (cost-aware):**
 
@@ -465,7 +458,7 @@ Non-retryable gate failures require STOP, not automatic retry:
 
 - Missing user/product input that would require guessing material facts
 - Missing or blocked dependency from an earlier phase
-- Artifact-store corruption, missing backend access, or unresolved hybrid conflict
+- Artifact-store corruption or missing backend access
 - Destructive, irreversible, PR-creating, archive-finalizing, or `size:exception` approval requirement
 - `sdd-verify` failure, unaddressed CRITICAL risk, or blocked verification evidence
 
@@ -510,13 +503,12 @@ This is collected by `SDD Session Preflight`. If missing on a mutating route, en
 
 Operational summary:
 
-- Supported modes are `engram`, `openspec`, `hybrid`, and `none`; map user-facing labels through `skills/_shared/persistence-contract.md#mode-resolution`.
+- Supported modes are `engram` and `openspec`; map user-facing labels through `skills/_shared/persistence-contract.md#mode-resolution`.
 - Cache the selected mode for the session and pass it as `artifact_store.mode` to every SDD sub-agent launch.
-- Never create `openspec/` files unless the cached mode is `openspec` or `hybrid`.
-- In `none`, do not write Engram observations, OpenSpec files, SDD artifacts, or local support files; implementation code edits are allowed only during authorized `sdd-apply` work with safe edit roots.
-- Treat mode changes as persistence migrations. If existing artifacts or hybrid backends conflict, follow the Hybrid Conflict Policy in `skills/_shared/persistence-contract.md` and STOP for reconciliation when required.
+- Never create `openspec/` files unless the cached mode is `openspec`.
+- Treat mode changes as persistence migrations. If existing artifacts conflict, follow `skills/_shared/persistence-contract.md` and STOP for reconciliation when required.
 
-Detailed mode behavior, backend boundaries, defaulting, hybrid conflict handling, and migration/repair rules live in `skills/_shared/persistence-contract.md`.
+Detailed mode behavior, backend boundaries, defaulting, and migration/repair rules live in `skills/_shared/persistence-contract.md`.
 
 ### Delivery Strategy
 
@@ -608,7 +600,7 @@ Orchestrator validation checklist:
 - Ensure required envelope fields are present: `status`, `executive_summary`, `detailed_report`, `artifacts`, `next_recommended`, `risks`, and `skill_resolution`.
 - Normalize `next_recommended` through `skills/_shared/sdd-status-contract.md` before routing, comparing successors, or persisting `nextRecommended` state.
 - Block dependent phases when any risk has `severity: CRITICAL` or `blocker: true`; preserve the safety rule that CRITICAL/blocker risks prevent dependent phases.
-- Verify declared artifact metadata reports `persisted: true`, `readable: true`, and concrete refs/paths in the selected backend; in `none` mode, verify the artifact is returned inline instead. Do not re-read full artifact bodies in the happy path because each executor owns persistence read-back before returning `success`.
+- Verify declared artifact metadata reports `persisted: true`, `readable: true`, and concrete refs/paths in the selected backend. Do not re-read full artifact bodies in the happy path because each executor owns persistence read-back before returning `success`.
 - Reject missing envelopes and final outputs that are only tool results rather than text containing the envelope.
 - Check phase-specific minimum details by reference to `skills/_shared/sdd-phase-common.md#d-return-envelope`.
 
@@ -627,7 +619,7 @@ Run this gate after:
 
 Ordering is strict: validate phase result -> persist/update DAG state -> read state back -> continue, ask, or report completion.
 
-If state persistence or read-back fails in `engram`, `openspec`, or `hybrid`, STOP before dependent work. Do not retry the completed phase automatically for persistence failures; repair or reconcile state first.
+If state persistence or read-back fails in `engram` or `openspec`, STOP before dependent work. Do not retry the completed phase automatically for persistence failures; repair or reconcile state first.
 
 State is an index and recovery pointer, not a replacement for artifacts. Do not duplicate full proposal/spec/design/test-design/tasks bodies into state. Backend writes, schema fields, read-back verification, legacy normalization, and failure handling are defined in `skills/_shared/persistence-contract.md#state-persistence-orchestrator`.
 
@@ -657,7 +649,7 @@ Resolution order for delegated SDD work:
 
 Use `agent.sdd-orchestrator.model` only for orchestrator-only synthesis, never as proof of an executor model. Config is not hot-reload safe: do not change assignments mid-phase, and keep the cached map until a new session or explicit restart.
 
-Prefer stronger configured models for design/apply/review/verify and stable/default models for init/archive. When delegation is needed for gate retry failures, CRITICAL risk, security/data-loss risk, destructive/irreversible actions, hybrid conflicts, or stale/newer state conflicts, use the strongest configured reviewer/verify model available.
+Prefer stronger configured models for design/apply/review/verify and stable/default models for init/archive. When delegation is needed for gate retry failures, CRITICAL risk, security/data-loss risk, destructive/irreversible actions, or stale/newer state conflicts, use the strongest configured reviewer/verify model available.
 
 Every SDD launch envelope should include resolved model metadata when the runtime makes it knowable:
 
@@ -700,7 +692,7 @@ Every SDD sub-agent launch MUST begin with a structured `launch:` YAML block —
 1. Open a fenced YAML block starting with `launch:`.
 2. Populate every field from the schema in `skills/_shared/sdd-phase-common.md ## Launch Envelope Contract`. Set deferred or unknown fields to `null` — never omit them, never invent values.
 3. Compute and include all `status.dependencies` fields using `skills/_shared/sdd-status-contract.md` state semantics (`blocked | ready | all_done`, plus `legacy` for historical security fields). Do not emit partial dependency maps.
-4. For `artifacts.refs` and `artifacts.paths`, resolve every required dependency via `skills/_shared/persistence-contract.md ## Artifact Reference Resolver` using the selected `artifact_store.mode`. In `engram` mode refs are topic keys; in `openspec` mode refs are file paths; in `hybrid` mode refs include both backends; in `none` mode refs are inline/session handles.
+4. For `artifacts.refs` and `artifacts.paths`, resolve every required dependency via `skills/_shared/persistence-contract.md ## Artifact Reference Resolver` using the selected `artifact_store.mode`. In `engram` mode refs are topic keys; in `openspec` mode refs are file paths.
 5. Populate `actionContext.mode`, `actionContext.workspaceRoot`, and `actionContext.allowedEditRoots` together. `actionContext.mode` is required (typically `repo-local` for local repository runs).
 6. Populate `delivery_strategy` and `chain_strategy` explicitly. Use `null` when unresolved; do not omit.
 7. Populate `review.review_budget_lines`, `review.current_slice_boundary`, and `review.size_exception` explicitly. Use `null` when not yet resolved.
@@ -721,7 +713,7 @@ Use `skills/_shared/sdd-phase-common.md ## Launch Envelope Examples` as the cano
 
 Orchestrator launch requirements:
 
-- Pass artifact refs and paths, not full artifact bodies, unless `artifact_store.mode` is `none` or the artifact is intentionally tiny.
+- Pass artifact refs and paths, not full artifact bodies, unless the artifact is intentionally tiny.
 - Include safe `actionContext` and `allowedEditRoots` for repo reads, writes, tests, verification, archive work, or changed-file inspection.
 - Set unresolved fields to `null` or `unknown`; never invent model IDs, artifact refs, workspace roots, delivery decisions, review approvals, or missing state.
 - Include supplemental `skill_paths` when registry resolution finds relevant skills.
@@ -801,7 +793,7 @@ Orchestrator minimum:
 
 Sub-agents get a fresh context with NO implicit memory. The orchestrator controls context access through the launch envelope, artifact refs, skill paths, and explicit instructions.
 
-Context principle: pass references by default, not bodies. Inline full artifact content only when `artifact_store.mode` is `none`, the artifact is intentionally tiny, or the sub-agent cannot retrieve the dependency from the selected backend.
+Context principle: pass references by default, not bodies. Inline full artifact content only when the artifact is intentionally tiny, or the sub-agent cannot retrieve the dependency from the selected backend.
 
 #### Non-SDD Tasks (general delegation)
 
@@ -822,8 +814,6 @@ When launching `sdd-apply` or `sdd-verify`, the orchestrator MUST:
 1. Resolve testing capabilities from the selected artifact store, following `skills/_shared/persistence-contract.md`:
    - `engram`: read `sdd/{project}/testing-capabilities` via `mem_search` + `mem_get_observation`.
    - `openspec`: read `openspec/config.yaml` and use its `rules.apply.tdd`, `rules.apply.test_command`, and `rules.verify.test_command` fields when present.
-   - `hybrid`: read Engram and `openspec/config.yaml`; apply the Hybrid Conflict Policy from `skills/_shared/persistence-contract.md` if they differ.
-   - `none`: use only the inline/ephemeral testing context returned by the current-session `sdd-init`; if it is unavailable, do not add Strict TDD instructions.
 2. If launching `sdd-apply` and the resolved capabilities contain `strict_tdd: true` or equivalent OpenSpec `rules.apply.tdd: true`, add: `"STRICT TDD MODE IS ACTIVE. Test runner: {test_command}. You MUST follow strict-tdd.md. Do NOT fall back to Standard Mode."`
 3. If launching `sdd-verify` and the resolved capabilities contain `strict_tdd: true` or equivalent OpenSpec `rules.apply.tdd: true`, add: `"STRICT TDD MODE IS ACTIVE. Test runner: {test_command}. You MUST load and follow strict-tdd-verify.md. Verify RED/GREEN/REFACTOR evidence from apply-progress and do NOT fall back to Standard Mode."`
 4. If testing capabilities cannot be resolved for the selected mode or `strict_tdd` is not enabled, do NOT add the TDD instruction.
@@ -835,8 +825,6 @@ When launching `sdd-apply` for a continuation batch:
 1. Resolve existing apply-progress from the selected artifact store:
    - `engram`: search `sdd/{change-name}/apply-progress` via `mem_search` + `mem_get_observation`.
    - `openspec`: check `openspec/changes/{change-name}/tasks.md` for completed checkboxes and any OpenSpec apply-progress/status fields defined by the active status contract.
-   - `hybrid`: check Engram and OpenSpec tasks/status files; apply the Hybrid Conflict Policy and instruct the sub-agent to merge only after authority is clear.
-   - `none`: use only current conversation context; if previous progress is unclear, stop before editing and ask for direction.
 2. If previous progress exists, add: `"PREVIOUS APPLY-PROGRESS EXISTS in the selected artifact store. You MUST read it first, merge your new progress with the existing progress, and save the combined result according to artifact_store.mode. Do NOT overwrite - MERGE."`
 3. If no previous progress exists, no extra instruction is needed.
 

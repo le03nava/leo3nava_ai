@@ -83,8 +83,6 @@ Routing rules for `next_recommended`:
 | Monitoring strategy is SQL-only by default | Fix before persistence; monitoring evidence must be mechanism-oriented and may include dashboards, alerts, jobs, traces, scripts, documented manual checks, or SQL only where appropriate. |
 | `engram` mode | Do not create `openspec/`; persist only `sdd/{change-name}/design`. |
 | `openspec` mode | Write only `openspec/changes/{change-name}/design.md`; do not call `mem_save`. |
-| `hybrid` mode | Write OpenSpec design and persist the Engram artifact. |
-| `none` mode | Return inline only; do not write files and do not call `mem_save`. |
 | Design draft fails validation | Fix it before persistence; if it cannot be fixed, return `blocked` with `next_recommended: resolve-blockers`. |
 
 ## What to Do
@@ -120,7 +118,7 @@ If affected code or testing capabilities cannot be found, state that limitation 
 
 ### Step 3: Write design.md
 
-**IF mode is `openspec` or `hybrid`:** Create the design document:
+**IF mode is `openspec`:** Create the design document:
 
 ```
 openspec/changes/{change-name}/
@@ -129,7 +127,7 @@ openspec/changes/{change-name}/
 └── design.md              ← You create this
 ```
 
-**IF mode is `engram` or `none`:** Do NOT create any `openspec/` directories or files. Compose the design content in memory; persist it only if the mode allows persistence.
+**IF mode is `engram`:** Do NOT create any `openspec/` directories or files. Compose the design content in memory; persist it in Engram.
 
 #### Design Document Format
 
@@ -277,7 +275,7 @@ Classification and evidence checks:
 
 ### Step 5: Persist Artifact
 
-**This step is MANDATORY for `engram`, `openspec`, and `hybrid` modes — do NOT skip it. In `none` mode, skip persistence.**
+**This step is MANDATORY for `engram` and `openspec` modes — do NOT skip it.**
 
 Follow **Section C** from `skills/_shared/sdd-phase-common.md`.
 - artifact: `design`
@@ -304,7 +302,7 @@ Return the Section D envelope from `skills/_shared/sdd-phase-common.md`. Use the
 ## Design Created
 
 **Change**: {change-name}
-**Location**: `openspec/changes/{change-name}/design.md` (openspec/hybrid) | Engram `sdd/{change-name}/design` (engram) | inline (none)
+**Location**: `openspec/changes/{change-name}/design.md` (openspec) | Engram `sdd/{change-name}/design` (engram)
 
 ### Summary
 - **Approach**: {one-line technical approach}

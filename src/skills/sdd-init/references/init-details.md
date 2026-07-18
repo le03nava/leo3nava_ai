@@ -60,7 +60,7 @@ openspec/
 
 `config.yaml` should include concise context, `strict_tdd`, testing capabilities, and phase rules for proposal/spec/design/tasks/apply/verify/archive. Keep `context:` under 10 lines.
 
-In persistent modes, write `.atl/skill-registry.md`; it is an agent routing index, not an SDD artifact. In `mode=none`, return the registry inline only and do not create or modify local support files. Follow the `skill-registry` skill behavior for deduplication, exact paths, and `.atl/` gitignore handling when writing is allowed.
+In persistent modes, write `.atl/skill-registry.md`; it is an agent routing index, not an SDD artifact. Follow the `skill-registry` skill behavior for deduplication, exact paths, and `.atl/` gitignore handling when writing is allowed.
 
 ## Testing Capabilities Format
 

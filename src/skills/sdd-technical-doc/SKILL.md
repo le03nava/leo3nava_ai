@@ -36,7 +36,6 @@ This utility is manual, user-invocable, post-archive, and archive-consuming only
 | --- | --- |
 | Archived change cannot be found | Stop and ask for the archive path or change name. |
 | User asks to run before archive | Stop; this utility consumes archived changes only. |
-| Hybrid backends differ materially | Stop and ask which backend is authoritative. |
 | Evidence proves a section is out of scope | Write `No aplica.`. |
 | Evidence is missing for applicable content | Write `Información no disponible en la evidencia archivada.`. |
 | Diagram details are not supported by archived evidence or explicit final-document context | Write `Información no disponible en la evidencia archivada.` for that diagram. |
@@ -69,6 +68,6 @@ Return:
 ## References
 
 - `skills/sdd-technical-doc/assets/technical-document-template.md` — mandatory Spanish document skeleton.
-- `skills/_shared/persistence-contract.md` — backend resolution and hybrid conflict policy.
+- `skills/_shared/persistence-contract.md` — backend resolution policy.
 - `skills/_shared/openspec-convention.md` — OpenSpec archive path conventions.
 - `skills/_shared/language-domain-contract.md` — artifact language rules.
